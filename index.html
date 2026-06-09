@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#171a20" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)" />
 
 <!-- Google Analytics 4 -->
@@ -60,7 +60,6 @@
     <nav class="nav-links" aria-label="Primary">
       <a href="#tools">Tools</a>
       <a href="/editor/">Editor</a>
-      <a href="#how">How it works</a>
       <a href="#faq">FAQ</a>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" type="button">
         <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></g></svg>
@@ -74,78 +73,83 @@
   <section class="hero">
     <div class="container">
       <p class="eyebrow">Free · Private · No signup</p>
-      <h1 class="hero-title">Every image tool you need.<br><span class="hero-accent">In one place.</span></h1>
-      <p class="hero-sub">Compress, resize, convert, crop, rotate, watermark and blur images — right in your browser. Your photos never leave your device.</p>
+      <h1 class="hero-title">Every image tool.<br><span class="hero-accent">In your browser.</span></h1>
+      <p class="hero-sub">Compress, resize, convert, crop, rotate, watermark and blur — instantly and privately. Your photos never leave your device.</p>
       <div class="hero-cta">
-        <a href="/editor/" class="btn btn-primary">Open editor</a>
-        <a href="#tools" class="btn btn-ghost">Browse tools</a>
+        <a href="/editor/" class="btn btn-light">Open editor</a>
+        <a href="#tools" class="btn btn-outline-light">Browse tools</a>
       </div>
       <div class="hero-trust">
-        <span class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 100% in-browser</span>
-        <span class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 12l3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No watermarks</span>
-        <span class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Unlimited &amp; free</span>
+        <span class="trust-item">100% in-browser</span>
+        <span class="trust-item">No watermarks</span>
+        <span class="trust-item">Unlimited &amp; free</span>
       </div>
     </div>
   </section>
 
   <section id="tools" class="tools">
     <div class="container">
-      <h2 class="section-title">Pick a tool</h2>
-      <p class="section-sub">All tools are free, unlimited, and work entirely in your browser.</p>
-
-      <div class="tool-grid">
-        <a href="/compress-image/" class="tool-card">
-          <div class="tool-icon tool-icon-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke-linecap="round"/></svg></div>
-          <h3>Compress Image</h3>
-          <p>Shrink JPG, PNG or WebP with a quality slider.</p>
-        </a>
-        <a href="/resize-image/" class="tool-card">
-          <div class="tool-icon tool-icon-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 15l6-6M15 9h-4M15 9v4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3>Resize Image</h3>
-          <p>Set exact pixels or scale by percent.</p>
-        </a>
-        <a href="/convert-image/" class="tool-card">
-          <div class="tool-icon tool-icon-3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8h12l-3-3M20 16H8l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3>Convert Image</h3>
-          <p>JPG ⇄ PNG, or anything to WebP.</p>
-        </a>
-        <a href="/crop-image/" class="tool-card">
-          <div class="tool-icon tool-icon-4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2v16h16M2 6h16v16" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3>Crop Image</h3>
-          <p>Drag to select and trim any region.</p>
-        </a>
-        <a href="/rotate-image/" class="tool-card">
-          <div class="tool-icon tool-icon-5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-3-6.7" stroke-linecap="round"/><path d="M21 4v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3>Rotate &amp; Flip</h3>
-          <p>Turn 90°/180° or mirror horizontally/vertically.</p>
-        </a>
-        <a href="/add-watermark/" class="tool-card">
-          <div class="tool-icon tool-icon-6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 6V4h14v2M12 4v16M9 20h6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3>Add Watermark</h3>
-          <p>Overlay text with size, opacity &amp; position.</p>
-        </a>
-        <a href="/image-to-pdf/" class="tool-card">
-          <div class="tool-icon tool-icon-7"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg></div>
-          <h3>Image to PDF</h3>
-          <p>Combine one or many images into a PDF.</p>
-        </a>
-        <a href="/blur-background/" class="tool-card">
-          <div class="tool-icon tool-icon-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/></svg></div>
-          <h3>Blur Background</h3>
-          <p>Keep the centre sharp, blur the rest.</p>
-        </a>
-      </div>
+      <p class="section-label">Tools</p>
+      <h2 class="section-title">Everything you need</h2>
+      <p class="section-sub">All free, unlimited, and processed entirely in your browser.</p>
+    </div>
+    <div class="tile-grid">
+      <a href="/compress-image/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke-linecap="round"/></svg></span>
+        <h3>Compress</h3><p>Shrink JPG, PNG or WebP with a quality slider.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/resize-image/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 15l6-6M15 9h-4M15 9v4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h3>Resize</h3><p>Set exact pixels or scale by percent.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/convert-image/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8h12l-3-3M20 16H8l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h3>Convert</h3><p>JPG ⇄ PNG, or anything to WebP.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/crop-image/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2v16h16M2 6h16v16" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h3>Crop</h3><p>Drag to select and trim any region.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/rotate-image/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 1 1-3-6.7" stroke-linecap="round"/><path d="M21 4v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h3>Rotate &amp; Flip</h3><p>Turn 90°/180° or mirror.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/add-watermark/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 6V4h14v2M12 4v16M9 20h6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <h3>Watermark</h3><p>Overlay text with size &amp; opacity.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/image-to-pdf/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 9h8M8 13h8M8 17h5" stroke-linecap="round"/></svg></span>
+        <h3>Image to PDF</h3><p>Combine images into one PDF.</p><span class="tile-cta">Open →</span>
+      </a>
+      <a href="/blur-background/" class="tile">
+        <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/></svg></span>
+        <h3>Blur Background</h3><p>Keep the centre sharp, blur the rest.</p><span class="tile-cta">Open →</span>
+      </a>
     </div>
   </section>
 
-  <section id="how" class="how">
-    <div class="container">
-      <h2 class="section-title">How it works</h2>
-      <div class="how-grid">
-        <div class="how-step"><span class="how-num">1</span><h3>Choose a tool</h3><p>Pick what you want to do — compress, resize, convert, and more.</p></div>
-        <div class="how-step"><span class="how-num">2</span><h3>Drop your image</h3><p>Drag and drop or select a file. Everything stays on your device.</p></div>
-        <div class="how-step"><span class="how-num">3</span><h3>Download instantly</h3><p>Your edited image is ready in seconds. No signup. No watermark.</p></div>
-      </div>
+  <section class="feature feature-dark">
+    <div class="feature-inner">
+      <h2>The whole studio, in your browser.</h2>
+      <p>Load an image once and switch between every tool — compress, resize, text, draw, shapes, layers and more. Nothing uploaded, ever.</p>
+      <a href="/editor/" class="feature-cta">Open the editor</a>
+    </div>
+  </section>
+
+  <section class="feature feature-light">
+    <div class="feature-inner">
+      <h2>Smaller files. Same quality.</h2>
+      <p>Dial in the exact compression you want and watch the file size drop in real time before you download.</p>
+      <a href="/compress-image/" class="feature-cta">Compress an image</a>
+    </div>
+  </section>
+
+  <section class="feature feature-dark">
+    <div class="feature-inner">
+      <h2>Photos into a PDF, instantly.</h2>
+      <p>Drop in one image or a hundred and get a clean, single-file PDF — one image per page, in the order you choose.</p>
+      <a href="/image-to-pdf/" class="feature-cta">Make a PDF</a>
     </div>
   </section>
 
@@ -162,38 +166,22 @@
 </main>
 
 <footer class="footer">
-  <div class="container footer-inner">
-    <div class="footer-brand">
-      <span class="brand-text">MyFreeImageTool</span>
-      <p class="footer-tag">Free image tools that respect your privacy.</p>
-    </div>
-    <div class="footer-cols">
-      <div>
-        <h4>Tools</h4>
-        <a href="/compress-image/">Compress Image</a>
-        <a href="/resize-image/">Resize Image</a>
-        <a href="/convert-image/">Convert Image</a>
-        <a href="/crop-image/">Crop Image</a>
-      </div>
-      <div>
-        <h4>More</h4>
-        <a href="/rotate-image/">Rotate &amp; Flip</a>
-        <a href="/add-watermark/">Add Watermark</a>
-        <a href="/image-to-pdf/">Image to PDF</a>
-        <a href="/blur-background/">Blur Background</a>
-      </div>
-      <div>
-        <h4>Company</h4>
-        <a href="/about/">About</a>
-        <a href="/privacy/">Privacy</a>
-        <a href="/terms/">Terms</a>
-        <a href="/contact/">Contact</a>
-      </div>
-    </div>
+  <div class="container footer-row">
+    <a href="/compress-image/">Compress</a>
+    <a href="/resize-image/">Resize</a>
+    <a href="/convert-image/">Convert</a>
+    <a href="/crop-image/">Crop</a>
+    <a href="/rotate-image/">Rotate</a>
+    <a href="/add-watermark/">Watermark</a>
+    <a href="/image-to-pdf/">Image to PDF</a>
+    <a href="/blur-background/">Blur</a>
+    <a href="/editor/">Editor</a>
+    <a href="/about/">About</a>
+    <a href="/privacy/">Privacy</a>
+    <a href="/terms/">Terms</a>
+    <a href="/contact/">Contact</a>
   </div>
-  <div class="container footer-bottom">
-    <small>© <span id="year"></span> MyFreeImageTool. All rights reserved.</small>
-  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Your images never leave your device</small></div>
 </footer>
 
 <script src="/app.js" defer></script>
