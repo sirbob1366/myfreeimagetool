@@ -71,6 +71,40 @@
     return toBlob(canvas, mime, opts.quality ?? 0.92);
   };
 
+  // ---------- Resize to a target size (preset) ----------
+  // opts: { width, height, mode: 'stretch'|'cover'|'contain', bg, mime, quality }
+  Engine.resizeFit = async function (src, opts = {}) {
+    const mime = opts.mime || src.type || 'image/png';
+    const tw = Math.max(1, Math.round(opts.width)), th = Math.max(1, Math.round(opts.height));
+    const mode = opts.mode || 'stretch';
+    const canvas = makeCanvas(tw, th);
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    if (mime === 'image/jpeg' || (mode === 'contain' && opts.bg !== 'transparent')) {
+      ctx.fillStyle = opts.bg && opts.bg !== 'transparent' ? opts.bg : '#ffffff';
+      ctx.fillRect(0, 0, tw, th);
+    }
+    if (mode === 'stretch') {
+      ctx.drawImage(src.img, 0, 0, tw, th);
+    } else {
+      const s = mode === 'cover' ? Math.max(tw / src.width, th / src.height) : Math.min(tw / src.width, th / src.height);
+      const dw = src.width * s, dh = src.height * s;
+      ctx.drawImage(src.img, (tw - dw) / 2, (th - dh) / 2, dw, dh);
+    }
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // Common social/print canvas presets (Canva-style).
+  Engine.SIZE_PRESETS = [
+    { label: 'Instagram Post — 1080×1080', w: 1080, h: 1080 },
+    { label: 'Instagram Story — 1080×1920', w: 1080, h: 1920 },
+    { label: 'Facebook Cover — 1640×624', w: 1640, h: 624 },
+    { label: 'X / Twitter Header — 1500×500', w: 1500, h: 500 },
+    { label: 'YouTube Thumbnail — 1280×720', w: 1280, h: 720 },
+    { label: 'A4 Portrait — 1240×1754', w: 1240, h: 1754 },
+    { label: 'Profile Picture — 400×400', w: 400, h: 400 }
+  ];
+
   // ---------- Convert ----------
   // opts: { mime, quality }
   Engine.convert = async function (src, opts = {}) {

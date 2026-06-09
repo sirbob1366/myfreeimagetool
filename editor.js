@@ -47,6 +47,8 @@
   async function loadFile(file) {
     ImgUtils.setStatus('Loading…');
     try {
+      if (/\.psd$/i.test(file.name) || file.type === 'image/vnd.adobe.photoshop') { await loadPsd(file); return; }
+      state.objects = []; state.selectedObjId = null;
       const src = await ImageEngine.loadImage(file);
       state.src = src;
       state.baseName = ImgUtils.stripExt(file.name) || 'image';
@@ -114,6 +116,8 @@
         cx.stroke();
       } else if (o.kind === 'shape') {
         drawShape(cx, o);
+      } else if (o.kind === 'image' && o.canvas) {
+        cx.drawImage(o.canvas, o.x || 0, o.y || 0);
       }
       cx.restore();
     });
@@ -210,6 +214,7 @@
     btn.addEventListener('click', () => {
       const tool = btn.dataset.tool;
       if (tool === 'open') { fileInput.click(); return; }
+      if (tool === 'newcanvas') { showNewCanvas(); return; }
       if (tool === 'download') { downloadCurrent(); return; }
       if (!state.src) return;
       setTool(tool);
@@ -232,6 +237,117 @@
     compositeCanvas().toBlob(b => ImgUtils.download(b, state.baseName + '.' + ImageEngine.extFor(state.src.type)), state.src.type, 0.95);
   }
   $('#download-btn').onclick = downloadCurrent;
+
+  // ---------- New design (blank canvas + background) ----------
+  const BG_GRADIENTS = {
+    Sunset: ['#ff7a59', '#ff5e62', '#ffd29b'],
+    Crimson: ['#e82127', '#7a0d10'],
+    Ocean: ['#0072ff', '#00c6ff'],
+    Mint: ['#34c759', '#30b0c7'],
+    Charcoal: ['#171a20', '#3a3d44'],
+    Grape: ['#5b2a52', '#241430']
+  };
+
+  function showNewCanvas() {
+    state.currentTool = 'newcanvas';
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === 'newcanvas'));
+    inspectorTitle.textContent = 'New design';
+    inspectorHint.textContent = 'Pick a size and background, then add text, shapes and images.';
+    const presetOpts = ImageEngine.SIZE_PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join('');
+    const gradOpts = Object.keys(BG_GRADIENTS).map(k => `<option value="${k}">${k}</option>`).join('');
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Size</label><select id="nc-preset">${presetOpts}<option value="custom">Custom…</option></select></div>
+      <div class="field-row" id="nc-custom" style="display:none;">
+        <div class="field"><label>Width</label><input type="number" id="nc-w" value="1080" min="1" /></div>
+        <div class="field"><label>Height</label><input type="number" id="nc-h" value="1080" min="1" /></div>
+      </div>
+      <div class="field"><label>Background</label><select id="nc-bgtype"><option value="solid">Solid colour</option><option value="gradient">Gradient</option></select></div>
+      <div class="field" id="nc-solid"><label>Colour</label><input type="color" id="nc-color" value="#171a20" /></div>
+      <div class="field" id="nc-grad" style="display:none;"><label>Gradient</label><select id="nc-gradname">${gradOpts}</select></div>
+      <button class="btn btn-primary btn-block" id="nc-go" type="button">Create design</button>
+    `;
+    const preset = $('#nc-preset'), bgtype = $('#nc-bgtype');
+    preset.onchange = () => { $('#nc-custom').style.display = preset.value === 'custom' ? 'flex' : 'none'; };
+    bgtype.onchange = () => { $('#nc-solid').style.display = bgtype.value === 'solid' ? 'block' : 'none'; $('#nc-grad').style.display = bgtype.value === 'gradient' ? 'block' : 'none'; };
+    $('#nc-go').onclick = () => {
+      let w, h;
+      if (preset.value === 'custom') { w = Number($('#nc-w').value) || 1080; h = Number($('#nc-h').value) || 1080; }
+      else { const p = ImageEngine.SIZE_PRESETS[Number(preset.value)]; w = p.w; h = p.h; }
+      const bg = bgtype.value === 'gradient' ? { type: 'gradient', name: $('#nc-gradname').value } : { type: 'solid', color: $('#nc-color').value };
+      createCanvas(w, h, bg);
+    };
+  }
+
+  async function createCanvas(w, h, bg) {
+    ImgUtils.setStatus('Creating…');
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const cx = cv.getContext('2d');
+    if (bg.type === 'gradient') {
+      const stops = BG_GRADIENTS[bg.name] || ['#171a20', '#3a3d44'];
+      const g = cx.createLinearGradient(0, 0, w, h);
+      stops.forEach((c, i) => g.addColorStop(stops.length > 1 ? i / (stops.length - 1) : 0, c));
+      cx.fillStyle = g;
+    } else cx.fillStyle = bg.color || '#ffffff';
+    cx.fillRect(0, 0, w, h);
+    const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    await loadFile(new File([blob], 'design.png', { type: 'image/png' }));
+    setTool('text');
+  }
+
+  // ---------- Open PSD (flatten + import layers) ----------
+  async function loadPsd(file) {
+    if (!window.agPsd) { ImgUtils.setStatus('PSD support is still loading — try again in a second.', 'error'); return; }
+    ImgUtils.setStatus('Reading PSD…');
+    try {
+      const buf = await file.arrayBuffer();
+      const psd = window.agPsd.readPsd(buf, { useImageData: false, skipThumbnail: true });
+      const W = psd.width, H = psd.height;
+      state.baseName = ImgUtils.stripExt(file.name) || 'design';
+      state.original = file;
+      state.objects = []; state.selectedObjId = null;
+
+      // collect leaf raster layers (groups flattened into their children)
+      const layers = [];
+      (function walk(nodes) { for (const n of (nodes || [])) { if (n.children) walk(n.children); else if (n.canvas) layers.push(n); } })(psd.children);
+
+      const CAP = 24;
+      let baseBlob, msg;
+      if (layers.length > 1 && layers.length <= CAP) {
+        const base = document.createElement('canvas'); base.width = W; base.height = H; // transparent base
+        baseBlob = await new Promise(r => base.toBlob(r, 'image/png'));
+        for (const ly of layers) {
+          state.objects.push({
+            id: uid(), kind: 'image', canvas: ly.canvas,
+            x: ly.left || 0, y: ly.top || 0,
+            w: ly.canvas.width, h: ly.canvas.height,
+            name: ly.name || 'Layer', visible: ly.hidden !== true
+          });
+        }
+        msg = `Opened PSD — ${layers.length} layers imported.`;
+      } else {
+        const comp = psd.canvas || document.createElement('canvas');
+        if (!psd.canvas) { comp.width = W; comp.height = H; }
+        baseBlob = await new Promise(r => comp.toBlob(r, 'image/png'));
+        msg = 'Opened PSD (flattened).';
+      }
+      state.src = await ImageEngine.loadImage(new File([baseBlob], state.baseName + '.png', { type: 'image/png' }));
+
+      emptyEl.style.display = 'none';
+      stage.style.display = 'block';
+      toolbar.style.display = 'flex';
+      actionBar.style.display = 'flex';
+      document.querySelectorAll('.tool-btn').forEach(b => b.disabled = false);
+      renderViewer();
+      state.history = [{ blob: baseBlob, name: state.baseName + '.png', type: 'image/png' }];
+      state.histIndex = 0;
+      updateHistoryButtons();
+      setTool(state.objects.length ? 'layers' : 'compress');
+      ImgUtils.setStatus(msg, 'success');
+    } catch (e) {
+      console.error(e);
+      ImgUtils.setStatus('Could not read this PSD file.', 'error');
+    }
+  }
 
   // ---------- Inspector ----------
   function showInspector(tool) {
@@ -329,7 +445,7 @@
       <div class="layer-list">
         ${top.map(o => `<div class="layer-row" data-id="${o.id}">
           <button class="lr-btn lr-vis" title="Show/hide">${o.visible === false ? '◌' : '●'}</button>
-          <span class="lr-name">${o.kind === 'draw' ? 'Brush stroke' : (o.shape.charAt(0).toUpperCase() + o.shape.slice(1))}</span>
+          <span class="lr-name">${o.kind === 'draw' ? 'Brush stroke' : o.kind === 'image' ? (o.name || 'Image layer') : (o.shape.charAt(0).toUpperCase() + o.shape.slice(1))}</span>
           <button class="lr-btn lr-up" title="Move up">↑</button>
           <button class="lr-btn lr-down" title="Move down">↓</button>
           <button class="lr-btn lr-del" title="Delete">✕</button>
@@ -452,24 +568,31 @@
 
   function inspResize() {
     inspectorTitle.textContent = 'Resize';
-    inspectorHint.textContent = 'Set new dimensions. Aspect ratio is kept by default.';
+    inspectorHint.textContent = 'Set a custom size or pick a preset (social, print, profile).';
     const s = state.src;
+    const presetOpts = ImageEngine.SIZE_PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join('');
     inspectorBody.innerHTML = `
+      <div class="field"><label>Preset size</label>
+        <select id="rpreset"><option value="">Custom</option>${presetOpts}</select></div>
       <div class="field-row">
         <div class="field"><label>Width (px)</label><input type="number" id="rw" value="${s.width}" min="1" /></div>
         <div class="field"><label>Height (px)</label><input type="number" id="rh" value="${s.height}" min="1" /></div>
       </div>
-      <div class="field"><label>Scale</label>
-        <select id="rscale"><option value="">Custom</option><option value="0.25">25%</option><option value="0.5">50%</option><option value="0.75">75%</option></select></div>
-      <label class="check"><input type="checkbox" id="rlock" checked /> Maintain aspect ratio</label>
+      <div class="field"><label>Fit</label>
+        <select id="rmode"><option value="stretch">Stretch to size</option><option value="cover">Fill &amp; crop</option><option value="contain">Fit with padding</option></select></div>
+      <label class="check"><input type="checkbox" id="rlock" checked /> Maintain aspect ratio (custom)</label>
       <button class="btn btn-primary btn-block" id="rgo" type="button" style="margin-top:12px;">Apply resize</button>
     `;
     const aspect = s.width / s.height;
-    const rw = $('#rw'), rh = $('#rh'), lock = $('#rlock');
-    rw.oninput = () => { if (lock.checked) rh.value = Math.round(rw.value / aspect); };
-    rh.oninput = () => { if (lock.checked) rw.value = Math.round(rh.value * aspect); };
-    $('#rscale').onchange = () => { const f = Number($('#rscale').value); if (f) { rw.value = Math.round(s.width * f); rh.value = Math.round(s.height * f); } };
-    $('#rgo').onclick = () => applyOp(() => ImageEngine.resize(state.src, { width: Number(rw.value), height: Number(rh.value), mime: state.src.type }), 'Resizing…');
+    const rw = $('#rw'), rh = $('#rh'), lock = $('#rlock'), mode = $('#rmode'), preset = $('#rpreset');
+    rw.oninput = () => { if (lock.checked) rh.value = Math.round(rw.value / aspect); preset.value = ''; };
+    rh.oninput = () => { if (lock.checked) rw.value = Math.round(rh.value * aspect); preset.value = ''; };
+    preset.onchange = () => {
+      if (preset.value === '') return;
+      const p = ImageEngine.SIZE_PRESETS[Number(preset.value)];
+      rw.value = p.w; rh.value = p.h; lock.checked = false; mode.value = 'cover';
+    };
+    $('#rgo').onclick = () => applyOp(() => ImageEngine.resizeFit(state.src, { width: Number(rw.value), height: Number(rh.value), mode: mode.value, mime: state.src.type }), 'Resizing…');
   }
 
   function inspConvert() {
