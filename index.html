@@ -48,6 +48,23 @@
 </head>
 <body>
 
+<!-- Reusable sample image used by the demo graphics -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff7a59"/><stop offset="0.55" stop-color="#ff5e62"/><stop offset="1" stop-color="#ffd29b"/>
+    </linearGradient>
+    <symbol id="scene" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="260" fill="url(#sky)"/>
+      <circle cx="296" cy="80" r="40" fill="#ffe7b3" opacity="0.95"/>
+      <polygon points="0,260 110,150 200,260" fill="#5b2a52"/>
+      <polygon points="150,260 250,128 360,260" fill="#3d1d3e"/>
+      <polygon points="280,260 360,168 400,206 400,260" fill="#5b2a52"/>
+      <rect y="222" width="400" height="38" fill="#241430"/>
+    </symbol>
+  </defs>
+</svg>
+
 <header class="nav">
   <div class="container nav-inner">
     <a href="/" class="brand" aria-label="MyFreeImageTool home">
@@ -83,6 +100,19 @@
         <span class="trust-item">100% in-browser</span>
         <span class="trust-item">No watermarks</span>
         <span class="trust-item">Unlimited &amp; free</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="mock">
+        <div class="mock-bar"><i></i><i></i><i></i><span class="mock-url">myfreeimagetool.com/editor</span></div>
+        <div class="mock-body">
+          <div class="mock-rail"><b class="on"></b><b></b><b></b><b></b><b></b><b></b></div>
+          <div class="mock-canvas">
+            <svg class="scene" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" style="height:300px"><use href="#scene"/></svg>
+            <div class="mock-crop"><i></i><i></i><i></i><i></i></div>
+            <div class="mock-badge">2.4 MB <b>→ 312 KB</b></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -129,27 +159,58 @@
     </div>
   </section>
 
+  <section class="feature feature-light">
+    <div class="feature-grid">
+      <div class="feature-inner">
+        <h2>Smaller files. Same quality.</h2>
+        <p>Dial in the exact compression you want and watch the file size drop in real time before you download.</p>
+        <a href="/compress-image/" class="feature-cta">Compress an image</a>
+      </div>
+      <div class="feature-visual">
+        <div class="demo-compress">
+          <div class="cbar"><span class="cbar-label">Original</span><div class="cbar-track"><div class="cbar-fill" style="width:100%"></div></div><span class="cbar-size">2.4 MB</span></div>
+          <div class="cbar"><span class="cbar-label">Compressed</span><div class="cbar-track"><div class="cbar-fill accent" style="width:13%"></div></div><span class="cbar-size">312 KB</span></div>
+          <div class="cbar"><span class="cbar-label">You save</span><div class="cbar-track"><div class="cbar-fill accent" style="width:87%;opacity:.45"></div></div><span class="cbar-size">87%</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="feature feature-dark">
-    <div class="feature-inner">
-      <h2>The whole studio, in your browser.</h2>
-      <p>Load an image once and switch between every tool — compress, resize, text, draw, shapes, layers and more. Nothing uploaded, ever.</p>
-      <a href="/editor/" class="feature-cta">Open the editor</a>
+    <div class="feature-grid">
+      <div class="feature-inner">
+        <h2>Watermark in one click.</h2>
+        <p>Overlay your name or brand with control over font size, opacity and position — then export in any format.</p>
+        <a href="/add-watermark/" class="feature-cta">Add a watermark</a>
+      </div>
+      <div class="feature-visual">
+        <div class="demo-frame">
+          <svg class="scene" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" style="height:240px"><use href="#scene"/></svg>
+          <span class="demo-pill">Opacity 70%</span>
+          <span class="wm">© MyFreeImageTool</span>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="feature feature-light">
-    <div class="feature-inner">
-      <h2>Smaller files. Same quality.</h2>
-      <p>Dial in the exact compression you want and watch the file size drop in real time before you download.</p>
-      <a href="/compress-image/" class="feature-cta">Compress an image</a>
-    </div>
-  </section>
-
-  <section class="feature feature-dark">
-    <div class="feature-inner">
-      <h2>Photos into a PDF, instantly.</h2>
-      <p>Drop in one image or a hundred and get a clean, single-file PDF — one image per page, in the order you choose.</p>
-      <a href="/image-to-pdf/" class="feature-cta">Make a PDF</a>
+    <div class="feature-grid">
+      <div class="feature-inner">
+        <h2>Photos into a PDF, instantly.</h2>
+        <p>Drop in one image or a hundred and get a clean, single-file PDF — one image per page, in the order you choose.</p>
+        <a href="/image-to-pdf/" class="feature-cta">Make a PDF</a>
+      </div>
+      <div class="feature-visual">
+        <div class="demo-pdf">
+          <div class="pdf-stack">
+            <span class="thumb t1"><svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice"><use href="#scene"/></svg></span>
+            <span class="thumb t2"><svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice"><use href="#scene"/></svg></span>
+            <span class="thumb t3"><svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice"><use href="#scene"/></svg></span>
+          </div>
+          <span class="pdf-arrow">→</span>
+          <span class="pdf-doc"><span class="pdf-tag">PDF</span></span>
+        </div>
+      </div>
     </div>
   </section>
 
