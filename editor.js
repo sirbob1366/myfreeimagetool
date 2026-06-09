@@ -169,6 +169,7 @@
   function showInspector(tool) {
     inspectorBody.innerHTML = '';
     if (tool === 'text') return inspText();
+    if (tool === 'filters') return inspFilters();
     if (tool === 'compress') return inspCompress();
     if (tool === 'resize') return inspResize();
     if (tool === 'convert') return inspConvert();
@@ -177,6 +178,46 @@
     if (tool === 'watermark') return inspWatermark();
     if (tool === 'blur') return inspBlur();
     if (tool === 'topdf') return inspToPdf();
+  }
+
+  function inspFilters() {
+    inspectorTitle.textContent = 'Filters & adjustments';
+    inspectorHint.textContent = 'Drag the sliders or pick a preset. Preview updates live.';
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Brightness <span class="range-val" id="f-br-v">100%</span></label><input type="range" id="f-br" min="0" max="200" value="100" /></div>
+      <div class="field"><label>Contrast <span class="range-val" id="f-co-v">100%</span></label><input type="range" id="f-co" min="0" max="200" value="100" /></div>
+      <div class="field"><label>Saturation <span class="range-val" id="f-sa-v">100%</span></label><input type="range" id="f-sa" min="0" max="200" value="100" /></div>
+      <div class="field"><label>Presets</label><div class="seg">
+        <button type="button" id="f-gray">B&amp;W</button>
+        <button type="button" id="f-sepia">Sepia</button>
+        <button type="button" id="f-invert">Invert</button>
+      </div></div>
+      <div class="field-row" style="margin-top:6px;">
+        <button class="btn btn-ghost" id="f-reset" type="button">Reset</button>
+        <button class="btn btn-primary" id="f-go" type="button">Apply</button>
+      </div>
+    `;
+    let gray = false, sepia = false, invert = false;
+    const opts = () => ({
+      brightness: Number($('#f-br').value), contrast: Number($('#f-co').value), saturate: Number($('#f-sa').value),
+      grayscale: gray ? 100 : 0, sepia: sepia ? 100 : 0, invert: invert ? 100 : 0
+    });
+    const preview = () => {
+      $('#f-br-v').textContent = $('#f-br').value + '%';
+      $('#f-co-v').textContent = $('#f-co').value + '%';
+      $('#f-sa-v').textContent = $('#f-sa').value + '%';
+      renderViewer();
+      ctx.save(); ctx.filter = ImageEngine.filterString(opts());
+      ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(state.src.img, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    };
+    inspectorBody.addEventListener('input', preview);
+    $('#f-gray').onclick = () => { gray = !gray; $('#f-gray').classList.toggle('active', gray); preview(); };
+    $('#f-sepia').onclick = () => { sepia = !sepia; $('#f-sepia').classList.toggle('active', sepia); preview(); };
+    $('#f-invert').onclick = () => { invert = !invert; $('#f-invert').classList.toggle('active', invert); preview(); };
+    $('#f-reset').onclick = () => { $('#f-br').value = 100; $('#f-co').value = 100; $('#f-sa').value = 100; gray = sepia = invert = false; inspectorBody.querySelectorAll('.seg button').forEach(b => b.classList.remove('active')); preview(); };
+    $('#f-go').onclick = () => applyOp(() => ImageEngine.adjust(state.src, { ...opts(), mime: state.src.type }), 'Applying…').then(() => setTool('filters'));
+    preview();
   }
 
   function inspText() {

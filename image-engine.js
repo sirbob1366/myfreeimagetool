@@ -148,6 +148,29 @@
     { label: 'Impact', css: 'Impact, Charcoal, sans-serif' }
   ];
 
+  // ---------- Filters / adjustments ----------
+  // opts: { brightness, contrast, saturate (percent, 100=normal),
+  //         grayscale, sepia, invert (0..100), mime, quality }
+  Engine.filterString = function (o = {}) {
+    const f = [];
+    if (o.brightness != null && o.brightness !== 100) f.push(`brightness(${o.brightness}%)`);
+    if (o.contrast != null && o.contrast !== 100) f.push(`contrast(${o.contrast}%)`);
+    if (o.saturate != null && o.saturate !== 100) f.push(`saturate(${o.saturate}%)`);
+    if (o.grayscale) f.push(`grayscale(${o.grayscale}%)`);
+    if (o.sepia) f.push(`sepia(${o.sepia}%)`);
+    if (o.invert) f.push(`invert(${o.invert}%)`);
+    return f.join(' ') || 'none';
+  };
+  Engine.adjust = async function (src, o = {}) {
+    const mime = o.mime || src.type || 'image/png';
+    const canvas = makeCanvas(src.width, src.height);
+    const ctx = canvas.getContext('2d');
+    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.filter = Engine.filterString(o);
+    ctx.drawImage(src.img, 0, 0, canvas.width, canvas.height);
+    return toBlob(canvas, mime, o.quality ?? 0.95);
+  };
+
   // ---------- Add text ----------
   // opts: { text, x, y (top-left, image px), size, font(css stack), color, bold, italic, mime, quality }
   Engine.addText = async function (src, o = {}) {
