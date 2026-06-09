@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://myfreeimagetool.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/editor/</loc><priority>0.95</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/compress-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/resize-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/convert-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/crop-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/rotate-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/add-watermark/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/image-to-pdf/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/blur-background/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/adjust/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/filters/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/text/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/shapes/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/crop/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/resize/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/remove-background/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/about/</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/privacy/</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/terms/</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/contact/</loc><priority>0.4</priority><changefreq>yearly</changefreq></url>
+</urlset>

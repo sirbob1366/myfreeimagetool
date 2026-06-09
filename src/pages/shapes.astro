@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import ToolShell from '../components/ToolShell.astro';
 ---
 
-<Layout title="Add Shapes to Photo — Free Image Tools">
+<Layout title="Add Shapes to Photo — MyFreeImageTool">
 	<ToolShell
 		title="Add Shapes"
 		subtitle="Overlay rectangles, ellipses, lines, and arrows, then move and scale them."
@@ -24,7 +24,7 @@ import ToolShell from '../components/ToolShell.astro';
 		<div class="control-group" id="shape-controls" hidden>
 			<h3>Selected Shape</h3>
 			<div class="row">
-				<label class="checkbox">Fill <input type="color" id="shape-fill" value="#3e6ae1" /></label>
+				<label class="checkbox">Fill <input type="color" id="shape-fill" value="#e82127" /></label>
 				<label class="checkbox">Stroke <input type="color" id="shape-stroke" value="#171a20" /></label>
 				<label class="checkbox"><input type="checkbox" id="shape-filled" checked /> Filled</label>
 			</div>
@@ -110,7 +110,7 @@ import ToolShell from '../components/ToolShell.astro';
 
 		if (selected && !exporting) {
 			ctx.save();
-			ctx.strokeStyle = '#3e6ae1';
+			ctx.strokeStyle = '#e82127';
 			ctx.lineWidth = Math.max(2, canvas.width / 400);
 			ctx.setLineDash([8, 6]);
 			ctx.strokeRect(
@@ -243,7 +243,7 @@ import ToolShell from '../components/ToolShell.astro';
 					y: canvas.height / 2,
 					w: Math.round(canvas.width * 0.3),
 					h: isLinear ? 0 : Math.round(canvas.height * 0.3),
-					fill: '#3e6ae1',
+					fill: '#e82127',
 					stroke: '#171a20',
 					filled: !isLinear,
 					strokeWidth: isLinear ? Math.max(4, Math.round(canvas.width / 150)) : 4,

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Compress Image — Reduce JPG, PNG &amp; WebP Size Free | MyFreeImageTool</title>
+<meta name="description" content="Compress images online for free. Adjustable quality, see before/after file size. JPG, PNG, WebP — processed in your browser, 100% private, no signup." />
+<link rel="canonical" href="https://myfreeimagetool.com/compress-image/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/compress-image/" />
+<meta property="og:title" content="Compress Image — Free Online Image Compressor" />
+<meta property="og:description" content="Reduce image file size with an adjustable quality slider. Free, private, in-browser." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Compress Image — MyFreeImageTool", "url": "https://myfreeimagetool.com/compress-image/", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" type="button">
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></g></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="currentColor"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 920px;">
+    <div class="tool-header">
+      <h1>Compress Image</h1>
+      <p>Reduce file size with an adjustable quality slider. See the savings before you download.</p>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <h2>Drop an image here or click to choose</h2>
+      <p>JPG, PNG or WebP · your file never leaves your device</p>
+      <input id="file-input" type="file" accept="image/*" />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div class="preview-pane"><canvas id="c"></canvas></div>
+      <div class="controls">
+        <h3>Compression</h3>
+        <div class="field"><label>Quality <span class="range-val" id="q-val">70%</span></label><input type="range" id="q" min="10" max="100" value="70" /></div>
+        <div class="field"><label>Format</label><select id="fmt"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></div>
+        <p class="meta-line">Original: <strong id="m-orig">—</strong></p>
+        <p class="meta-line">Estimated: <strong id="m-new">—</strong> <span id="m-save"></span></p>
+        <button class="btn btn-primary btn-block" id="go" type="button" style="margin-top:14px;">Download compressed</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+
+    <div class="editor-link">
+      <div class="editor-link-text"><strong>Need more than compression?</strong> Resize, crop, convert and more in one place.</div>
+      <a href="/editor/" class="btn btn-primary">Open editor →</a>
+    </div>
+
+    <section style="margin-top: 64px;">
+      <h2 class="section-title" style="font-size: 26px;">About compressing images</h2>
+      <p style="color: var(--text-secondary); font-size: 16px; max-width: 640px; margin: 0 auto;">
+        This tool re-encodes your image at a lower quality to shrink the file, all in your browser using the Canvas API. JPEG and WebP give the biggest savings for photos. Nothing is uploaded — your image stays on your device.
+      </p>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer-row">
+    <a href="/compress-image/">Compress</a>
+    <a href="/resize-image/">Resize</a>
+    <a href="/convert-image/">Convert</a>
+    <a href="/crop-image/">Crop</a>
+    <a href="/rotate-image/">Rotate</a>
+    <a href="/add-watermark/">Watermark</a>
+    <a href="/image-to-pdf/">Image to PDF</a>
+    <a href="/blur-background/">Blur</a>
+    <a href="/editor/">Editor</a>
+    <a href="/about/">About</a>
+    <a href="/privacy/">Privacy</a>
+    <a href="/terms/">Terms</a>
+    <a href="/contact/">Contact</a>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Your images never leave your device</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  let src = null;
+  let debounceTimer;
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
+
+  async function load(file) {
+    try {
+      src = await ImageEngine.loadImage(file);
+      const c = $('#c'); c.width = src.width; c.height = src.height;
+      c.getContext('2d').drawImage(src.img, 0, 0);
+      $('#workbench').style.display = 'grid';
+      $('#m-orig').textContent = ImgUtils.formatBytes(src.size) + ` · ${src.width}×${src.height}`;
+      estimate();
+      ImgUtils.setStatus('');
+    } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
+  }
+  async function estimate() {
+    if (!src) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      const blob = await ImageEngine.compress(src, { quality: Number($('#q').value) / 100, mime: $('#fmt').value });
+      $('#m-new').textContent = ImgUtils.formatBytes(blob.size);
+      const save = src.size ? Math.round((1 - blob.size / src.size) * 100) : 0;
+      $('#m-save').textContent = save > 0 ? `(${save}% smaller)` : '';
+    }, 200);
+  }
+  $('#q').oninput = () => { $('#q-val').textContent = $('#q').value + '%'; estimate(); };
+  $('#fmt').onchange = estimate;
+  $('#go').onclick = async () => {
+    if (!src) return;
+    ImgUtils.setStatus('Compressing…');
+    const blob = await ImageEngine.compress(src, { quality: Number($('#q').value) / 100, mime: $('#fmt').value });
+    ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '_compressed.' + ImageEngine.extFor(blob.type));
+    ImgUtils.setStatus('Downloaded.', 'success');
+  };
+});
+</script>
+</body>
+</html>

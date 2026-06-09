@@ -7,18 +7,18 @@ interface Props {
 }
 
 const {
-	title = 'Free Image Tools — Edit Photos in Your Browser',
+	title = 'Free Image Tools — MyFreeImageTool',
 	description = 'Free online photo editing tools. Adjust colors, apply filters, add text and shapes, crop, resize, and remove backgrounds — all in your browser, no upload required.',
 } = Astro.props;
 
 const tools = [
-	{ href: '/adjust', label: 'Adjust' },
-	{ href: '/filters', label: 'Filters' },
-	{ href: '/text', label: 'Text' },
-	{ href: '/shapes', label: 'Shapes' },
-	{ href: '/crop', label: 'Crop' },
-	{ href: '/resize', label: 'Resize' },
-	{ href: '/remove-background', label: 'Background' },
+	{ href: '/adjust/', label: 'Adjust' },
+	{ href: '/filters/', label: 'Filters' },
+	{ href: '/text/', label: 'Text' },
+	{ href: '/shapes/', label: 'Shapes' },
+	{ href: '/crop/', label: 'Crop' },
+	{ href: '/resize/', label: 'Resize' },
+	{ href: '/remove-background/', label: 'Background' },
 ];
 ---
 
@@ -27,23 +27,68 @@ const tools = [
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- Google Analytics 4 -->
+		<script
+			async
+			is:inline
+			src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+		<script is:inline>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
+			}
+			gtag('js', new Date());
+			gtag('config', 'G-69S8TY48JV');
+		</script>
+
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>
 	</head>
 	<body>
 		<nav class="site-nav">
-			<a href="/" class="wordmark">FREE IMAGE TOOLS</a>
+			<a href="/" class="brand" aria-label="MyFreeImageTool home">
+				<svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+					<path
+						d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.6"
+						stroke-linejoin="round"></path>
+					<circle
+						cx="16"
+						cy="17"
+						r="3.6"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.6"></circle>
+				</svg>
+				<span class="brand-text">MyFreeImageTool</span>
+			</a>
 			<div class="nav-links">
 				{tools.map((t) => <a href={t.href}>{t.label}</a>)}
+				<a href="/editor/">Editor</a>
 			</div>
 		</nav>
 		<main>
 			<slot />
 		</main>
 		<footer class="site-footer">
+			<div class="footer-links">
+				<a href="/">Home</a>
+				<a href="/editor/">Editor</a>
+				<a href="/compress-image/">Compress</a>
+				<a href="/convert-image/">Convert</a>
+				<a href="/add-watermark/">Watermark</a>
+				<a href="/image-to-pdf/">Image to PDF</a>
+				<a href="/blur-background/">Blur</a>
+				<a href="/about/">About</a>
+				<a href="/privacy/">Privacy</a>
+				<a href="/terms/">Terms</a>
+				<a href="/contact/">Contact</a>
+			</div>
 			<p>
 				All editing happens in your browser. Your images never leave your
 				device.

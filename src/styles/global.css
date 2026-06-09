@@ -1,5 +1,6 @@
 :root {
-	--blue: #3e6ae1;
+	--accent: #e82127;
+	--accent-hover: #c8161c;
 	--white: #ffffff;
 	--ash: #f4f4f4;
 	--carbon: #171a20;
@@ -68,12 +69,12 @@ a {
 }
 
 .btn-primary {
-	background: var(--blue);
+	background: var(--accent);
 	color: var(--white);
 }
 
 .btn-primary:hover {
-	background: #3457b1;
+	background: var(--accent-hover);
 }
 
 .btn-secondary {
@@ -119,11 +120,18 @@ a {
 	backdrop-filter: blur(12px);
 }
 
-.site-nav .wordmark {
-	font-size: 14px;
+.site-nav .brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 17px;
 	font-weight: 500;
-	letter-spacing: 4px;
 	color: var(--carbon);
+}
+
+.site-nav .brand-mark {
+	width: 26px;
+	height: 26px;
 }
 
 .site-nav .nav-links {
@@ -152,6 +160,23 @@ a {
 	padding: 40px 24px;
 	text-align: center;
 	color: var(--pewter);
+}
+
+.site-footer .footer-links {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 4px 16px;
+	margin-bottom: 8px;
+}
+
+.site-footer .footer-links a {
+	color: var(--pewter);
+	transition: color 0.33s var(--ease);
+}
+
+.site-footer .footer-links a:hover {
+	color: var(--carbon);
 }
 
 /* ---------- Tool shell ---------- */
@@ -290,7 +315,7 @@ a {
 
 input[type='range'] {
 	width: 100%;
-	accent-color: var(--blue);
+	accent-color: var(--accent);
 }
 
 input[type='text'],
@@ -336,7 +361,7 @@ input[type='color'] {
 }
 
 .checkbox input {
-	accent-color: var(--blue);
+	accent-color: var(--accent);
 }
 
 /* ---------- Filter / preset grids ---------- */
@@ -363,7 +388,7 @@ input[type='color'] {
 }
 
 .preset.active {
-	border-color: var(--blue);
+	border-color: var(--accent);
 	color: var(--carbon);
 }
 
@@ -393,7 +418,7 @@ input[type='color'] {
 
 .layer-item.active {
 	background: var(--cloud);
-	outline: 2px solid var(--blue);
+	outline: 2px solid var(--accent);
 }
 
 .layer-item .layer-name {
@@ -491,7 +516,7 @@ input[type='color'] {
 }
 
 .tool-card .open-link {
-	color: var(--blue);
+	color: var(--accent);
 	font-weight: 500;
 }
 

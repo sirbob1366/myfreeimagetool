@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Image to PDF — Combine Images into a PDF Free | MyFreeImageTool</title>
+<meta name="description" content="Convert images to PDF free. Combine one or many JPG, PNG or WebP files into a single PDF in your browser. No upload, no signup, 100% private." />
+<link rel="canonical" href="https://myfreeimagetool.com/image-to-pdf/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/image-to-pdf/" />
+<meta property="og:title" content="Image to PDF — Free Online" />
+<meta property="og:description" content="Combine images into a PDF in your browser. Free and private." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Image to PDF — MyFreeImageTool", "url": "https://myfreeimagetool.com/image-to-pdf/", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .img-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 20px; }
+  .img-tile { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px; }
+  .img-tile img { width: 100%; height: 96px; object-fit: contain; border-radius: 4px; background: var(--bg-elevated); }
+  .img-tile .rm { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; font-size: 14px; line-height: 1; }
+  .img-tile .idx { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" type="button">
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></g></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="currentColor"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 820px;">
+    <div class="tool-header">
+      <h1>Image to PDF</h1>
+      <p>Combine one or more images into a single PDF — one image per page.</p>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+      <h2>Drop images here or click to choose</h2>
+      <p>Select one or more · your files never leave your device</p>
+      <input id="file-input" type="file" accept="image/*" multiple />
+    </label>
+
+    <div class="img-list" id="list"></div>
+
+    <div class="action-bar" id="bar" style="display:none;">
+      <button class="btn btn-ghost" id="add" type="button">Add more</button>
+      <button class="btn btn-primary" id="go" type="button">Create PDF</button>
+    </div>
+    <div class="status" role="status"></div>
+
+    <div class="editor-link">
+      <div class="editor-link-text"><strong>Editing one image?</strong> Compress, resize, crop and more in the editor.</div>
+      <a href="/editor/" class="btn btn-primary">Open editor →</a>
+    </div>
+
+    <section style="margin-top: 64px;">
+      <h2 class="section-title" style="font-size: 26px;">About image to PDF</h2>
+      <p style="color: var(--text-secondary); font-size: 16px; max-width: 640px; margin: 0 auto;">
+        Each image becomes one page sized to the image, assembled into a PDF with the open-source pdf-lib library — all in your browser. Add images in the order you want them to appear.
+      </p>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer-row">
+    <a href="/compress-image/">Compress</a>
+    <a href="/resize-image/">Resize</a>
+    <a href="/convert-image/">Convert</a>
+    <a href="/crop-image/">Crop</a>
+    <a href="/rotate-image/">Rotate</a>
+    <a href="/add-watermark/">Watermark</a>
+    <a href="/image-to-pdf/">Image to PDF</a>
+    <a href="/blur-background/">Blur</a>
+    <a href="/editor/">Editor</a>
+    <a href="/about/">About</a>
+    <a href="/privacy/">Privacy</a>
+    <a href="/terms/">Terms</a>
+    <a href="/contact/">Contact</a>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Your images never leave your device</small></div>
+</footer>
+
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="/app.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const list = $('#list');
+  let items = []; // { src, url, name }
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), accept: 'image/', multiple: true, onFiles: addFiles });
+  $('#add').onclick = () => $('#file-input').click();
+
+  async function addFiles(files) {
+    for (const f of files) {
+      try { const src = await ImageEngine.loadImage(f); items.push({ src, url: src.url, name: f.name }); } catch (e) {}
+    }
+    render(); ImgUtils.setStatus('');
+  }
+  function render() {
+    list.innerHTML = '';
+    items.forEach((it, i) => {
+      const t = document.createElement('div'); t.className = 'img-tile';
+      t.innerHTML = `<img src="${it.url}" alt="" /><span class="idx">${i + 1}</span><button class="rm" type="button" aria-label="Remove">×</button>`;
+      t.querySelector('.rm').onclick = () => { items.splice(i, 1); render(); };
+      list.appendChild(t);
+    });
+    $('#bar').style.display = items.length ? 'flex' : 'none';
+  }
+  $('#go').onclick = async () => {
+    if (!items.length) return;
+    ImgUtils.setStatus('Building PDF…');
+    try {
+      const bytes = await ImageEngine.imagesToPdf(items.map(i => i.src));
+      ImgUtils.download(new Blob([bytes], { type: 'application/pdf' }), 'images.pdf');
+      ImgUtils.setStatus(`PDF with ${items.length} page(s) downloaded.`, 'success');
+    } catch (e) { console.error(e); ImgUtils.setStatus('Could not build PDF.', 'error'); }
+  };
+});
+</script>
+</body>
+</html>

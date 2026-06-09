@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import ToolShell from '../components/ToolShell.astro';
 ---
 
-<Layout title="Add Text to Photo — Free Image Tools">
+<Layout title="Add Text to Photo — MyFreeImageTool">
 	<ToolShell
 		title="Add Text"
 		subtitle="Place text on your photo, style it, and drag it into position."
@@ -130,7 +130,7 @@ import ToolShell from '../components/ToolShell.astro';
 		if (selected && !exporting) {
 			const box = layerBox(selected);
 			ctx.save();
-			ctx.strokeStyle = '#3e6ae1';
+			ctx.strokeStyle = '#e82127';
 			ctx.lineWidth = Math.max(2, canvas.width / 400);
 			ctx.setLineDash([8, 6]);
 			ctx.strokeRect(

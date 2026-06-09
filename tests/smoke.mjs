@@ -83,13 +83,69 @@ page.on('console', (msg) => {
 	if (msg.type() === 'error') consoleErrors.push(msg.text());
 });
 
-// ---------- Homepage ----------
+// ---------- Homepage (restored old site) ----------
 console.log('home');
 await page.goto(`${BASE}/`);
-check('home: hero renders', await page.locator('.hero h1').isVisible());
 check(
-	'home: 7 tool cards',
-	(await page.locator('.tool-card').count()) === 7,
+	'home: MyFreeImageTool homepage loads',
+	(await page.title()).includes('MyFreeImageTool'),
+);
+check('home: hero renders', await page.locator('.hero-title').isVisible());
+check(
+	'home: 15 tool tiles (8 old + 7 new)',
+	(await page.locator('.tile').count()) === 15,
+	`count=${await page.locator('.tile').count()}`,
+);
+for (const href of [
+	'/adjust/',
+	'/filters/',
+	'/text/',
+	'/shapes/',
+	'/crop/',
+	'/resize/',
+	'/remove-background/',
+	'/editor/',
+	'/compress-image/',
+]) {
+	check(
+		`home: links to ${href}`,
+		(await page.locator(`a[href="${href}"]`).count()) > 0,
+	);
+}
+check('home: FAQ section present', (await page.locator('#faq').count()) === 1);
+
+// ---------- Old site pages still serve ----------
+console.log('old pages');
+for (const path of [
+	'/editor/',
+	'/compress-image/',
+	'/resize-image/',
+	'/convert-image/',
+	'/crop-image/',
+	'/rotate-image/',
+	'/add-watermark/',
+	'/image-to-pdf/',
+	'/blur-background/',
+	'/about/',
+	'/privacy/',
+	'/terms/',
+	'/contact/',
+]) {
+	const res = await page.goto(`${BASE}${path}`);
+	check(`old page ${path} returns 200`, res !== null && res.status() === 200);
+}
+// The old editor should boot without errors.
+await page.goto(`${BASE}/editor/`);
+await page.waitForTimeout(400);
+check(
+	'old editor page renders its UI',
+	(await page.locator('canvas, #file-input, input[type=file]').count()) > 0,
+);
+const oldSiteErrors = consoleErrors.length;
+check(
+	'old pages load without console errors',
+	oldSiteErrors === 0,
+	consoleErrors.slice(0, 5).join(' | '),
 );
 
 // ---------- Adjust ----------
@@ -200,12 +256,12 @@ check(
 );
 await page.waitForTimeout(100);
 const rectPixel = await pixelAt(page, 120, 80);
-// Default fill is #3e6ae1.
+// Default fill is #e82127.
 check(
 	'shapes: blue rectangle drawn at center',
-	Math.abs(rectPixel[0] - 0x3e) < 12 &&
-		Math.abs(rectPixel[1] - 0x6a) < 12 &&
-		Math.abs(rectPixel[2] - 0xe1) < 12,
+	Math.abs(rectPixel[0] - 0xe8) < 12 &&
+		Math.abs(rectPixel[1] - 0x21) < 12 &&
+		Math.abs(rectPixel[2] - 0x27) < 12,
 	`pixel=${rectPixel}`,
 );
 await page.click('[data-shape="arrow"]');
