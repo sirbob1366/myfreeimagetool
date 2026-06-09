@@ -1,0 +1,191 @@
+/* ===========================================================
+   image-engine.js — Shared client-side image operations (Canvas API)
+   All tool pages and the unified editor use these functions.
+   pdf-lib (global PDFLib) is only needed for imageToPdf().
+   =========================================================== */
+
+(function () {
+  'use strict';
+  const Engine = {};
+
+  // ---------- Load ----------
+  // Returns { img, width, height, name, type, size }
+  Engine.loadImage = function (file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        resolve({ img, width: img.naturalWidth, height: img.naturalHeight, name: file.name, type: file.type || 'image/png', size: file.size, url });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not load image')); };
+      img.src = url;
+    });
+  };
+
+  function makeCanvas(w, h) {
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w));
+    c.height = Math.max(1, Math.round(h));
+    return c;
+  }
+
+  // mime helpers
+  Engine.mimeFor = function (format) {
+    return format === 'jpg' || format === 'jpeg' ? 'image/jpeg'
+      : format === 'webp' ? 'image/webp'
+      : 'image/png';
+  };
+  Engine.extFor = function (mime) {
+    return mime === 'image/jpeg' ? 'jpg' : mime === 'image/webp' ? 'webp' : 'png';
+  };
+
+  function toBlob(canvas, mime, quality) {
+    return new Promise(resolve => canvas.toBlob(b => resolve(b), mime, quality));
+  }
+
+  // Draw onto a white background for formats without alpha (JPEG).
+  function drawImage(ctx, img, w, h, mime) {
+    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); }
+    ctx.drawImage(img, 0, 0, w, h);
+  }
+
+  // ---------- Compress ----------
+  // opts: { quality 0..1, mime } — keeps original dimensions
+  Engine.compress = async function (src, opts = {}) {
+    const mime = opts.mime || (src.type === 'image/png' ? 'image/jpeg' : src.type) || 'image/jpeg';
+    const quality = opts.quality ?? 0.7;
+    const canvas = makeCanvas(src.width, src.height);
+    const ctx = canvas.getContext('2d');
+    drawImage(ctx, src.img, canvas.width, canvas.height, mime);
+    return toBlob(canvas, mime, quality);
+  };
+
+  // ---------- Resize ----------
+  // opts: { width, height, mime, quality }
+  Engine.resize = async function (src, opts = {}) {
+    const mime = opts.mime || src.type || 'image/png';
+    const canvas = makeCanvas(opts.width || src.width, opts.height || src.height);
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    drawImage(ctx, src.img, canvas.width, canvas.height, mime);
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // ---------- Convert ----------
+  // opts: { mime, quality }
+  Engine.convert = async function (src, opts = {}) {
+    const mime = opts.mime || 'image/png';
+    const canvas = makeCanvas(src.width, src.height);
+    const ctx = canvas.getContext('2d');
+    drawImage(ctx, src.img, canvas.width, canvas.height, mime);
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // ---------- Crop ----------
+  // rect: { x, y, w, h } in source-image pixels
+  Engine.crop = async function (src, rect, opts = {}) {
+    const mime = opts.mime || src.type || 'image/png';
+    const canvas = makeCanvas(rect.w, rect.h);
+    const ctx = canvas.getContext('2d');
+    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.drawImage(src.img, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // ---------- Rotate & flip ----------
+  // opts: { deg (0/90/180/270), flipH, flipV, mime, quality }
+  Engine.transform = async function (src, opts = {}) {
+    const mime = opts.mime || src.type || 'image/png';
+    const deg = ((opts.deg || 0) % 360 + 360) % 360;
+    const swap = deg === 90 || deg === 270;
+    const w = src.width, h = src.height;
+    const canvas = makeCanvas(swap ? h : w, swap ? w : h);
+    const ctx = canvas.getContext('2d');
+    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(deg * Math.PI / 180);
+    ctx.scale(opts.flipH ? -1 : 1, opts.flipV ? -1 : 1);
+    ctx.drawImage(src.img, -w / 2, -h / 2, w, h);
+    ctx.restore();
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // ---------- Watermark ----------
+  // opts: { text, fontSize, opacity 0..1, color, position, mime, quality }
+  // position: top-left|top-right|center|bottom-left|bottom-right
+  Engine.watermark = async function (src, opts = {}) {
+    const mime = opts.mime || src.type || 'image/png';
+    const canvas = makeCanvas(src.width, src.height);
+    const ctx = canvas.getContext('2d');
+    drawImage(ctx, src.img, canvas.width, canvas.height, mime);
+    const text = opts.text || 'Watermark';
+    const size = opts.fontSize || Math.round(canvas.width * 0.06);
+    ctx.font = `600 ${size}px -apple-system, Helvetica, Arial, sans-serif`;
+    ctx.fillStyle = opts.color || '#ffffff';
+    ctx.globalAlpha = opts.opacity ?? 0.5;
+    ctx.textBaseline = 'middle';
+    const m = ctx.measureText(text);
+    const pad = Math.round(size * 0.6);
+    let x = pad, y = pad + size / 2;
+    const pos = opts.position || 'bottom-right';
+    if (pos.includes('right')) x = canvas.width - m.width - pad;
+    if (pos.includes('bottom')) y = canvas.height - pad - size / 2;
+    if (pos === 'center') { x = (canvas.width - m.width) / 2; y = canvas.height / 2; }
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = Math.max(2, size * 0.06);
+    ctx.fillText(text, x, y);
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // ---------- Blur background (center focus) ----------
+  // opts: { blur (px), focus (0..1 of min dimension as clear radius), mime, quality }
+  Engine.blurBackground = async function (src, opts = {}) {
+    const mime = opts.mime || src.type || 'image/png';
+    const w = src.width, h = src.height;
+    const canvas = makeCanvas(w, h);
+    const ctx = canvas.getContext('2d');
+
+    // 1) blurred base
+    ctx.filter = `blur(${opts.blur ?? 12}px)`;
+    drawImage(ctx, src.img, w, h, mime);
+    ctx.filter = 'none';
+
+    // 2) sharp center, feathered with a radial mask
+    const sharp = makeCanvas(w, h);
+    const sctx = sharp.getContext('2d');
+    sctx.drawImage(src.img, 0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+    const min = Math.min(w, h);
+    const clear = (opts.focus ?? 0.42) * min;
+    const grad = sctx.createRadialGradient(cx, cy, clear * 0.6, cx, cy, clear);
+    grad.addColorStop(0, 'rgba(0,0,0,1)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    sctx.globalCompositeOperation = 'destination-in';
+    sctx.fillStyle = grad;
+    sctx.fillRect(0, 0, w, h);
+    sctx.globalCompositeOperation = 'source-over';
+
+    ctx.drawImage(sharp, 0, 0);
+    return toBlob(canvas, mime, opts.quality ?? 0.92);
+  };
+
+  // ---------- Images to PDF ----------
+  // sources: [{ img, width, height }]. opts: { fit: 'page' (A4-ish auto) }
+  Engine.imagesToPdf = async function (sources) {
+    const doc = await PDFLib.PDFDocument.create();
+    for (const s of sources) {
+      // Re-encode each image to PNG bytes for embedding (robust for any source type)
+      const canvas = makeCanvas(s.width, s.height);
+      canvas.getContext('2d').drawImage(s.img, 0, 0, s.width, s.height);
+      const blob = await toBlob(canvas, 'image/png');
+      const bytes = await blob.arrayBuffer();
+      const png = await doc.embedPng(bytes);
+      const page = doc.addPage([s.width, s.height]);
+      page.drawImage(png, { x: 0, y: 0, width: s.width, height: s.height });
+    }
+    return doc.save();
+  };
+
+  window.ImageEngine = Engine;
+})();

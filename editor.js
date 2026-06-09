@@ -1,0 +1,401 @@
+/* ===========================================================
+   editor.js — Unified image editor controller
+   Loads one image, then applies tools (compress/resize/convert/crop/
+   rotate/watermark/blur/to-pdf) in sequence. Each apply produces a new
+   image you keep editing. Undo/redo over the image history.
+   =========================================================== */
+
+(function () {
+  'use strict';
+
+  const state = {
+    src: null,            // { img, width, height, name, type, size }
+    currentTool: null,
+    baseName: 'image',
+    cropRect: null,       // display-space rect while cropping
+    history: [],          // array of { blob, name, type }
+    histIndex: -1,
+    original: null        // first loaded blob for Reset
+  };
+
+  const $ = s => document.querySelector(s);
+  const dropzone = $('#dropzone');
+  const fileInput = $('#file-input');
+  const addInput = $('#add-image-input');
+  const emptyEl = $('#editor-empty');
+  const toolbar = $('#viewer-toolbar');
+  const stage = $('#image-stage');
+  const canvas = $('#img-canvas');
+  const ctx = canvas.getContext('2d');
+  const cropOverlay = $('#crop-overlay');
+  const actionBar = $('#editor-actionbar');
+  const abSummary = $('#ab-summary');
+  const vtFile = $('#vt-file');
+  const undoBtn = $('#undo-btn');
+  const redoBtn = $('#redo-btn');
+  const resetBtn = $('#reset-btn');
+  const inspectorTitle = $('#inspector-title');
+  const inspectorHint = $('#inspector-hint');
+  const inspectorBody = $('#inspector-body');
+
+  // ---------- Loading ----------
+  ImgUtils.attachDropzone({ dropzone, input: fileInput, onFiles: files => loadFile(files[0]) });
+
+  async function loadFile(file) {
+    ImgUtils.setStatus('Loading…');
+    try {
+      const src = await ImageEngine.loadImage(file);
+      state.src = src;
+      state.baseName = ImgUtils.stripExt(file.name) || 'image';
+      state.original = file;
+      emptyEl.style.display = 'none';
+      stage.style.display = 'block';
+      toolbar.style.display = 'flex';
+      actionBar.style.display = 'flex';
+      document.querySelectorAll('.tool-btn').forEach(b => b.disabled = false);
+      renderViewer();
+      // history starts with the loaded image
+      state.history = [{ blob: file, name: file.name, type: src.type }];
+      state.histIndex = 0;
+      updateHistoryButtons();
+      setTool('compress');
+      ImgUtils.setStatus('');
+    } catch (e) {
+      console.error(e);
+      ImgUtils.setStatus('Could not open this image.', 'error');
+    }
+  }
+
+  // Reload the working image from a Blob (after an op). Keeps chaining.
+  async function setImageFromBlob(blob, name) {
+    const file = new File([blob], name || (state.baseName + '.' + ImageEngine.extFor(blob.type)), { type: blob.type });
+    state.src = await ImageEngine.loadImage(file);
+    renderViewer();
+    updateSummary();
+  }
+
+  // ---------- Viewer ----------
+  function renderViewer() {
+    const s = state.src;
+    canvas.width = s.width;
+    canvas.height = s.height;
+    ctx.clearRect(0, 0, s.width, s.height);
+    ctx.drawImage(s.img, 0, 0, s.width, s.height);
+    // fit within viewer via CSS
+    canvas.style.maxWidth = '100%';
+    canvas.style.maxHeight = '72vh';
+    canvas.style.width = 'auto';
+    canvas.style.height = 'auto';
+    vtFile.textContent = `${s.name} · ${s.width}×${s.height} · ${ImgUtils.formatBytes(s.size)}`;
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const s = state.src;
+    if (s) abSummary.innerHTML = `<strong>${s.width}×${s.height}</strong> · ${ImageEngine.extFor(s.type).toUpperCase()} · ${ImgUtils.formatBytes(s.size)}`;
+  }
+
+  // ---------- History ----------
+  function pushHistory(blob, name) {
+    if (state.histIndex < state.history.length - 1) state.history = state.history.slice(0, state.histIndex + 1);
+    state.history.push({ blob, name, type: blob.type });
+    if (state.history.length > 30) state.history.shift();
+    state.histIndex = state.history.length - 1;
+    updateHistoryButtons();
+  }
+  async function restoreHistory(i) {
+    const h = state.history[i];
+    state.histIndex = i;
+    await setImageFromBlob(h.blob, h.name);
+    updateHistoryButtons();
+  }
+  function updateHistoryButtons() {
+    if (undoBtn) undoBtn.disabled = state.histIndex <= 0;
+    if (redoBtn) redoBtn.disabled = state.histIndex >= state.history.length - 1;
+  }
+  undoBtn.onclick = () => { if (state.histIndex > 0) restoreHistory(state.histIndex - 1); };
+  redoBtn.onclick = () => { if (state.histIndex < state.history.length - 1) restoreHistory(state.histIndex + 1); };
+  resetBtn.onclick = () => { if (state.original) { state.history = []; setImageFromBlob(state.original, state.original.name).then(() => { pushHistory(state.original, state.original.name); }); } };
+
+  document.addEventListener('keydown', e => {
+    if (!state.src) return;
+    const t = document.activeElement && document.activeElement.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undoBtn.click(); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); redoBtn.click(); }
+  });
+
+  // Run an op, commit to history, keep editing.
+  async function applyOp(producer, statusMsg) {
+    ImgUtils.setStatus(statusMsg || 'Working…');
+    try {
+      const blob = await producer();
+      const name = state.baseName + '.' + ImageEngine.extFor(blob.type);
+      await setImageFromBlob(blob, name);
+      pushHistory(blob, name);
+      ImgUtils.setStatus('Applied.', 'success');
+    } catch (e) { console.error(e); ImgUtils.setStatus('That operation failed.', 'error'); }
+  }
+
+  // ---------- Tools ----------
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tool = btn.dataset.tool;
+      if (tool === 'open') { fileInput.click(); return; }
+      if (tool === 'download') { downloadCurrent(); return; }
+      if (!state.src) return;
+      setTool(tool);
+    });
+  });
+
+  function setTool(tool) {
+    state.currentTool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
+    cropOverlay.style.display = 'none';
+    cropOverlay.innerHTML = '';
+    state.cropRect = null;
+    renderViewer(); // reset any live preview
+    showInspector(tool);
+  }
+
+  function downloadCurrent() {
+    if (!state.src) return;
+    canvas.toBlob(b => ImgUtils.download(b, state.baseName + '.' + ImageEngine.extFor(state.src.type)), state.src.type, 0.95);
+  }
+  $('#download-btn').onclick = downloadCurrent;
+
+  // ---------- Inspector ----------
+  function showInspector(tool) {
+    inspectorBody.innerHTML = '';
+    if (tool === 'compress') return inspCompress();
+    if (tool === 'resize') return inspResize();
+    if (tool === 'convert') return inspConvert();
+    if (tool === 'crop') return inspCrop();
+    if (tool === 'rotate') return inspRotate();
+    if (tool === 'watermark') return inspWatermark();
+    if (tool === 'blur') return inspBlur();
+    if (tool === 'topdf') return inspToPdf();
+  }
+
+  function inspCompress() {
+    inspectorTitle.textContent = 'Compress';
+    inspectorHint.textContent = 'Lower quality = smaller file. JPEG/WebP compress best.';
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Quality <span class="range-val" id="cq-val">70%</span></label>
+        <input type="range" id="cq" min="10" max="100" value="70" /></div>
+      <div class="field"><label>Format</label>
+        <select id="cf"><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></select></div>
+      <button class="btn btn-primary btn-block" id="cgo" type="button">Apply compression</button>
+    `;
+    $('#cq').oninput = () => $('#cq-val').textContent = $('#cq').value + '%';
+    $('#cgo').onclick = () => applyOp(() => ImageEngine.compress(state.src, { quality: Number($('#cq').value) / 100, mime: $('#cf').value }), 'Compressing…');
+  }
+
+  function inspResize() {
+    inspectorTitle.textContent = 'Resize';
+    inspectorHint.textContent = 'Set new dimensions. Aspect ratio is kept by default.';
+    const s = state.src;
+    inspectorBody.innerHTML = `
+      <div class="field-row">
+        <div class="field"><label>Width (px)</label><input type="number" id="rw" value="${s.width}" min="1" /></div>
+        <div class="field"><label>Height (px)</label><input type="number" id="rh" value="${s.height}" min="1" /></div>
+      </div>
+      <div class="field"><label>Scale</label>
+        <select id="rscale"><option value="">Custom</option><option value="0.25">25%</option><option value="0.5">50%</option><option value="0.75">75%</option></select></div>
+      <label class="check"><input type="checkbox" id="rlock" checked /> Maintain aspect ratio</label>
+      <button class="btn btn-primary btn-block" id="rgo" type="button" style="margin-top:12px;">Apply resize</button>
+    `;
+    const aspect = s.width / s.height;
+    const rw = $('#rw'), rh = $('#rh'), lock = $('#rlock');
+    rw.oninput = () => { if (lock.checked) rh.value = Math.round(rw.value / aspect); };
+    rh.oninput = () => { if (lock.checked) rw.value = Math.round(rh.value * aspect); };
+    $('#rscale').onchange = () => { const f = Number($('#rscale').value); if (f) { rw.value = Math.round(s.width * f); rh.value = Math.round(s.height * f); } };
+    $('#rgo').onclick = () => applyOp(() => ImageEngine.resize(state.src, { width: Number(rw.value), height: Number(rh.value), mime: state.src.type }), 'Resizing…');
+  }
+
+  function inspConvert() {
+    inspectorTitle.textContent = 'Convert';
+    inspectorHint.textContent = 'Change the file format.';
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Convert to</label>
+        <select id="cvf"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option></select></div>
+      <button class="btn btn-primary btn-block" id="cvgo" type="button">Convert</button>
+    `;
+    $('#cvgo').onclick = () => applyOp(() => ImageEngine.convert(state.src, { mime: $('#cvf').value }), 'Converting…');
+  }
+
+  function inspRotate() {
+    inspectorTitle.textContent = 'Rotate & Flip';
+    inspectorHint.textContent = 'Each action applies immediately.';
+    inspectorBody.innerHTML = `
+      <div class="field-row">
+        <button class="btn btn-ghost" id="rl" type="button">↺ 90° left</button>
+        <button class="btn btn-ghost" id="rr" type="button">↻ 90° right</button>
+      </div>
+      <button class="btn btn-ghost btn-block" id="r180" type="button" style="margin-top:8px;">180°</button>
+      <div class="divider"></div>
+      <div class="field-row">
+        <button class="btn btn-ghost" id="fh" type="button">⇋ Flip H</button>
+        <button class="btn btn-ghost" id="fv" type="button">⇅ Flip V</button>
+      </div>
+    `;
+    const t = (o, msg) => applyOp(() => ImageEngine.transform(state.src, { ...o, mime: state.src.type }), msg);
+    $('#rl').onclick = () => t({ deg: 270 }, 'Rotating…');
+    $('#rr').onclick = () => t({ deg: 90 }, 'Rotating…');
+    $('#r180').onclick = () => t({ deg: 180 }, 'Rotating…');
+    $('#fh').onclick = () => t({ flipH: true }, 'Flipping…');
+    $('#fv').onclick = () => t({ flipV: true }, 'Flipping…');
+  }
+
+  function inspWatermark() {
+    inspectorTitle.textContent = 'Watermark';
+    inspectorHint.textContent = 'Live preview updates as you type.';
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Text</label><input type="text" id="wt" value="© MyFreeImageTool" /></div>
+      <div class="field-row">
+        <div class="field"><label>Size <span class="range-val" id="ws-val"></span></label><input type="range" id="ws" min="10" max="200" value="${Math.round(state.src.width * 0.06)}" /></div>
+      </div>
+      <div class="field"><label>Opacity <span class="range-val" id="wo-val">50%</span></label><input type="range" id="wo" min="5" max="100" value="50" /></div>
+      <div class="field-row">
+        <div class="field"><label>Colour</label><input type="color" id="wc" value="#ffffff" /></div>
+        <div class="field"><label>Position</label>
+          <select id="wp"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="center">Center</option><option value="top-right">Top right</option><option value="top-left">Top left</option></select></div>
+      </div>
+      <button class="btn btn-primary btn-block" id="wgo" type="button">Apply watermark</button>
+    `;
+    const opts = () => ({ text: $('#wt').value, fontSize: Number($('#ws').value), opacity: Number($('#wo').value) / 100, color: $('#wc').value, position: $('#wp').value });
+    const preview = () => {
+      $('#ws-val').textContent = $('#ws').value + 'px';
+      $('#wo-val').textContent = $('#wo').value + '%';
+      drawWatermarkPreview(opts());
+    };
+    ['input', 'change'].forEach(ev => inspectorBody.addEventListener(ev, preview));
+    preview();
+    $('#wgo').onclick = () => applyOp(() => ImageEngine.watermark(state.src, { ...opts(), mime: state.src.type }), 'Adding watermark…');
+  }
+
+  function drawWatermarkPreview(o) {
+    renderViewer();
+    const text = o.text || '';
+    if (!text) return;
+    ctx.save();
+    ctx.font = `600 ${o.fontSize}px -apple-system, Helvetica, Arial, sans-serif`;
+    ctx.fillStyle = o.color; ctx.globalAlpha = o.opacity; ctx.textBaseline = 'middle';
+    const m = ctx.measureText(text); const pad = Math.round(o.fontSize * 0.6);
+    let x = pad, y = pad + o.fontSize / 2;
+    if (o.position.includes('right')) x = canvas.width - m.width - pad;
+    if (o.position.includes('bottom')) y = canvas.height - pad - o.fontSize / 2;
+    if (o.position === 'center') { x = (canvas.width - m.width) / 2; y = canvas.height / 2; }
+    ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = Math.max(2, o.fontSize * 0.06);
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function inspBlur() {
+    inspectorTitle.textContent = 'Blur background';
+    inspectorHint.textContent = 'Keeps the centre sharp and blurs the rest.';
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Blur strength <span class="range-val" id="bb-val">12px</span></label><input type="range" id="bb" min="2" max="40" value="12" /></div>
+      <div class="field"><label>Focus size <span class="range-val" id="bf-val">42%</span></label><input type="range" id="bf" min="15" max="80" value="42" /></div>
+      <button class="btn btn-primary btn-block" id="bgo" type="button">Apply blur</button>
+    `;
+    $('#bb').oninput = () => $('#bb-val').textContent = $('#bb').value + 'px';
+    $('#bf').oninput = () => $('#bf-val').textContent = $('#bf').value + '%';
+    $('#bgo').onclick = () => applyOp(() => ImageEngine.blurBackground(state.src, { blur: Number($('#bb').value), focus: Number($('#bf').value) / 100, mime: state.src.type }), 'Blurring…');
+  }
+
+  function inspToPdf() {
+    inspectorTitle.textContent = 'Image to PDF';
+    inspectorHint.textContent = 'Save the current image as a one-page PDF, or add more images for a multi-page PDF.';
+    inspectorBody.innerHTML = `
+      <button class="btn btn-primary btn-block" id="pdf-one" type="button">Save current as PDF</button>
+      <div class="divider"></div>
+      <button class="btn btn-ghost btn-block" id="pdf-more" type="button">Add more images &amp; make PDF</button>
+    `;
+    $('#pdf-one').onclick = async () => {
+      ImgUtils.setStatus('Building PDF…');
+      try {
+        const bytes = await ImageEngine.imagesToPdf([state.src]);
+        ImgUtils.download(new Blob([bytes], { type: 'application/pdf' }), state.baseName + '.pdf');
+        ImgUtils.setStatus('PDF downloaded.', 'success');
+      } catch (e) { console.error(e); ImgUtils.setStatus('Could not build PDF.', 'error'); }
+    };
+    $('#pdf-more').onclick = () => addInput.click();
+  }
+
+  addInput.addEventListener('change', async e => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    ImgUtils.setStatus('Building PDF…');
+    try {
+      const extra = [];
+      for (const f of files) extra.push(await ImageEngine.loadImage(f));
+      const bytes = await ImageEngine.imagesToPdf([state.src, ...extra]);
+      ImgUtils.download(new Blob([bytes], { type: 'application/pdf' }), state.baseName + '_album.pdf');
+      ImgUtils.setStatus(`PDF with ${extra.length + 1} pages downloaded.`, 'success');
+    } catch (e) { console.error(e); ImgUtils.setStatus('Could not build PDF.', 'error'); }
+    addInput.value = '';
+  });
+
+  // ---------- Crop ----------
+  function inspCrop() {
+    inspectorTitle.textContent = 'Crop';
+    inspectorHint.textContent = 'Drag on the image to select an area, then apply.';
+    inspectorBody.innerHTML = `
+      <div class="meta-line" id="crop-meta">Drag a selection on the image.</div>
+      <button class="btn btn-primary btn-block" id="crop-go" type="button" style="margin-top:12px;" disabled>Apply crop</button>
+      <button class="btn btn-ghost btn-block" id="crop-clear" type="button" style="margin-top:8px;">Clear selection</button>
+    `;
+    cropOverlay.style.display = 'block';
+    cropOverlay.innerHTML = '';
+    state.cropRect = null;
+    setupCropDrag();
+    $('#crop-clear').onclick = () => { cropOverlay.innerHTML = ''; state.cropRect = null; $('#crop-go').disabled = true; $('#crop-meta').textContent = 'Drag a selection on the image.'; };
+    $('#crop-go').onclick = () => {
+      if (!state.cropRect) return;
+      const scaleX = state.src.width / canvas.getBoundingClientRect().width;
+      const scaleY = state.src.height / canvas.getBoundingClientRect().height;
+      const r = state.cropRect;
+      const rect = {
+        x: Math.round(r.x * scaleX), y: Math.round(r.y * scaleY),
+        w: Math.round(r.w * scaleX), h: Math.round(r.h * scaleY)
+      };
+      if (rect.w < 2 || rect.h < 2) return;
+      applyOp(() => ImageEngine.crop(state.src, rect, { mime: state.src.type }), 'Cropping…').then(() => setTool('crop'));
+    };
+  }
+
+  function setupCropDrag() {
+    let box = null, start = null;
+    cropOverlay.onpointerdown = e => {
+      const r = cropOverlay.getBoundingClientRect();
+      start = { x: e.clientX - r.left, y: e.clientY - r.top };
+      box = document.createElement('div');
+      box.className = 'crop-rect';
+      cropOverlay.innerHTML = '';
+      cropOverlay.appendChild(box);
+      const move = ev => {
+        const x = Math.max(0, Math.min(ev.clientX - r.left, r.width));
+        const y = Math.max(0, Math.min(ev.clientY - r.top, r.height));
+        const left = Math.min(x, start.x), top = Math.min(y, start.y);
+        const w = Math.abs(x - start.x), h = Math.abs(y - start.y);
+        box.style.left = left + 'px'; box.style.top = top + 'px';
+        box.style.width = w + 'px'; box.style.height = h + 'px';
+        state.cropRect = { x: left, y: top, w, h };
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        const go = $('#crop-go'), meta = $('#crop-meta');
+        if (state.cropRect && state.cropRect.w > 4 && state.cropRect.h > 4) {
+          if (go) go.disabled = false;
+          const sx = state.src.width / r.width, sy = state.src.height / r.height;
+          if (meta) meta.innerHTML = `Selection: <strong>${Math.round(state.cropRect.w * sx)}×${Math.round(state.cropRect.h * sy)}</strong> px`;
+        }
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    };
+  }
+
+})();
