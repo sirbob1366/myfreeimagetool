@@ -252,6 +252,15 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .meta-line { font-size: 13px; color: var(--text-muted); margin: 8px 0 0; }
 .meta-line strong { color: var(--text); }
 
+/* Layers panel */
+.layer-list { display: flex; flex-direction: column; gap: 6px; }
+.layer-row { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; }
+.layer-row.layer-bg { opacity: 0.75; }
+.layer-row .lr-name { flex: 1; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-btn { width: 26px; height: 26px; border: none; background: var(--bg-elevated); border-radius: 6px; color: var(--text); font-size: 13px; line-height: 1; flex-shrink: 0; }
+.lr-btn:hover:not([disabled]) { background: var(--border); }
+.lr-btn[disabled] { opacity: 0.5; }
+
 /* Segmented buttons */
 .seg { display: flex; gap: 6px; flex-wrap: wrap; }
 .seg button { flex: 1; min-width: 56px; padding: 8px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 8px; color: var(--text); font-size: 13px; }

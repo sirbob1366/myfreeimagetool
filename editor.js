@@ -14,6 +14,8 @@
     baseName: 'image',
     cropRect: null,       // display-space rect while cropping
     textPos: null,        // { x, y } image-space anchor for the text tool
+    objects: [],          // non-destructive overlay: draw strokes + shapes (image coords)
+    selectedObjId: null,
     history: [],          // array of { blob, name, type }
     histIndex: -1,
     original: null        // first loaded blob for Reset
@@ -82,6 +84,7 @@
     canvas.height = s.height;
     ctx.clearRect(0, 0, s.width, s.height);
     ctx.drawImage(s.img, 0, 0, s.width, s.height);
+    drawObjects(ctx);
     // fit within viewer via CSS
     canvas.style.maxWidth = '100%';
     canvas.style.maxHeight = '72vh';
@@ -94,6 +97,69 @@
   function updateSummary() {
     const s = state.src;
     if (s) abSummary.innerHTML = `<strong>${s.width}×${s.height}</strong> · ${ImageEngine.extFor(s.type).toUpperCase()} · ${ImgUtils.formatBytes(s.size)}`;
+  }
+
+  // ---------- Overlay objects (draw / shapes) ----------
+  const uid = () => 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  function drawObjects(cx, list) {
+    (list || state.objects).forEach(o => {
+      if (o.visible === false) return;
+      cx.save();
+      cx.strokeStyle = o.color; cx.fillStyle = o.color; cx.lineWidth = o.width || o.stroke || 4;
+      cx.lineCap = 'round'; cx.lineJoin = 'round';
+      if (o.kind === 'draw') {
+        cx.beginPath();
+        o.points.forEach((p, i) => i ? cx.lineTo(p[0], p[1]) : cx.moveTo(p[0], p[1]));
+        cx.stroke();
+      } else if (o.kind === 'shape') {
+        drawShape(cx, o);
+      }
+      cx.restore();
+    });
+  }
+
+  function drawShape(cx, o) {
+    const x = Math.min(o.sx, o.ex), y = Math.min(o.sy, o.ey), w = Math.abs(o.ex - o.sx), h = Math.abs(o.ey - o.sy);
+    if (o.shape === 'rect') { o.fill ? cx.fillRect(x, y, w, h) : cx.strokeRect(x, y, w, h); }
+    else if (o.shape === 'ellipse') {
+      cx.beginPath(); cx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+      o.fill ? cx.fill() : cx.stroke();
+    } else if (o.shape === 'line' || o.shape === 'arrow') {
+      cx.beginPath(); cx.moveTo(o.sx, o.sy); cx.lineTo(o.ex, o.ey); cx.stroke();
+      if (o.shape === 'arrow') {
+        const a = Math.atan2(o.ey - o.sy, o.ex - o.sx), len = Math.max(10, (o.stroke || 4) * 3.2);
+        cx.beginPath(); cx.moveTo(o.ex, o.ey);
+        cx.lineTo(o.ex - len * Math.cos(a - 0.4), o.ey - len * Math.sin(a - 0.4));
+        cx.moveTo(o.ex, o.ey);
+        cx.lineTo(o.ex - len * Math.cos(a + 0.4), o.ey - len * Math.sin(a + 0.4));
+        cx.stroke();
+      }
+    }
+  }
+
+  function compositeCanvas() {
+    const c = document.createElement('canvas');
+    c.width = state.src.width; c.height = state.src.height;
+    const cx = c.getContext('2d');
+    cx.drawImage(state.src.img, 0, 0);
+    drawObjects(cx);
+    return c;
+  }
+
+  // Bake overlay objects into the base image (called before destructive ops / export).
+  async function flattenObjects() {
+    if (!state.objects.length) return;
+    const c = compositeCanvas();
+    const blob = await new Promise(r => c.toBlob(r, state.src.type || 'image/png', 0.95));
+    state.objects = []; state.selectedObjId = null;
+    await setImageFromBlob(blob, state.src.name);
+  }
+
+  // map a pointer event to image-space coords
+  function toImagePoint(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * (state.src.width / r.width), y: (e.clientY - r.top) * (state.src.height / r.height) };
   }
 
   // ---------- History ----------
@@ -130,6 +196,7 @@
   async function applyOp(producer, statusMsg) {
     ImgUtils.setStatus(statusMsg || 'Working…');
     try {
+      await flattenObjects(); // bake any draw/shape overlay into the base first
       const blob = await producer();
       const name = state.baseName + '.' + ImageEngine.extFor(blob.type);
       await setImageFromBlob(blob, name);
@@ -154,6 +221,7 @@
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
     cropOverlay.style.display = 'none';
     cropOverlay.innerHTML = '';
+    cropOverlay.onpointerdown = null;
     state.cropRect = null;
     renderViewer(); // reset any live preview
     showInspector(tool);
@@ -161,7 +229,7 @@
 
   function downloadCurrent() {
     if (!state.src) return;
-    canvas.toBlob(b => ImgUtils.download(b, state.baseName + '.' + ImageEngine.extFor(state.src.type)), state.src.type, 0.95);
+    compositeCanvas().toBlob(b => ImgUtils.download(b, state.baseName + '.' + ImageEngine.extFor(state.src.type)), state.src.type, 0.95);
   }
   $('#download-btn').onclick = downloadCurrent;
 
@@ -169,6 +237,9 @@
   function showInspector(tool) {
     inspectorBody.innerHTML = '';
     if (tool === 'text') return inspText();
+    if (tool === 'draw') return inspDraw();
+    if (tool === 'shapes') return inspShapes();
+    if (tool === 'layers') return inspLayers();
     if (tool === 'filters') return inspFilters();
     if (tool === 'compress') return inspCompress();
     if (tool === 'resize') return inspResize();
@@ -178,6 +249,105 @@
     if (tool === 'watermark') return inspWatermark();
     if (tool === 'blur') return inspBlur();
     if (tool === 'topdf') return inspToPdf();
+  }
+
+  function inspDraw() {
+    inspectorTitle.textContent = 'Draw';
+    inspectorHint.textContent = 'Drag on the image to draw freehand. Each stroke is its own layer.';
+    inspectorBody.innerHTML = `
+      <div class="field-row">
+        <div class="field"><label>Colour</label><input type="color" id="d-color" value="#ff3b30" /></div>
+        <div class="field"><label>Brush size <span class="range-val" id="d-w-v">8px</span></label><input type="range" id="d-w" min="1" max="60" value="8" /></div>
+      </div>
+      <p class="meta-line">Use the Layers panel to hide or delete strokes.</p>
+    `;
+    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    $('#d-w').oninput = () => $('#d-w-v').textContent = $('#d-w').value + 'px';
+    cropOverlay.onpointerdown = e => {
+      const color = $('#d-color').value, width = Number($('#d-w').value), pts = [];
+      const add = ev => {
+        const p = toImagePoint(ev); pts.push([p.x, p.y]);
+        renderViewer();
+        ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke(); ctx.restore();
+      };
+      add(e);
+      const move = ev => add(ev);
+      const up = () => {
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+        if (pts.length) { state.objects.push({ id: uid(), kind: 'draw', color, width, points: pts, visible: true }); renderViewer(); }
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    };
+  }
+
+  function inspShapes() {
+    inspectorTitle.textContent = 'Shapes & arrows';
+    inspectorHint.textContent = 'Pick a shape, then drag on the image to draw it.';
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Shape</label><div class="seg" id="s-shapes">
+        <button type="button" data-shape="rect" class="active">▭</button>
+        <button type="button" data-shape="ellipse">◯</button>
+        <button type="button" data-shape="line">╱</button>
+        <button type="button" data-shape="arrow">➜</button>
+      </div></div>
+      <div class="field-row">
+        <div class="field"><label>Colour</label><input type="color" id="s-color" value="#ff3b30" /></div>
+        <div class="field"><label>Stroke <span class="range-val" id="s-w-v">6px</span></label><input type="range" id="s-w" min="1" max="40" value="6" /></div>
+      </div>
+      <label class="check"><input type="checkbox" id="s-fill" /> Fill (rectangle &amp; ellipse)</label>
+    `;
+    let shape = 'rect';
+    $('#s-shapes').querySelectorAll('button').forEach(b => b.onclick = () => { shape = b.dataset.shape; $('#s-shapes').querySelectorAll('button').forEach(x => x.classList.remove('active')); b.classList.add('active'); });
+    $('#s-w').oninput = () => $('#s-w-v').textContent = $('#s-w').value + 'px';
+    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    cropOverlay.onpointerdown = e => {
+      const start = toImagePoint(e);
+      const o = { id: uid(), kind: 'shape', shape, sx: start.x, sy: start.y, ex: start.x, ey: start.y, color: $('#s-color').value, stroke: Number($('#s-w').value), fill: $('#s-fill').checked, visible: true };
+      const move = ev => {
+        const p = toImagePoint(ev); o.ex = p.x; o.ey = p.y;
+        renderViewer();
+        ctx.save(); ctx.strokeStyle = o.color; ctx.fillStyle = o.color; ctx.lineWidth = o.stroke; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; drawShape(ctx, o); ctx.restore();
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+        if (Math.abs(o.ex - o.sx) > 2 || Math.abs(o.ey - o.sy) > 2) { state.objects.push(o); renderViewer(); }
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    };
+  }
+
+  function inspLayers() {
+    inspectorTitle.textContent = 'Layers';
+    inspectorHint.textContent = 'Background plus each stroke and shape you add. Reorder, hide or delete.';
+    renderLayers();
+  }
+  function renderLayers() {
+    if (state.currentTool !== 'layers') return;
+    const top = [...state.objects].reverse(); // show top of stack first
+    inspectorBody.innerHTML = `
+      <div class="layer-list">
+        ${top.map(o => `<div class="layer-row" data-id="${o.id}">
+          <button class="lr-btn lr-vis" title="Show/hide">${o.visible === false ? '◌' : '●'}</button>
+          <span class="lr-name">${o.kind === 'draw' ? 'Brush stroke' : (o.shape.charAt(0).toUpperCase() + o.shape.slice(1))}</span>
+          <button class="lr-btn lr-up" title="Move up">↑</button>
+          <button class="lr-btn lr-down" title="Move down">↓</button>
+          <button class="lr-btn lr-del" title="Delete">✕</button>
+        </div>`).join('')}
+        <div class="layer-row layer-bg"><button class="lr-btn" disabled>▦</button><span class="lr-name">Background image</span></div>
+      </div>
+      ${state.objects.length ? `<button class="btn btn-ghost btn-block" id="lr-flatten" type="button" style="margin-top:12px;">Flatten all into image</button>` : '<p class="meta-line">No layers yet — add some with Draw or Shapes.</p>'}
+    `;
+    inspectorBody.querySelectorAll('.layer-row[data-id]').forEach(row => {
+      const id = row.dataset.id;
+      const idx = () => state.objects.findIndex(o => o.id === id);
+      row.querySelector('.lr-vis').onclick = () => { const o = state.objects[idx()]; o.visible = o.visible === false; renderViewer(); renderLayers(); };
+      row.querySelector('.lr-up').onclick = () => { const i = idx(); if (i < state.objects.length - 1) { [state.objects[i], state.objects[i + 1]] = [state.objects[i + 1], state.objects[i]]; renderViewer(); renderLayers(); } };
+      row.querySelector('.lr-down').onclick = () => { const i = idx(); if (i > 0) { [state.objects[i], state.objects[i - 1]] = [state.objects[i - 1], state.objects[i]]; renderViewer(); renderLayers(); } };
+      row.querySelector('.lr-del').onclick = () => { state.objects.splice(idx(), 1); renderViewer(); renderLayers(); };
+    });
+    const fl = $('#lr-flatten');
+    if (fl) fl.onclick = () => flattenObjects().then(() => { renderViewer(); renderLayers(); ImgUtils.setStatus('Flattened into image.', 'success'); });
   }
 
   function inspFilters() {
@@ -404,6 +574,7 @@
     $('#pdf-one').onclick = async () => {
       ImgUtils.setStatus('Building PDF…');
       try {
+        await flattenObjects();
         const bytes = await ImageEngine.imagesToPdf([state.src]);
         ImgUtils.download(new Blob([bytes], { type: 'application/pdf' }), state.baseName + '.pdf');
         ImgUtils.setStatus('PDF downloaded.', 'success');
@@ -417,6 +588,7 @@
     if (!files.length) return;
     ImgUtils.setStatus('Building PDF…');
     try {
+      await flattenObjects();
       const extra = [];
       for (const f of files) extra.push(await ImageEngine.loadImage(f));
       const bytes = await ImageEngine.imagesToPdf([state.src, ...extra]);
