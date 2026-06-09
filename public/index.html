@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#171a20" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#0a0a0b" />
 
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
@@ -88,9 +87,20 @@
 
 <main>
   <section class="hero">
+    <div class="orb orb-a" aria-hidden="true"></div>
+    <div class="orb orb-b" aria-hidden="true"></div>
+    <div class="orb orb-c" aria-hidden="true"></div>
+    <div class="spot" aria-hidden="true"></div>
     <div class="container">
       <p class="eyebrow">Free · Private · No signup</p>
-      <h1 class="hero-title">Every image tool.<br><span class="hero-accent">In your browser.</span></h1>
+      <h1 class="hero-title">
+        <span class="w" style="--i:0">Every</span>
+        <span class="w" style="--i:1">image</span>
+        <span class="w" style="--i:2">tool.</span><br>
+        <span class="w hero-accent" style="--i:3">In</span>
+        <span class="w hero-accent" style="--i:4">your</span>
+        <span class="w hero-accent" style="--i:5">browser.</span>
+      </h1>
       <p class="hero-sub">Compress, resize, convert, crop, rotate, watermark and blur — instantly and privately. Your photos never leave your device.</p>
       <div class="hero-cta">
         <a href="/editor/" class="btn btn-light">Open editor</a>
@@ -117,13 +127,23 @@
     </div>
   </section>
 
-  <section id="tools" class="tools">
+  <section class="stats" aria-label="MyFreeImageTool at a glance">
+    <div class="container stats-row">
+      <div class="stat"><span class="stat-num" data-count="15">15</span><span class="stat-label">Tools</span></div>
+      <div class="stat"><span class="stat-num" data-count="100" data-suffix="%">100%</span><span class="stat-label">In-browser</span></div>
+      <div class="stat"><span class="stat-num" data-count="0">0</span><span class="stat-label">Uploads, ever</span></div>
+      <div class="stat"><span class="stat-num" data-count="0" data-prefix="$">$0</span><span class="stat-label">Forever</span></div>
+    </div>
+  </section>
+
+  <section id="tools" class="tools showcase">
     <div class="container">
       <p class="section-label">Tools</p>
       <h2 class="section-title">Everything you need</h2>
       <p class="section-sub">All free, unlimited, and processed entirely in your browser.</p>
     </div>
-    <div class="tile-grid">
+    <div class="showcase-pin">
+    <div class="tile-track">
       <a href="/compress-image/" class="tile">
         <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke-linecap="round"/></svg></span>
         <h3>Compress</h3><p>Shrink JPG, PNG or WebP with a quality slider.</p><span class="tile-cta">Open →</span>
@@ -184,6 +204,7 @@
         <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><path d="M12 7a5 5 0 1 0 0 10" stroke-linecap="round"/></svg></span>
         <h3>Remove Background</h3><p>Click a colour to make it transparent.</p><span class="tile-cta">Open →</span>
       </a>
+    </div>
     </div>
   </section>
 
@@ -279,5 +300,6 @@
 </footer>
 
 <script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
 </body>
 </html>
