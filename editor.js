@@ -13,6 +13,7 @@
     currentTool: null,
     baseName: 'image',
     cropRect: null,       // display-space rect while cropping
+    textPos: null,        // { x, y } image-space anchor for the text tool
     history: [],          // array of { blob, name, type }
     histIndex: -1,
     original: null        // first loaded blob for Reset
@@ -167,6 +168,7 @@
   // ---------- Inspector ----------
   function showInspector(tool) {
     inspectorBody.innerHTML = '';
+    if (tool === 'text') return inspText();
     if (tool === 'compress') return inspCompress();
     if (tool === 'resize') return inspResize();
     if (tool === 'convert') return inspConvert();
@@ -175,6 +177,52 @@
     if (tool === 'watermark') return inspWatermark();
     if (tool === 'blur') return inspBlur();
     if (tool === 'topdf') return inspToPdf();
+  }
+
+  function inspText() {
+    inspectorTitle.textContent = 'Add text';
+    inspectorHint.textContent = 'Type, pick a font/colour, then click on the image to position. Drag to move.';
+    const fontOpts = ImageEngine.TEXT_FONTS.map((f, i) => `<option value='${f.css}' ${i === 0 ? 'selected' : ''}>${f.label}</option>`).join('');
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Text</label><textarea id="tx-text" rows="2">Your text</textarea></div>
+      <div class="field"><label>Font</label><select id="tx-font">${fontOpts}</select></div>
+      <div class="field-row">
+        <div class="field"><label>Size</label><input type="number" id="tx-size" value="${Math.round(state.src.width * 0.08)}" min="6" /></div>
+        <div class="field"><label>Colour</label><input type="color" id="tx-color" value="#ffffff" /></div>
+      </div>
+      <div class="field"><label>Style</label><div class="seg"><button type="button" id="tx-bold" style="font-weight:700">Bold</button><button type="button" id="tx-italic" style="font-style:italic">Italic</button></div></div>
+      <button class="btn btn-primary btn-block" id="tx-go" type="button" style="margin-top:12px;">Apply text</button>
+    `;
+    state.textPos = { x: Math.round(state.src.width * 0.1), y: Math.round(state.src.height * 0.42) };
+    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    let bold = false, italic = false;
+    const opts = () => ({ text: $('#tx-text').value, font: $('#tx-font').value, size: Number($('#tx-size').value), color: $('#tx-color').value, x: state.textPos.x, y: state.textPos.y, bold, italic });
+    const preview = () => drawTextPreview(opts());
+    ['input', 'change'].forEach(ev => inspectorBody.addEventListener(ev, () => { if (state.src) preview(); }));
+    $('#tx-bold').onclick = () => { bold = !bold; $('#tx-bold').classList.toggle('active', bold); preview(); };
+    $('#tx-italic').onclick = () => { italic = !italic; $('#tx-italic').classList.toggle('active', italic); preview(); };
+    cropOverlay.onpointerdown = e => {
+      const r = canvas.getBoundingClientRect();
+      const sx = state.src.width / r.width, sy = state.src.height / r.height;
+      const setPos = ev => { state.textPos = { x: Math.max(0, (ev.clientX - r.left) * sx), y: Math.max(0, (ev.clientY - r.top) * sy) }; preview(); };
+      setPos(e);
+      const move = ev => setPos(ev);
+      const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    };
+    preview();
+    $('#tx-go').onclick = () => applyOp(() => ImageEngine.addText(state.src, { ...opts(), mime: state.src.type }), 'Adding text…').then(() => setTool('text'));
+  }
+
+  function drawTextPreview(o) {
+    renderViewer();
+    if (!o.text) return;
+    ctx.save();
+    ctx.font = `${o.bold ? '700 ' : ''}${o.italic ? 'italic ' : ''}${o.size}px ${o.font}`;
+    ctx.fillStyle = o.color; ctx.textBaseline = 'top';
+    const lines = o.text.split('\n'), lh = o.size * 1.25;
+    lines.forEach((ln, i) => ctx.fillText(ln, o.x, o.y + i * lh));
+    ctx.restore();
   }
 
   function inspCompress() {

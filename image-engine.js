@@ -138,6 +138,33 @@
     return toBlob(canvas, mime, opts.quality ?? 0.92);
   };
 
+  // Web-safe fonts — rasterised into the image, so no embedding needed.
+  Engine.TEXT_FONTS = [
+    { label: 'Arial', css: 'Arial, Helvetica, sans-serif' },
+    { label: 'Times New Roman', css: '"Times New Roman", Times, serif' },
+    { label: 'Georgia', css: 'Georgia, serif' },
+    { label: 'Courier New', css: '"Courier New", monospace' },
+    { label: 'Verdana', css: 'Verdana, Geneva, sans-serif' },
+    { label: 'Impact', css: 'Impact, Charcoal, sans-serif' }
+  ];
+
+  // ---------- Add text ----------
+  // opts: { text, x, y (top-left, image px), size, font(css stack), color, bold, italic, mime, quality }
+  Engine.addText = async function (src, o = {}) {
+    const mime = o.mime || src.type || 'image/png';
+    const canvas = makeCanvas(src.width, src.height);
+    const ctx = canvas.getContext('2d');
+    drawImage(ctx, src.img, canvas.width, canvas.height, mime);
+    const size = o.size || Math.round(src.width * 0.08);
+    ctx.font = `${o.bold ? '700 ' : ''}${o.italic ? 'italic ' : ''}${size}px ${o.font || 'Arial, sans-serif'}`;
+    ctx.fillStyle = o.color || '#ffffff';
+    ctx.textBaseline = 'top';
+    const lines = (o.text || '').split('\n');
+    const lh = size * 1.25;
+    lines.forEach((ln, i) => ctx.fillText(ln, o.x || 0, (o.y || 0) + i * lh));
+    return toBlob(canvas, mime, o.quality ?? 0.95);
+  };
+
   // ---------- Blur background (center focus) ----------
   // opts: { blur (px), focus (0..1 of min dimension as clear radius), mime, quality }
   Engine.blurBackground = async function (src, opts = {}) {
