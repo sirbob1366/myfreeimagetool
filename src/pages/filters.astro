@@ -1,0 +1,136 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolShell from '../components/ToolShell.astro';
+---
+
+<Layout title="Photo Filters — Free Image Tools">
+	<ToolShell
+		title="Photo Filters"
+		subtitle="One-click preset filters with adjustable intensity."
+	>
+		<div class="control-group">
+			<h3>Presets</h3>
+			<div class="preset-grid" id="preset-grid"></div>
+		</div>
+		<div class="control-group">
+			<div class="field">
+				<label>Intensity <output>100</output></label>
+				<input type="range" id="intensity" min="0" max="100" value="100" />
+			</div>
+		</div>
+	</ToolShell>
+</Layout>
+
+<script>
+	import { initTool, bindRange } from '../scripts/tool';
+
+	interface Preset {
+		name: string;
+		filter: string;
+	}
+
+	const presets: Preset[] = [
+		{ name: 'Original', filter: 'none' },
+		{ name: 'Grayscale', filter: 'grayscale(100%)' },
+		{ name: 'Sepia', filter: 'sepia(100%)' },
+		{
+			name: 'Vintage',
+			filter: 'sepia(55%) contrast(108%) brightness(96%) saturate(130%)',
+		},
+		{ name: 'Noir', filter: 'grayscale(100%) contrast(140%) brightness(92%)' },
+		{ name: 'Warm', filter: 'sepia(28%) saturate(140%) brightness(104%)' },
+		{
+			name: 'Cool',
+			filter: 'saturate(115%) hue-rotate(12deg) brightness(103%)',
+		},
+		{ name: 'Vivid', filter: 'saturate(165%) contrast(112%)' },
+		{ name: 'Fade', filter: 'contrast(84%) brightness(112%) saturate(78%)' },
+		{ name: 'Chrome', filter: 'contrast(122%) saturate(132%) brightness(105%)' },
+		{ name: 'Invert', filter: 'invert(100%)' },
+		{ name: 'Soft', filter: 'blur(1px) brightness(106%) saturate(88%)' },
+	];
+
+	let image: HTMLImageElement | null = null;
+	let activePreset = presets[0];
+	let intensity = 100;
+
+	const filtered = document.createElement('canvas');
+	const filteredCtx = filtered.getContext('2d')!;
+
+	const { canvas, ctx } = initTool({
+		onImage(img) {
+			image = img;
+			activePreset = presets[0];
+			intensity = 100;
+			intensityInput.value = '100';
+			const output = intensityInput
+				.closest('.field')
+				?.querySelector('output');
+			if (output) output.textContent = '100';
+			buildThumbnails();
+			updateActiveButton();
+			render();
+		},
+	});
+
+	function render() {
+		if (!image) return;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+		if (activePreset.filter === 'none' || intensity === 0) return;
+
+		filtered.width = canvas.width;
+		filtered.height = canvas.height;
+		filteredCtx.filter = activePreset.filter;
+		filteredCtx.drawImage(image, 0, 0, canvas.width, canvas.height);
+		filteredCtx.filter = 'none';
+
+		ctx.globalAlpha = intensity / 100;
+		ctx.drawImage(filtered, 0, 0);
+		ctx.globalAlpha = 1;
+	}
+
+	const grid = document.getElementById('preset-grid')!;
+
+	function buildThumbnails() {
+		if (!image) return;
+		grid.innerHTML = '';
+		const thumbWidth = 96;
+		const thumbHeight = Math.max(
+			1,
+			Math.round((image.naturalHeight / image.naturalWidth) * thumbWidth),
+		);
+		for (const preset of presets) {
+			const button = document.createElement('button');
+			button.className = 'preset';
+			button.type = 'button';
+			const thumb = document.createElement('canvas');
+			thumb.width = thumbWidth;
+			thumb.height = thumbHeight;
+			const thumbCtx = thumb.getContext('2d')!;
+			thumbCtx.filter = preset.filter;
+			thumbCtx.drawImage(image, 0, 0, thumbWidth, thumbHeight);
+			const label = document.createElement('span');
+			label.textContent = preset.name;
+			button.append(thumb, label);
+			button.addEventListener('click', () => {
+				activePreset = preset;
+				updateActiveButton();
+				render();
+			});
+			grid.appendChild(button);
+		}
+	}
+
+	function updateActiveButton() {
+		const buttons = grid.querySelectorAll('.preset');
+		buttons.forEach((button, i) => {
+			button.classList.toggle('active', presets[i] === activePreset);
+		});
+	}
+
+	const intensityInput = bindRange('intensity', (value) => {
+		intensity = value;
+		render();
+	});
+</script>

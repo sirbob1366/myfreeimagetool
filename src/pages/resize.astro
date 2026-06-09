@@ -1,0 +1,176 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolShell from '../components/ToolShell.astro';
+---
+
+<Layout title="Resize & Rotate Image — Free Image Tools">
+	<ToolShell
+		title="Resize & Rotate"
+		subtitle="Scale to exact dimensions, rotate in 90° steps, and flip."
+	>
+		<div class="control-group">
+			<h3>Dimensions</h3>
+			<div class="row">
+				<div class="field" style="flex: 1;">
+					<label>Width</label>
+					<input type="number" id="out-width" min="1" max="10000" />
+				</div>
+				<div class="field" style="flex: 1;">
+					<label>Height</label>
+					<input type="number" id="out-height" min="1" max="10000" />
+				</div>
+			</div>
+			<label class="checkbox">
+				<input type="checkbox" id="lock-aspect" checked /> Lock aspect ratio
+			</label>
+			<div class="row">
+				<button class="btn-ghost" data-scale="0.25">25%</button>
+				<button class="btn-ghost" data-scale="0.5">50%</button>
+				<button class="btn-ghost" data-scale="0.75">75%</button>
+				<button class="btn-ghost" data-scale="1">100%</button>
+			</div>
+		</div>
+		<div class="control-group">
+			<h3>Rotate & Flip</h3>
+			<div class="row">
+				<button class="btn-ghost" id="rotate-left">⟲ Rotate Left</button>
+				<button class="btn-ghost" id="rotate-right">⟳ Rotate Right</button>
+			</div>
+			<div class="row">
+				<button class="btn-ghost" id="flip-h">⇋ Flip Horizontal</button>
+				<button class="btn-ghost" id="flip-v">⇵ Flip Vertical</button>
+			</div>
+		</div>
+		<p id="size-info" style="margin: 0; color: var(--pewter);"></p>
+	</ToolShell>
+</Layout>
+
+<script>
+	import { initTool } from '../scripts/tool';
+
+	let image: HTMLImageElement | null = null;
+	let rotation = 0; // 0 | 90 | 180 | 270
+	let flipH = false;
+	let flipV = false;
+	let outW = 0;
+	let outH = 0;
+
+	const widthInput = document.getElementById('out-width') as HTMLInputElement;
+	const heightInput = document.getElementById(
+		'out-height',
+	) as HTMLInputElement;
+	const lockInput = document.getElementById('lock-aspect') as HTMLInputElement;
+	const sizeInfo = document.getElementById('size-info')!;
+
+	const { canvas, ctx } = initTool({
+		onImage(img) {
+			image = img;
+			rotation = 0;
+			flipH = false;
+			flipV = false;
+			outW = img.naturalWidth;
+			outH = img.naturalHeight;
+			syncInputs();
+			render();
+		},
+	});
+
+	/** Source dimensions accounting for rotation. */
+	function sourceDims() {
+		if (!image) return { w: 1, h: 1 };
+		const rotated = rotation % 180 !== 0;
+		return {
+			w: rotated ? image.naturalHeight : image.naturalWidth,
+			h: rotated ? image.naturalWidth : image.naturalHeight,
+		};
+	}
+
+	function aspectRatio() {
+		const { w, h } = sourceDims();
+		return w / h;
+	}
+
+	function render() {
+		if (!image) return;
+		outW = Math.max(1, Math.round(outW));
+		outH = Math.max(1, Math.round(outH));
+		canvas.width = outW;
+		canvas.height = outH;
+
+		ctx.save();
+		ctx.translate(outW / 2, outH / 2);
+		ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+		ctx.rotate((rotation * Math.PI) / 180);
+		const rotated = rotation % 180 !== 0;
+		const drawW = rotated ? outH : outW;
+		const drawH = rotated ? outW : outH;
+		ctx.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
+		ctx.restore();
+
+		sizeInfo.textContent = `Output: ${outW} × ${outH} px`;
+	}
+
+	function syncInputs() {
+		widthInput.value = String(Math.round(outW));
+		heightInput.value = String(Math.round(outH));
+	}
+
+	widthInput.addEventListener('input', () => {
+		const value = Number(widthInput.value);
+		if (!value || value < 1) return;
+		outW = value;
+		if (lockInput.checked) {
+			outH = Math.max(1, Math.round(value / aspectRatio()));
+			heightInput.value = String(outH);
+		}
+		render();
+	});
+
+	heightInput.addEventListener('input', () => {
+		const value = Number(heightInput.value);
+		if (!value || value < 1) return;
+		outH = value;
+		if (lockInput.checked) {
+			outW = Math.max(1, Math.round(value * aspectRatio()));
+			widthInput.value = String(outW);
+		}
+		render();
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-scale]').forEach(
+		(button) => {
+			button.addEventListener('click', () => {
+				if (!image) return;
+				const scale = Number(button.dataset.scale);
+				const { w, h } = sourceDims();
+				outW = Math.max(1, Math.round(w * scale));
+				outH = Math.max(1, Math.round(h * scale));
+				syncInputs();
+				render();
+			});
+		},
+	);
+
+	function rotateBy(delta: number) {
+		rotation = (rotation + delta + 360) % 360;
+		// Swap output dimensions so the image isn't squashed.
+		[outW, outH] = [outH, outW];
+		syncInputs();
+		render();
+	}
+
+	document
+		.getElementById('rotate-left')!
+		.addEventListener('click', () => rotateBy(-90));
+	document
+		.getElementById('rotate-right')!
+		.addEventListener('click', () => rotateBy(90));
+	document.getElementById('flip-h')!.addEventListener('click', () => {
+		flipH = !flipH;
+		render();
+	});
+	document.getElementById('flip-v')!.addEventListener('click', () => {
+		flipV = !flipV;
+		render();
+	});
+</script>

@@ -1,0 +1,35 @@
+---
+interface Props {
+	title: string;
+	subtitle: string;
+	checkered?: boolean;
+}
+
+const { title, subtitle, checkered = false } = Astro.props;
+---
+
+<section class="tool">
+	<header class="tool-head">
+		<h1>{title}</h1>
+		<p>{subtitle}</p>
+	</header>
+
+	<div class="dropzone" id="dropzone">
+		<span class="dz-title">Drop an image here, or click to browse</span>
+		<span class="dz-hint">JPG, PNG, WebP — processed entirely on your device</span>
+		<input type="file" id="file-input" accept="image/*" hidden />
+	</div>
+
+	<div class="editor" id="editor" hidden>
+		<div class={`stage${checkered ? ' checkered' : ''}`}>
+			<canvas id="canvas"></canvas>
+		</div>
+		<aside class="controls">
+			<slot />
+			<div class="actions">
+				<button id="download-btn" class="btn btn-primary">Download PNG</button>
+				<button id="new-image-btn" class="btn btn-secondary">New Image</button>
+			</div>
+		</aside>
+	</div>
+</section>

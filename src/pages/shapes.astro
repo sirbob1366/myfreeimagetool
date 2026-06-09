@@ -1,0 +1,388 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolShell from '../components/ToolShell.astro';
+---
+
+<Layout title="Add Shapes to Photo — Free Image Tools">
+	<ToolShell
+		title="Add Shapes"
+		subtitle="Overlay rectangles, ellipses, lines, and arrows, then move and scale them."
+	>
+		<div class="control-group">
+			<h3>Add Shape</h3>
+			<div class="row">
+				<button class="btn-ghost" data-shape="rect">Rectangle</button>
+				<button class="btn-ghost" data-shape="ellipse">Ellipse</button>
+				<button class="btn-ghost" data-shape="line">Line</button>
+				<button class="btn-ghost" data-shape="arrow">Arrow</button>
+			</div>
+		</div>
+		<div class="control-group">
+			<h3>Layers</h3>
+			<div class="layer-list" id="layer-list"></div>
+		</div>
+		<div class="control-group" id="shape-controls" hidden>
+			<h3>Selected Shape</h3>
+			<div class="row">
+				<label class="checkbox">Fill <input type="color" id="shape-fill" value="#3e6ae1" /></label>
+				<label class="checkbox">Stroke <input type="color" id="shape-stroke" value="#171a20" /></label>
+				<label class="checkbox"><input type="checkbox" id="shape-filled" checked /> Filled</label>
+			</div>
+			<div class="field">
+				<label>Stroke Width <output>4</output></label>
+				<input type="range" id="shape-stroke-width" min="0" max="40" value="4" />
+			</div>
+			<div class="field">
+				<label>Opacity <output>100</output></label>
+				<input type="range" id="shape-opacity" min="5" max="100" value="100" />
+			</div>
+			<div class="field">
+				<label>Width <output>30</output></label>
+				<input type="range" id="shape-width" min="2" max="100" value="30" />
+			</div>
+			<div class="field">
+				<label>Height <output>30</output></label>
+				<input type="range" id="shape-height" min="2" max="100" value="30" />
+			</div>
+		</div>
+	</ToolShell>
+</Layout>
+
+<script>
+	import { initTool, bindRange } from '../scripts/tool';
+
+	type ShapeType = 'rect' | 'ellipse' | 'line' | 'arrow';
+
+	interface ShapeLayer {
+		type: ShapeType;
+		/** Center position in canvas pixels. */
+		x: number;
+		y: number;
+		/** Size in canvas pixels. For line/arrow this is the x/y span. */
+		w: number;
+		h: number;
+		fill: string;
+		stroke: string;
+		filled: boolean;
+		strokeWidth: number;
+		opacity: number;
+	}
+
+	let image: HTMLImageElement | null = null;
+	let layers: ShapeLayer[] = [];
+	let selected: ShapeLayer | null = null;
+	let exporting = false;
+
+	const shapeNames: Record<ShapeType, string> = {
+		rect: 'Rectangle',
+		ellipse: 'Ellipse',
+		line: 'Line',
+		arrow: 'Arrow',
+	};
+
+	const { canvas, ctx, canvasPoint } = initTool({
+		onImage(img) {
+			image = img;
+			layers = [];
+			selected = null;
+			refreshControls();
+			renderLayerList();
+			render();
+		},
+		beforeDownload() {
+			exporting = true;
+			render();
+		},
+		afterDownload() {
+			exporting = false;
+			render();
+		},
+	});
+
+	function render() {
+		if (!image) return;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+		for (const layer of layers) {
+			drawShape(layer);
+		}
+
+		if (selected && !exporting) {
+			ctx.save();
+			ctx.strokeStyle = '#3e6ae1';
+			ctx.lineWidth = Math.max(2, canvas.width / 400);
+			ctx.setLineDash([8, 6]);
+			ctx.strokeRect(
+				selected.x - selected.w / 2 - 8,
+				selected.y - selected.h / 2 - 8,
+				selected.w + 16,
+				selected.h + 16,
+			);
+			ctx.restore();
+		}
+	}
+
+	function drawShape(layer: ShapeLayer) {
+		ctx.save();
+		ctx.globalAlpha = layer.opacity / 100;
+		ctx.fillStyle = layer.fill;
+		ctx.strokeStyle = layer.stroke;
+		ctx.lineWidth = layer.strokeWidth;
+
+		const left = layer.x - layer.w / 2;
+		const top = layer.y - layer.h / 2;
+
+		switch (layer.type) {
+			case 'rect':
+				if (layer.filled) ctx.fillRect(left, top, layer.w, layer.h);
+				if (layer.strokeWidth > 0)
+					ctx.strokeRect(left, top, layer.w, layer.h);
+				break;
+			case 'ellipse':
+				ctx.beginPath();
+				ctx.ellipse(
+					layer.x,
+					layer.y,
+					layer.w / 2,
+					layer.h / 2,
+					0,
+					0,
+					Math.PI * 2,
+				);
+				if (layer.filled) ctx.fill();
+				if (layer.strokeWidth > 0) ctx.stroke();
+				break;
+			case 'line': {
+				ctx.lineWidth = Math.max(1, layer.strokeWidth);
+				ctx.lineCap = 'round';
+				ctx.beginPath();
+				ctx.moveTo(left, top);
+				ctx.lineTo(left + layer.w, top + layer.h);
+				ctx.stroke();
+				break;
+			}
+			case 'arrow': {
+				const lineWidth = Math.max(1, layer.strokeWidth);
+				const x1 = left;
+				const y1 = top;
+				const x2 = left + layer.w;
+				const y2 = top + layer.h;
+				const angle = Math.atan2(y2 - y1, x2 - x1);
+				const head = Math.max(lineWidth * 3, 14);
+				ctx.lineWidth = lineWidth;
+				ctx.lineCap = 'round';
+				ctx.beginPath();
+				ctx.moveTo(x1, y1);
+				ctx.lineTo(
+					x2 - head * 0.6 * Math.cos(angle),
+					y2 - head * 0.6 * Math.sin(angle),
+				);
+				ctx.stroke();
+				ctx.fillStyle = layer.stroke;
+				ctx.beginPath();
+				ctx.moveTo(x2, y2);
+				ctx.lineTo(
+					x2 - head * Math.cos(angle - 0.45),
+					y2 - head * Math.sin(angle - 0.45),
+				);
+				ctx.lineTo(
+					x2 - head * Math.cos(angle + 0.45),
+					y2 - head * Math.sin(angle + 0.45),
+				);
+				ctx.closePath();
+				ctx.fill();
+				break;
+			}
+		}
+		ctx.restore();
+	}
+
+	// ---------- Layer management ----------
+	const layerList = document.getElementById('layer-list')!;
+	const controls = document.getElementById('shape-controls')!;
+
+	const fillInput = document.getElementById('shape-fill') as HTMLInputElement;
+	const strokeInput = document.getElementById(
+		'shape-stroke',
+	) as HTMLInputElement;
+	const filledInput = document.getElementById(
+		'shape-filled',
+	) as HTMLInputElement;
+
+	const strokeWidthInput = bindRange('shape-stroke-width', (value) => {
+		if (!selected) return;
+		selected.strokeWidth = value;
+		render();
+	});
+	const opacityInput = bindRange('shape-opacity', (value) => {
+		if (!selected) return;
+		selected.opacity = value;
+		render();
+	});
+	const widthInput = bindRange('shape-width', (value) => {
+		if (!selected) return;
+		selected.w = Math.round((value / 100) * canvas.width);
+		render();
+	});
+	const heightInput = bindRange('shape-height', (value) => {
+		if (!selected) return;
+		selected.h = Math.round((value / 100) * canvas.height);
+		render();
+	});
+
+	document.querySelectorAll<HTMLButtonElement>('[data-shape]').forEach(
+		(button) => {
+			button.addEventListener('click', () => {
+				if (!image) return;
+				const type = button.dataset.shape as ShapeType;
+				const isLinear = type === 'line' || type === 'arrow';
+				const layer: ShapeLayer = {
+					type,
+					x: canvas.width / 2,
+					y: canvas.height / 2,
+					w: Math.round(canvas.width * 0.3),
+					h: isLinear ? 0 : Math.round(canvas.height * 0.3),
+					fill: '#3e6ae1',
+					stroke: '#171a20',
+					filled: !isLinear,
+					strokeWidth: isLinear ? Math.max(4, Math.round(canvas.width / 150)) : 4,
+					opacity: 100,
+				};
+				layers.push(layer);
+				selectLayer(layer);
+			});
+		},
+	);
+
+	function selectLayer(layer: ShapeLayer | null) {
+		selected = layer;
+		refreshControls();
+		renderLayerList();
+		render();
+	}
+
+	function refreshControls() {
+		controls.hidden = !selected;
+		if (!selected) return;
+		fillInput.value = selected.fill;
+		strokeInput.value = selected.stroke;
+		filledInput.checked = selected.filled;
+		setRange(strokeWidthInput, selected.strokeWidth);
+		setRange(opacityInput, selected.opacity);
+		setRange(
+			widthInput,
+			Math.round((selected.w / canvas.width) * 100),
+		);
+		setRange(
+			heightInput,
+			Math.round((selected.h / canvas.height) * 100),
+		);
+	}
+
+	function setRange(input: HTMLInputElement, value: number) {
+		const clamped = Math.min(
+			Number(input.max),
+			Math.max(Number(input.min), value),
+		);
+		input.value = String(clamped);
+		const output = input.closest('.field')?.querySelector('output');
+		if (output) output.textContent = String(clamped);
+	}
+
+	function renderLayerList() {
+		layerList.innerHTML = '';
+		for (const layer of layers) {
+			const item = document.createElement('div');
+			item.className = `layer-item${layer === selected ? ' active' : ''}`;
+			const name = document.createElement('span');
+			name.className = 'layer-name';
+			name.textContent = shapeNames[layer.type];
+			const del = document.createElement('button');
+			del.className = 'layer-del';
+			del.type = 'button';
+			del.textContent = '×';
+			del.title = 'Delete layer';
+			del.addEventListener('click', (e) => {
+				e.stopPropagation();
+				layers = layers.filter((l) => l !== layer);
+				if (selected === layer) selected = null;
+				selectLayer(selected);
+			});
+			item.append(name, del);
+			item.addEventListener('click', () => selectLayer(layer));
+			layerList.appendChild(item);
+		}
+	}
+
+	// ---------- Control bindings ----------
+	fillInput.addEventListener('input', () => {
+		if (!selected) return;
+		selected.fill = fillInput.value;
+		render();
+	});
+	strokeInput.addEventListener('input', () => {
+		if (!selected) return;
+		selected.stroke = strokeInput.value;
+		render();
+	});
+	filledInput.addEventListener('change', () => {
+		if (!selected) return;
+		selected.filled = filledInput.checked;
+		render();
+	});
+
+	// ---------- Dragging ----------
+	let dragging: ShapeLayer | null = null;
+	let dragOffsetX = 0;
+	let dragOffsetY = 0;
+
+	function hitTest(layer: ShapeLayer, x: number, y: number) {
+		const pad = 10;
+		const halfW = Math.abs(layer.w) / 2 + pad;
+		const halfH = Math.abs(layer.h) / 2 + pad;
+		return (
+			x >= layer.x - halfW &&
+			x <= layer.x + halfW &&
+			y >= layer.y - halfH &&
+			y <= layer.y + halfH
+		);
+	}
+
+	canvas.addEventListener('pointerdown', (e) => {
+		if (!image) return;
+		const point = canvasPoint(e);
+		for (let i = layers.length - 1; i >= 0; i--) {
+			if (hitTest(layers[i], point.x, point.y)) {
+				dragging = layers[i];
+				dragOffsetX = point.x - dragging.x;
+				dragOffsetY = point.y - dragging.y;
+				canvas.setPointerCapture(e.pointerId);
+				if (selected !== dragging) selectLayer(dragging);
+				return;
+			}
+		}
+		selectLayer(null);
+	});
+
+	canvas.addEventListener('pointermove', (e) => {
+		if (!dragging) return;
+		const point = canvasPoint(e);
+		dragging.x = point.x - dragOffsetX;
+		dragging.y = point.y - dragOffsetY;
+		render();
+	});
+
+	canvas.addEventListener('pointerup', () => {
+		dragging = null;
+	});
+	canvas.addEventListener('pointercancel', () => {
+		dragging = null;
+	});
+</script>
+
+<style is:global>
+	#canvas {
+		cursor: move;
+	}
+</style>

@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Free Image Tools — Edit Photos in Your Browser',
+	description = 'Free online photo editing tools. Adjust colors, apply filters, add text and shapes, crop, resize, and remove backgrounds — all in your browser, no upload required.',
+} = Astro.props;
+
+const tools = [
+	{ href: '/adjust', label: 'Adjust' },
+	{ href: '/filters', label: 'Filters' },
+	{ href: '/text', label: 'Text' },
+	{ href: '/shapes', label: 'Shapes' },
+	{ href: '/crop', label: 'Crop' },
+	{ href: '/resize', label: 'Resize' },
+	{ href: '/remove-background', label: 'Background' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<title>{title}</title>
+	</head>
+	<body>
+		<nav class="site-nav">
+			<a href="/" class="wordmark">FREE IMAGE TOOLS</a>
+			<div class="nav-links">
+				{tools.map((t) => <a href={t.href}>{t.label}</a>)}
+			</div>
+		</nav>
+		<main>
+			<slot />
+		</main>
+		<footer class="site-footer">
+			<p>
+				All editing happens in your browser. Your images never leave your
+				device.
+			</p>
+		</footer>
+	</body>
+</html>

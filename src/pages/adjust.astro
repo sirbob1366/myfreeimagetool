@@ -1,0 +1,167 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolShell from '../components/ToolShell.astro';
+---
+
+<Layout title="Adjust Colors — Free Image Tools">
+	<ToolShell
+		title="Adjust Colors"
+		subtitle="Fine-tune brightness, contrast, saturation, exposure, temperature, and more."
+	>
+		<div class="control-group">
+			<h3>Light</h3>
+			<div class="field">
+				<label>Brightness <output>100</output></label>
+				<input type="range" id="brightness" min="0" max="200" value="100" />
+			</div>
+			<div class="field">
+				<label>Contrast <output>100</output></label>
+				<input type="range" id="contrast" min="0" max="200" value="100" />
+			</div>
+			<div class="field">
+				<label>Exposure <output>0</output></label>
+				<input type="range" id="exposure" min="-100" max="100" value="0" />
+			</div>
+		</div>
+		<div class="control-group">
+			<h3>Color</h3>
+			<div class="field">
+				<label>Saturation <output>100</output></label>
+				<input type="range" id="saturation" min="0" max="200" value="100" />
+			</div>
+			<div class="field">
+				<label>Temperature <output>0</output></label>
+				<input type="range" id="temperature" min="-100" max="100" value="0" />
+			</div>
+			<div class="field">
+				<label>Tint <output>0</output></label>
+				<input type="range" id="tint" min="-100" max="100" value="0" />
+			</div>
+		</div>
+		<div class="control-group">
+			<h3>Effects</h3>
+			<div class="field">
+				<label>Blur <output>0</output></label>
+				<input type="range" id="blur" min="0" max="20" value="0" />
+			</div>
+			<div class="field">
+				<label>Vignette <output>0</output></label>
+				<input type="range" id="vignette" min="0" max="100" value="0" />
+			</div>
+		</div>
+		<button id="reset-btn" class="btn btn-secondary">Reset All</button>
+	</ToolShell>
+</Layout>
+
+<script>
+	import { initTool, bindRange, clampByte } from '../scripts/tool';
+
+	let image: HTMLImageElement | null = null;
+
+	const state = {
+		brightness: 100,
+		contrast: 100,
+		exposure: 0,
+		saturation: 100,
+		temperature: 0,
+		tint: 0,
+		blur: 0,
+		vignette: 0,
+	};
+	type Key = keyof typeof state;
+	const defaults = { ...state };
+
+	const { canvas, ctx } = initTool({
+		onImage(img) {
+			image = img;
+			resetState();
+			render();
+		},
+	});
+
+	let rafPending = false;
+	function requestRender() {
+		if (rafPending) return;
+		rafPending = true;
+		requestAnimationFrame(() => {
+			rafPending = false;
+			render();
+		});
+	}
+
+	function render() {
+		if (!image) return;
+		ctx.filter = `brightness(${state.brightness}%) contrast(${state.contrast}%) saturate(${state.saturation}%)${
+			state.blur > 0 ? ` blur(${state.blur}px)` : ''
+		}`;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+		ctx.filter = 'none';
+
+		if (state.exposure !== 0 || state.temperature !== 0 || state.tint !== 0) {
+			applyPixelOps();
+		}
+		if (state.vignette > 0) {
+			applyVignette();
+		}
+	}
+
+	function applyPixelOps() {
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		const d = imageData.data;
+		const exposureMul = Math.pow(2, state.exposure / 100);
+		const tempShift = state.temperature * 0.4;
+		const tintShift = state.tint * 0.4;
+		for (let i = 0; i < d.length; i += 4) {
+			d[i] = clampByte(d[i] * exposureMul + tempShift);
+			d[i + 1] = clampByte(d[i + 1] * exposureMul + tintShift);
+			d[i + 2] = clampByte(d[i + 2] * exposureMul - tempShift);
+		}
+		ctx.putImageData(imageData, 0, 0);
+	}
+
+	function applyVignette() {
+		const w = canvas.width;
+		const h = canvas.height;
+		const outer = Math.hypot(w, h) / 2;
+		const gradient = ctx.createRadialGradient(
+			w / 2,
+			h / 2,
+			outer * 0.4,
+			w / 2,
+			h / 2,
+			outer,
+		);
+		gradient.addColorStop(0, 'rgba(0,0,0,0)');
+		gradient.addColorStop(1, `rgba(0,0,0,${(state.vignette / 100) * 0.85})`);
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, w, h);
+	}
+
+	const inputs: Partial<Record<Key, HTMLInputElement>> = {};
+	for (const key of Object.keys(state) as Key[]) {
+		inputs[key] = bindRange(key, (value) => {
+			state[key] = value;
+			requestRender();
+		});
+	}
+
+	function resetState() {
+		for (const key of Object.keys(state) as Key[]) {
+			state[key] = defaults[key];
+			const input = inputs[key];
+			if (input) {
+				input.value = String(defaults[key]);
+				const output = input
+					.closest('.field')
+					?.querySelector('output');
+				if (output) output.textContent = String(defaults[key]);
+			}
+		}
+	}
+
+	document.getElementById('reset-btn')!.addEventListener('click', () => {
+		resetState();
+		render();
+	});
+</script>

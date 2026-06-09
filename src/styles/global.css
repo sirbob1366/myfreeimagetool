@@ -1,0 +1,513 @@
+:root {
+	--blue: #3e6ae1;
+	--white: #ffffff;
+	--ash: #f4f4f4;
+	--carbon: #171a20;
+	--graphite: #393c41;
+	--pewter: #5c5e62;
+	--silver: #8e8e8e;
+	--cloud: #eeeeee;
+	--pale: #d0d1d2;
+	--ease: cubic-bezier(0.5, 0, 0, 0.75);
+	--font:
+		'Universal Sans Text', -apple-system, 'Segoe UI', Arial, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+/* Author display rules (flex/grid) would otherwise override the UA's
+   [hidden] style on elements we toggle with the hidden attribute. */
+[hidden] {
+	display: none !important;
+}
+
+html,
+body {
+	margin: 0;
+	width: 100%;
+	min-height: 100%;
+	background: var(--white);
+	color: var(--graphite);
+	font-family: var(--font);
+	font-size: 14px;
+	line-height: 1.43;
+}
+
+h1,
+h2,
+h3 {
+	color: var(--carbon);
+	font-weight: 500;
+	margin: 0;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 40px;
+	padding: 4px 24px;
+	border-radius: 4px;
+	border: 3px solid transparent;
+	font-family: var(--font);
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		border-color 0.33s var(--ease),
+		background-color 0.33s var(--ease),
+		color 0.33s var(--ease);
+}
+
+.btn-primary {
+	background: var(--blue);
+	color: var(--white);
+}
+
+.btn-primary:hover {
+	background: #3457b1;
+}
+
+.btn-secondary {
+	background: var(--white);
+	color: var(--graphite);
+	border-color: var(--pale);
+}
+
+.btn-secondary:hover {
+	border-color: var(--graphite);
+}
+
+.btn-ghost {
+	background: transparent;
+	color: var(--carbon);
+	min-height: 32px;
+	padding: 4px 16px;
+	border: none;
+	border-radius: 4px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		color 0.33s var(--ease),
+		background-color 0.33s var(--ease);
+}
+
+.btn-ghost:hover,
+.btn-ghost.active {
+	background: var(--ash);
+}
+
+/* ---------- Navigation ---------- */
+.site-nav {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 24px;
+	background: rgba(255, 255, 255, 0.75);
+	backdrop-filter: blur(12px);
+}
+
+.site-nav .wordmark {
+	font-size: 14px;
+	font-weight: 500;
+	letter-spacing: 4px;
+	color: var(--carbon);
+}
+
+.site-nav .nav-links {
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+
+.site-nav .nav-links a {
+	padding: 4px 12px;
+	min-height: 32px;
+	display: inline-flex;
+	align-items: center;
+	border-radius: 4px;
+	font-weight: 500;
+	color: var(--carbon);
+	transition: background-color 0.33s var(--ease);
+}
+
+.site-nav .nav-links a:hover {
+	background: var(--ash);
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+	padding: 40px 24px;
+	text-align: center;
+	color: var(--pewter);
+}
+
+/* ---------- Tool shell ---------- */
+.tool {
+	max-width: 1383px;
+	margin: 0 auto;
+	padding: 40px 24px 80px;
+}
+
+.tool-head {
+	text-align: center;
+	margin-bottom: 40px;
+}
+
+.tool-head h1 {
+	font-size: 40px;
+	line-height: 1.2;
+	font-weight: 500;
+}
+
+.tool-head p {
+	color: var(--pewter);
+	margin: 8px 0 0;
+}
+
+.dropzone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	min-height: 320px;
+	background: var(--ash);
+	border-radius: 12px;
+	cursor: pointer;
+	transition: background-color 0.33s var(--ease);
+}
+
+.dropzone:hover,
+.dropzone.dragging {
+	background: var(--cloud);
+}
+
+.dropzone .dz-title {
+	font-size: 17px;
+	font-weight: 500;
+	color: var(--carbon);
+}
+
+.dropzone .dz-hint {
+	color: var(--silver);
+}
+
+.editor {
+	display: grid;
+	grid-template-columns: 1fr 300px;
+	gap: 24px;
+	align-items: start;
+}
+
+.stage {
+	background: var(--ash);
+	border-radius: 12px;
+	padding: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 400px;
+}
+
+.stage canvas {
+	max-width: 100%;
+	max-height: 75vh;
+	border-radius: 4px;
+	touch-action: none;
+}
+
+.stage.checkered canvas {
+	background-image:
+		linear-gradient(45deg, var(--cloud) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--cloud) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, var(--cloud) 75%),
+		linear-gradient(-45deg, transparent 75%, var(--cloud) 75%);
+	background-size: 16px 16px;
+	background-position:
+		0 0,
+		0 8px,
+		8px -8px,
+		-8px 0;
+}
+
+.controls {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.controls .actions {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.controls .actions .btn {
+	width: 100%;
+}
+
+/* ---------- Control widgets ---------- */
+.control-group {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.control-group h3 {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.field label {
+	display: flex;
+	justify-content: space-between;
+	color: var(--pewter);
+}
+
+.field label output {
+	color: var(--carbon);
+}
+
+input[type='range'] {
+	width: 100%;
+	accent-color: var(--blue);
+}
+
+input[type='text'],
+input[type='number'],
+select {
+	font-family: var(--font);
+	font-size: 14px;
+	color: var(--carbon);
+	padding: 8px;
+	border: 1px solid var(--pale);
+	border-radius: 4px;
+	background: var(--white);
+	width: 100%;
+}
+
+input[type='text']::placeholder {
+	color: var(--silver);
+}
+
+input[type='color'] {
+	width: 40px;
+	height: 32px;
+	padding: 2px;
+	border: 1px solid var(--pale);
+	border-radius: 4px;
+	background: var(--white);
+	cursor: pointer;
+}
+
+.row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.checkbox {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	color: var(--pewter);
+	cursor: pointer;
+}
+
+.checkbox input {
+	accent-color: var(--blue);
+}
+
+/* ---------- Filter / preset grids ---------- */
+.preset-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+}
+
+.preset {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 6px;
+	border: 2px solid transparent;
+	border-radius: 4px;
+	background: transparent;
+	cursor: pointer;
+	font-family: var(--font);
+	font-size: 12px;
+	color: var(--pewter);
+	transition: border-color 0.33s var(--ease);
+}
+
+.preset.active {
+	border-color: var(--blue);
+	color: var(--carbon);
+}
+
+.preset canvas {
+	width: 100%;
+	border-radius: 4px;
+	background: var(--cloud);
+}
+
+/* ---------- Layer list ---------- */
+.layer-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.layer-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px;
+	border-radius: 4px;
+	background: var(--ash);
+	cursor: pointer;
+	transition: background-color 0.33s var(--ease);
+}
+
+.layer-item.active {
+	background: var(--cloud);
+	outline: 2px solid var(--blue);
+}
+
+.layer-item .layer-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--carbon);
+}
+
+.layer-item .layer-del {
+	border: none;
+	background: none;
+	color: var(--silver);
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 1;
+	padding: 0 4px;
+}
+
+.layer-item .layer-del:hover {
+	color: var(--carbon);
+}
+
+/* ---------- Home ---------- */
+.hero {
+	min-height: 70vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 24px;
+	background: var(--carbon);
+	color: var(--white);
+	text-align: center;
+	padding: 40px 24px;
+}
+
+.hero h1 {
+	font-size: 40px;
+	font-weight: 500;
+	color: var(--white);
+	line-height: 1.2;
+}
+
+.hero p {
+	font-size: 17px;
+	color: var(--pale);
+	max-width: 560px;
+	margin: 0;
+}
+
+.hero .cta-row {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.hero .btn {
+	width: 200px;
+}
+
+.tool-grid {
+	max-width: 1383px;
+	margin: 0 auto;
+	padding: 80px 24px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 16px;
+}
+
+.tool-card {
+	background: var(--ash);
+	border-radius: 12px;
+	padding: 32px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	transition: background-color 0.33s var(--ease);
+}
+
+.tool-card:hover {
+	background: var(--cloud);
+}
+
+.tool-card h2 {
+	font-size: 17px;
+	font-weight: 500;
+}
+
+.tool-card p {
+	margin: 0;
+	color: var(--pewter);
+	flex: 1;
+}
+
+.tool-card .open-link {
+	color: var(--blue);
+	font-weight: 500;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+	.editor {
+		grid-template-columns: 1fr;
+	}
+
+	.tool-head h1,
+	.hero h1 {
+		font-size: 28px;
+	}
+
+	.site-nav {
+		flex-direction: column;
+		gap: 8px;
+	}
+}

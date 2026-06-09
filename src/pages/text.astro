@@ -1,0 +1,328 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ToolShell from '../components/ToolShell.astro';
+---
+
+<Layout title="Add Text to Photo — Free Image Tools">
+	<ToolShell
+		title="Add Text"
+		subtitle="Place text on your photo, style it, and drag it into position."
+	>
+		<button id="add-text-btn" class="btn btn-primary">Add Text</button>
+		<div class="control-group">
+			<h3>Layers</h3>
+			<div class="layer-list" id="layer-list"></div>
+		</div>
+		<div class="control-group" id="text-controls" hidden>
+			<h3>Selected Text</h3>
+			<div class="field">
+				<input type="text" id="text-content" placeholder="Your text" />
+			</div>
+			<div class="field">
+				<label>Font</label>
+				<select id="text-font">
+					<option value="Arial, sans-serif">Arial</option>
+					<option value="Georgia, serif">Georgia</option>
+					<option value="'Times New Roman', serif">Times New Roman</option>
+					<option value="'Courier New', monospace">Courier New</option>
+					<option value="Impact, sans-serif">Impact</option>
+					<option value="Verdana, sans-serif">Verdana</option>
+					<option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+					<option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+				</select>
+			</div>
+			<div class="field">
+				<label>Size <output>48</output></label>
+				<input type="range" id="text-size" min="8" max="300" value="48" />
+			</div>
+			<div class="row">
+				<label class="checkbox"><input type="checkbox" id="text-bold" /> Bold</label>
+				<label class="checkbox"><input type="checkbox" id="text-italic" /> Italic</label>
+			</div>
+			<div class="row">
+				<label class="checkbox">Color <input type="color" id="text-color" value="#ffffff" /></label>
+				<label class="checkbox">Outline <input type="color" id="text-outline-color" value="#171a20" /></label>
+			</div>
+			<div class="field">
+				<label>Outline Width <output>0</output></label>
+				<input type="range" id="text-outline-width" min="0" max="20" value="0" />
+			</div>
+		</div>
+	</ToolShell>
+</Layout>
+
+<script>
+	import { initTool, bindRange } from '../scripts/tool';
+
+	interface TextLayer {
+		text: string;
+		x: number;
+		y: number;
+		size: number;
+		font: string;
+		color: string;
+		bold: boolean;
+		italic: boolean;
+		outlineColor: string;
+		outlineWidth: number;
+	}
+
+	let image: HTMLImageElement | null = null;
+	let layers: TextLayer[] = [];
+	let selected: TextLayer | null = null;
+	let exporting = false;
+
+	const { canvas, ctx, canvasPoint } = initTool({
+		onImage(img) {
+			image = img;
+			layers = [];
+			selected = null;
+			refreshControls();
+			renderLayerList();
+			render();
+		},
+		beforeDownload() {
+			exporting = true;
+			render();
+		},
+		afterDownload() {
+			exporting = false;
+			render();
+		},
+	});
+
+	function fontString(layer: TextLayer) {
+		return `${layer.italic ? 'italic ' : ''}${layer.bold ? '700' : '400'} ${layer.size}px ${layer.font}`;
+	}
+
+	function layerBox(layer: TextLayer) {
+		ctx.font = fontString(layer);
+		const width = ctx.measureText(layer.text || ' ').width;
+		const height = layer.size * 1.2;
+		return {
+			left: layer.x - width / 2,
+			top: layer.y - height / 2,
+			width,
+			height,
+		};
+	}
+
+	function render() {
+		if (!image) return;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+		for (const layer of layers) {
+			if (!layer.text) continue;
+			ctx.font = fontString(layer);
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			if (layer.outlineWidth > 0) {
+				ctx.lineWidth = layer.outlineWidth;
+				ctx.lineJoin = 'round';
+				ctx.strokeStyle = layer.outlineColor;
+				ctx.strokeText(layer.text, layer.x, layer.y);
+			}
+			ctx.fillStyle = layer.color;
+			ctx.fillText(layer.text, layer.x, layer.y);
+		}
+
+		if (selected && !exporting) {
+			const box = layerBox(selected);
+			ctx.save();
+			ctx.strokeStyle = '#3e6ae1';
+			ctx.lineWidth = Math.max(2, canvas.width / 400);
+			ctx.setLineDash([8, 6]);
+			ctx.strokeRect(
+				box.left - 8,
+				box.top - 8,
+				box.width + 16,
+				box.height + 16,
+			);
+			ctx.restore();
+		}
+	}
+
+	// ---------- Layer management ----------
+	const layerList = document.getElementById('layer-list')!;
+	const controls = document.getElementById('text-controls')!;
+
+	const contentInput = document.getElementById(
+		'text-content',
+	) as HTMLInputElement;
+	const fontSelect = document.getElementById('text-font') as HTMLSelectElement;
+	const boldInput = document.getElementById('text-bold') as HTMLInputElement;
+	const italicInput = document.getElementById(
+		'text-italic',
+	) as HTMLInputElement;
+	const colorInput = document.getElementById('text-color') as HTMLInputElement;
+	const outlineColorInput = document.getElementById(
+		'text-outline-color',
+	) as HTMLInputElement;
+
+	const sizeInput = bindRange('text-size', (value) => {
+		if (!selected) return;
+		selected.size = value;
+		render();
+	});
+	const outlineWidthInput = bindRange('text-outline-width', (value) => {
+		if (!selected) return;
+		selected.outlineWidth = value;
+		render();
+	});
+
+	document.getElementById('add-text-btn')!.addEventListener('click', () => {
+		if (!image) return;
+		const layer: TextLayer = {
+			text: 'Your text here',
+			x: canvas.width / 2,
+			y: canvas.height / 2,
+			size: Math.max(16, Math.round(canvas.width / 12)),
+			font: 'Arial, sans-serif',
+			color: '#ffffff',
+			bold: false,
+			italic: false,
+			outlineColor: '#171a20',
+			outlineWidth: 0,
+		};
+		layers.push(layer);
+		selectLayer(layer);
+		contentInput.focus();
+		contentInput.select();
+	});
+
+	function selectLayer(layer: TextLayer | null) {
+		selected = layer;
+		refreshControls();
+		renderLayerList();
+		render();
+	}
+
+	function refreshControls() {
+		controls.hidden = !selected;
+		if (!selected) return;
+		contentInput.value = selected.text;
+		fontSelect.value = selected.font;
+		boldInput.checked = selected.bold;
+		italicInput.checked = selected.italic;
+		colorInput.value = selected.color;
+		outlineColorInput.value = selected.outlineColor;
+		setRange(sizeInput, selected.size);
+		setRange(outlineWidthInput, selected.outlineWidth);
+	}
+
+	function setRange(input: HTMLInputElement, value: number) {
+		input.value = String(value);
+		const output = input.closest('.field')?.querySelector('output');
+		if (output) output.textContent = String(value);
+	}
+
+	function renderLayerList() {
+		layerList.innerHTML = '';
+		for (const layer of layers) {
+			const item = document.createElement('div');
+			item.className = `layer-item${layer === selected ? ' active' : ''}`;
+			const name = document.createElement('span');
+			name.className = 'layer-name';
+			name.textContent = layer.text || '(empty)';
+			const del = document.createElement('button');
+			del.className = 'layer-del';
+			del.type = 'button';
+			del.textContent = '×';
+			del.title = 'Delete layer';
+			del.addEventListener('click', (e) => {
+				e.stopPropagation();
+				layers = layers.filter((l) => l !== layer);
+				if (selected === layer) selected = null;
+				selectLayer(selected);
+			});
+			item.append(name, del);
+			item.addEventListener('click', () => selectLayer(layer));
+			layerList.appendChild(item);
+		}
+	}
+
+	// ---------- Control bindings ----------
+	contentInput.addEventListener('input', () => {
+		if (!selected) return;
+		selected.text = contentInput.value;
+		renderLayerList();
+		render();
+	});
+	fontSelect.addEventListener('change', () => {
+		if (!selected) return;
+		selected.font = fontSelect.value;
+		render();
+	});
+	boldInput.addEventListener('change', () => {
+		if (!selected) return;
+		selected.bold = boldInput.checked;
+		render();
+	});
+	italicInput.addEventListener('change', () => {
+		if (!selected) return;
+		selected.italic = italicInput.checked;
+		render();
+	});
+	colorInput.addEventListener('input', () => {
+		if (!selected) return;
+		selected.color = colorInput.value;
+		render();
+	});
+	outlineColorInput.addEventListener('input', () => {
+		if (!selected) return;
+		selected.outlineColor = outlineColorInput.value;
+		render();
+	});
+
+	// ---------- Dragging ----------
+	let dragging: TextLayer | null = null;
+	let dragOffsetX = 0;
+	let dragOffsetY = 0;
+
+	canvas.addEventListener('pointerdown', (e) => {
+		if (!image) return;
+		const point = canvasPoint(e);
+		for (let i = layers.length - 1; i >= 0; i--) {
+			const box = layerBox(layers[i]);
+			if (
+				point.x >= box.left - 8 &&
+				point.x <= box.left + box.width + 8 &&
+				point.y >= box.top - 8 &&
+				point.y <= box.top + box.height + 8
+			) {
+				dragging = layers[i];
+				dragOffsetX = point.x - dragging.x;
+				dragOffsetY = point.y - dragging.y;
+				canvas.setPointerCapture(e.pointerId);
+				if (selected !== dragging) selectLayer(dragging);
+				return;
+			}
+		}
+		selectLayer(null);
+	});
+
+	canvas.addEventListener('pointermove', (e) => {
+		if (!dragging) return;
+		const point = canvasPoint(e);
+		dragging.x = point.x - dragOffsetX;
+		dragging.y = point.y - dragOffsetY;
+		render();
+	});
+
+	canvas.addEventListener('pointerup', () => {
+		dragging = null;
+	});
+	canvas.addEventListener('pointercancel', () => {
+		dragging = null;
+	});
+</script>
+
+<style is:global>
+	#add-text-btn {
+		width: 100%;
+	}
+	#canvas {
+		cursor: move;
+	}
+</style>
