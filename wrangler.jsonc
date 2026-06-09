@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "myfreeimagetool",
+	"compatibility_date": "2026-06-09",
+	"observability": {
+		"enabled": true
+	},
+	// The site is an Astro project: deploy the build output, not the repo root.
+	// Build with `npm run build` before `wrangler deploy`.
+	"assets": {
+		"directory": "./dist"
+	},
+	"compatibility_flags": ["nodejs_compat"]
+}
