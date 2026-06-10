@@ -520,12 +520,12 @@ check(
 );
 await page.waitForTimeout(100);
 const rectPixel = await pixelAt(page, 120, 80);
-// Default fill is #7c5cff.
+// Default fill is #4f46e5.
 check(
 	'shapes: blue rectangle drawn at center',
-	Math.abs(rectPixel[0] - 0x7c) < 12 &&
-		Math.abs(rectPixel[1] - 0x5c) < 12 &&
-		Math.abs(rectPixel[2] - 0xff) < 12,
+	Math.abs(rectPixel[0] - 0x4f) < 12 &&
+		Math.abs(rectPixel[1] - 0x46) < 12 &&
+		Math.abs(rectPixel[2] - 0xe5) < 12,
 	`pixel=${rectPixel}`,
 );
 await page.click('[data-shape="arrow"]');

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0a0a0b" />
+<meta name="theme-color" content="#ffffff" />
 
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
@@ -87,10 +87,6 @@
 
 <main>
   <section class="hero">
-    <div class="orb orb-a" aria-hidden="true"></div>
-    <div class="orb orb-b" aria-hidden="true"></div>
-    <div class="orb orb-c" aria-hidden="true"></div>
-    <div class="spot" aria-hidden="true"></div>
     <div class="container">
       <p class="eyebrow">Free · Private · No signup</p>
       <h1 class="hero-title">
@@ -112,19 +108,6 @@
         <span class="trust-item">Unlimited &amp; free</span>
       </div>
     </div>
-    <div class="hero-visual">
-      <div class="mock">
-        <div class="mock-bar"><i></i><i></i><i></i><span class="mock-url">myfreeimagetool.com/editor</span></div>
-        <div class="mock-body">
-          <div class="mock-rail"><b class="on"></b><b></b><b></b><b></b><b></b><b></b></div>
-          <div class="mock-canvas">
-            <svg class="scene" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" style="height:300px"><use href="#scene"/></svg>
-            <div class="mock-crop"><i></i><i></i><i></i><i></i></div>
-            <div class="mock-badge">2.4 MB <b>→ 312 KB</b></div>
-          </div>
-        </div>
-      </div>
-    </div>
   </section>
 
   <section class="stats" aria-label="MyFreeImageTool at a glance">
@@ -136,14 +119,13 @@
     </div>
   </section>
 
-  <section id="tools" class="tools showcase">
+  <section id="tools" class="tools">
     <div class="container">
       <p class="section-label">Tools</p>
       <h2 class="section-title">Everything you need</h2>
       <p class="section-sub">All free, unlimited, and processed entirely in your browser.</p>
     </div>
-    <div class="showcase-pin">
-    <div class="tile-track">
+    <div class="tile-grid">
       <a href="/compress-image/" class="tile">
         <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4" stroke-linecap="round"/></svg></span>
         <h3>Compress</h3><p>Shrink JPG, PNG or WebP with a quality slider.</p><span class="tile-cta">Open →</span>
@@ -204,7 +186,6 @@
         <span class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><path d="M12 7a5 5 0 1 0 0 10" stroke-linecap="round"/></svg></span>
         <h3>Remove Background</h3><p>Click a colour to make it transparent.</p><span class="tile-cta">Open →</span>
       </a>
-    </div>
     </div>
   </section>
 
@@ -301,5 +282,6 @@
 
 <script src="/app.js" defer></script>
 <script src="/motion.js" defer></script>
+<script src="/scene3d.js" defer></script>
 </body>
 </html>

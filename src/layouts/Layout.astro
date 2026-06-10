@@ -43,14 +43,16 @@ const tools = [
 		</script>
 
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="theme-color" content="#0a0a0b" />
+		<meta name="theme-color" content="#ffffff" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>
 		<script src="/motion.js" defer is:inline></script>
+		<script src="/scene3d.js" defer is:inline></script>
 	</head>
-	<body>
+	<body data-scene="lite">
 		<nav class="site-nav">
+			<div class="nav-pill">
 			<a href="/" class="brand" aria-label="MyFreeImageTool home">
 				<svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
 					<path
@@ -72,6 +74,7 @@ const tools = [
 			<div class="nav-links">
 				{tools.map((t) => <a href={t.href}>{t.label}</a>)}
 				<a href="/editor/">Editor</a>
+			</div>
 			</div>
 		</nav>
 		<main>

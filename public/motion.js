@@ -1,6 +1,6 @@
-/* Motion — scroll reveals, progress bar, glass nav, count-ups,
-   horizontal showcase, spotlight, tilt, magnetic buttons.
-   Vanilla JS, transform/opacity only, reduced-motion aware. */
+/* Motion — scroll reveals, progress bar, glass nav, count-ups.
+   Vanilla JS, transform/opacity only, reduced-motion aware.
+   (The 3D background lives in scene3d.js.) */
 (function () {
   'use strict';
   var doc = document.documentElement;
@@ -15,25 +15,9 @@
     document.body.appendChild(bar);
   }
 
-  // ---------- Glass nav after 100px ----------
+  // ---------- Nav shadow state on scroll ----------
   var nav = document.querySelector('.nav, .site-nav');
 
-  // ---------- Sticky horizontal showcase ----------
-  var showcase = document.querySelector('.showcase');
-  var track = document.querySelector('.tile-track');
-  var pin = document.querySelector('.showcase-pin');
-  var showcaseOn = false;
-
-  function sizeShowcase() {
-    showcaseOn = !!(showcase && track && pin) && !reduced && window.innerWidth > 900;
-    if (!showcase) return;
-    if (!showcaseOn) { showcase.style.height = ''; if (track) track.style.transform = ''; return; }
-    var distance = track.scrollWidth - window.innerWidth;
-    if (distance < 0) distance = 0;
-    showcase.style.height = (pin.offsetTop - showcase.offsetTop) + pin.offsetHeight + distance + 'px';
-  }
-
-  // ---------- Unified scroll handler (rAF-throttled) ----------
   var ticking = false;
   function onScroll() {
     if (ticking) return;
@@ -46,19 +30,9 @@
         var max = doc.scrollHeight - window.innerHeight;
         bar.style.transform = 'scaleX(' + (max > 0 ? y / max : 0) + ')';
       }
-      if (showcaseOn) {
-        var start = showcase.offsetTop;
-        var range = showcase.offsetHeight - pin.offsetHeight;
-        var p = range > 0 ? (y - start) / range : 0;
-        p = p < 0 ? 0 : p > 1 ? 1 : p;
-        var distance = track.scrollWidth - window.innerWidth;
-        track.style.transform = 'translate3d(' + -p * distance + 'px,0,0)';
-      }
     });
   }
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function () { sizeShowcase(); onScroll(); }, { passive: true });
-  sizeShowcase();
   onScroll();
 
   // ---------- Scroll reveals (auto-tag common blocks; stagger grids) ----------
@@ -73,9 +47,9 @@
     var i = 0;
     group.querySelectorAll('.rv').forEach(function (el) { el.style.setProperty('--d', i++ % 8); });
   });
-  // Tiles reveal with stagger when the showcase is in grid mode.
   document.querySelectorAll('.tile').forEach(function (el, i) {
-    if (!showcaseOn) { el.classList.add('rv'); el.style.setProperty('--d', i % 6); }
+    el.classList.add('rv');
+    el.style.setProperty('--d', i % 6);
   });
 
   var revealEls = document.querySelectorAll('.rv');
@@ -124,55 +98,4 @@
       counters.forEach(function (el) { cio.observe(el); });
     }
   }
-
-  if (reduced) return; // pointer effects below are motion-only
-
-  var fine = window.matchMedia('(pointer: fine)').matches;
-  if (!fine) return;
-
-  // ---------- Hero cursor spotlight ----------
-  var hero = document.querySelector('.hero');
-  var spot = document.querySelector('.spot');
-  if (hero && spot) {
-    var sx = 0, sy = 0, spotTick = false;
-    hero.addEventListener('mousemove', function (e) {
-      var r = hero.getBoundingClientRect();
-      sx = e.clientX - r.left - 450;
-      sy = e.clientY - r.top - 450;
-      if (spotTick) return;
-      spotTick = true;
-      requestAnimationFrame(function () {
-        spotTick = false;
-        spot.style.transform = 'translate3d(' + sx + 'px,' + sy + 'px,0)';
-      });
-    }, { passive: true });
-  }
-
-  // ---------- Mock editor tilt ----------
-  var rig = document.querySelector('.hero-visual');
-  var mock = document.querySelector('.mock');
-  if (rig && mock) {
-    rig.addEventListener('mousemove', function (e) {
-      var r = rig.getBoundingClientRect();
-      var px = (e.clientX - r.left) / r.width - 0.5;
-      var py = (e.clientY - r.top) / r.height - 0.5;
-      mock.style.setProperty('--ry', (px * 7).toFixed(2) + 'deg');
-      mock.style.setProperty('--rx', (-py * 7).toFixed(2) + 'deg');
-    }, { passive: true });
-    rig.addEventListener('mouseleave', function () {
-      mock.style.setProperty('--rx', '0deg');
-      mock.style.setProperty('--ry', '0deg');
-    });
-  }
-
-  // ---------- Magnetic buttons ----------
-  document.querySelectorAll('.hero-cta .btn, .btn-magnetic').forEach(function (btn) {
-    btn.addEventListener('mousemove', function (e) {
-      var r = btn.getBoundingClientRect();
-      var mx = (e.clientX - r.left - r.width / 2) / (r.width / 2);
-      var my = (e.clientY - r.top - r.height / 2) / (r.height / 2);
-      btn.style.transform = 'translate(' + (mx * 5).toFixed(1) + 'px,' + (my * 4).toFixed(1) + 'px)';
-    }, { passive: true });
-    btn.addEventListener('mouseleave', function () { btn.style.transform = ''; });
-  });
 })();
