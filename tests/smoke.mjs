@@ -148,6 +148,136 @@ check(
 	consoleErrors.slice(0, 5).join(' | '),
 );
 
+// ---------- Editor: text on image, draw, eraser, undo/redo/reset ----------
+console.log('editor tools');
+await page.goto(`${BASE}/editor/`);
+{
+	const buffer = await makeTestImage(page);
+	await page.setInputFiles('#file-input', {
+		name: 'test.png',
+		mimeType: 'image/png',
+		buffer,
+	});
+	await page.waitForSelector('#image-stage', { state: 'visible' });
+
+	const ePixel = (x, y) =>
+		page.evaluate(
+			([px, py]) => {
+				const c = document.getElementById('img-canvas');
+				return Array.from(
+					c.getContext('2d').getImageData(px, py, 1, 1).data,
+				);
+			},
+			[x, y],
+		);
+	const hasWhiteInRegion = () =>
+		page.evaluate(() => {
+			const c = document.getElementById('img-canvas');
+			const d = c.getContext('2d').getImageData(15, 55, 140, 50).data;
+			for (let i = 0; i < d.length; i += 4) {
+				if (d[i] > 220 && d[i + 1] > 220 && d[i + 2] > 220) return true;
+			}
+			return false;
+		});
+
+	// --- Text tool: type directly on the image ---
+	await page.click('[data-tool="text"]');
+	await page.waitForSelector('#tx-live');
+	check('editor: live text box on image', await page.locator('#tx-live').isVisible());
+	check(
+		'editor: 14 fonts available',
+		(await page.locator('#tx-font option').count()) === 14,
+		`count=${await page.locator('#tx-font option').count()}`,
+	);
+	check(
+		'editor: font size slider present',
+		(await page.locator('#tx-size[type=range]').count()) === 1,
+	);
+	await page.waitForTimeout(300);
+	await page.keyboard.type('HELLO');
+	await page.waitForTimeout(150);
+	const sideVal = await page.locator('#tx-text').inputValue();
+	check(
+		'editor: typing on image syncs to sidebar',
+		sideVal === 'HELLO',
+		`side="${sideVal}"`,
+	);
+	await page.click('#tx-go');
+	await page.waitForTimeout(700);
+	check('editor: applied text baked into image', await hasWhiteInRegion());
+	check(
+		'editor: undo enabled after apply',
+		!(await page.locator('#undo-btn').isDisabled()),
+	);
+	await page.click('#undo-btn');
+	await page.waitForTimeout(500);
+	check('editor: undo removes applied text', !(await hasWhiteInRegion()));
+
+	// --- Draw + eraser ---
+	await page.click('[data-tool="draw"]');
+	await page.waitForSelector('#d-color');
+	await page.locator('#d-color').fill('#00ff00');
+	const box = await page.locator('#img-canvas').boundingBox();
+	const yMid = box.y + box.height / 2;
+	async function dragAcross() {
+		await page.mouse.move(box.x + box.width * 0.25, yMid);
+		await page.mouse.down();
+		await page.mouse.move(box.x + box.width * 0.4, yMid, { steps: 6 });
+		await page.mouse.up();
+		await page.waitForTimeout(150);
+	}
+	await dragAcross();
+	const strokePixel = await ePixel(78, 80);
+	check(
+		'editor: brush stroke drawn',
+		strokePixel[1] > 200 && strokePixel[0] < 80,
+		`pixel=${strokePixel}`,
+	);
+
+	await page.click('[data-mode="erase"]');
+	await dragAcross();
+	const erasedPixel = await ePixel(78, 80);
+	check(
+		'editor: eraser removes stroke',
+		erasedPixel[0] > 200 && erasedPixel[1] < 60,
+		`pixel=${erasedPixel}`,
+	);
+
+	await page.click('#undo-btn'); // undo the erase -> stroke comes back
+	await page.waitForTimeout(400);
+	const undoneErase = await ePixel(78, 80);
+	check(
+		'editor: undo restores erased stroke',
+		undoneErase[1] > 200,
+		`pixel=${undoneErase}`,
+	);
+
+	await page.click('#redo-btn'); // redo the erase
+	await page.waitForTimeout(400);
+	const redone = await ePixel(78, 80);
+	check(
+		'editor: redo re-applies erase',
+		redone[0] > 200 && redone[1] < 60,
+		`pixel=${redone}`,
+	);
+
+	// --- Reset clears drawings ---
+	await page.click('[data-mode="brush"]');
+	await dragAcross();
+	await page.click('#reset-btn');
+	await page.waitForTimeout(500);
+	const resetPx = await ePixel(78, 80);
+	check(
+		'editor: reset clears drawings',
+		resetPx[0] > 200 && resetPx[1] < 60,
+		`pixel=${resetPx}`,
+	);
+	check(
+		'editor: undo disabled after reset',
+		await page.locator('#undo-btn').isDisabled(),
+	);
+}
+
 // ---------- Adjust ----------
 console.log('adjust');
 await page.goto(`${BASE}/adjust`);

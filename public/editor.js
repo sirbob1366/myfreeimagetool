@@ -16,9 +16,10 @@
     textPos: null,        // { x, y } image-space anchor for the text tool
     objects: [],          // non-destructive overlay: draw strokes + shapes (image coords)
     selectedObjId: null,
-    history: [],          // array of { blob, name, type }
+    history: [],          // array of { blob, name, type, objects }
     histIndex: -1,
-    original: null        // first loaded blob for Reset
+    original: null,       // first loaded blob
+    initial: null         // full initial snapshot { blob, name, type, objects } for Reset
   };
 
   const $ = s => document.querySelector(s);
@@ -39,7 +40,7 @@
   const resetBtn = $('#reset-btn');
   const inspectorTitle = $('#inspector-title');
   const inspectorHint = $('#inspector-hint');
-  const inspectorBody = $('#inspector-body');
+  let inspectorBody = $('#inspector-body');
 
   // ---------- Loading ----------
   ImgUtils.attachDropzone({ dropzone, input: fileInput, onFiles: files => loadFile(files[0]) });
@@ -60,8 +61,9 @@
       document.querySelectorAll('.tool-btn').forEach(b => b.disabled = false);
       renderViewer();
       // history starts with the loaded image
-      state.history = [{ blob: file, name: file.name, type: src.type }];
+      state.history = [{ blob: file, name: file.name, type: src.type, objects: [] }];
       state.histIndex = 0;
+      state.initial = { blob: file, name: file.name, type: src.type, objects: [] };
       updateHistoryButtons();
       setTool('compress');
       ImgUtils.setStatus('');
@@ -152,12 +154,14 @@
   }
 
   // Bake overlay objects into the base image (called before destructive ops / export).
+  // Returns the flattened blob, or undefined if there was nothing to flatten.
   async function flattenObjects() {
     if (!state.objects.length) return;
     const c = compositeCanvas();
     const blob = await new Promise(r => c.toBlob(r, state.src.type || 'image/png', 0.95));
     state.objects = []; state.selectedObjId = null;
     await setImageFromBlob(blob, state.src.name);
+    return blob;
   }
 
   // map a pointer event to image-space coords
@@ -167,18 +171,34 @@
   }
 
   // ---------- History ----------
-  function pushHistory(blob, name) {
+  // Each entry snapshots the base image AND the overlay objects, so undo/redo
+  // covers draw strokes, shapes and layer edits — not just image operations.
+  const cloneObjs = list => (list || state.objects).map(o => ({ ...o }));
+
+  function pushEntry(entry) {
     if (state.histIndex < state.history.length - 1) state.history = state.history.slice(0, state.histIndex + 1);
-    state.history.push({ blob, name, type: blob.type });
+    state.history.push(entry);
     if (state.history.length > 30) state.history.shift();
     state.histIndex = state.history.length - 1;
     updateHistoryButtons();
   }
+  function pushHistory(blob, name) {
+    pushEntry({ blob, name, type: blob.type, objects: cloneObjs() });
+  }
+  // Snapshot an overlay-only change (stroke added/erased, shape, layer edit).
+  function pushObjects() {
+    const cur = state.history[state.histIndex];
+    if (!cur) return;
+    pushEntry({ blob: cur.blob, name: cur.name, type: cur.type, objects: cloneObjs() });
+  }
   async function restoreHistory(i) {
     const h = state.history[i];
     state.histIndex = i;
+    state.objects = cloneObjs(h.objects);
+    state.selectedObjId = null;
     await setImageFromBlob(h.blob, h.name);
     updateHistoryButtons();
+    if (state.currentTool === 'layers') renderLayers();
   }
   function updateHistoryButtons() {
     if (undoBtn) undoBtn.disabled = state.histIndex <= 0;
@@ -186,12 +206,24 @@
   }
   undoBtn.onclick = () => { if (state.histIndex > 0) restoreHistory(state.histIndex - 1); };
   redoBtn.onclick = () => { if (state.histIndex < state.history.length - 1) restoreHistory(state.histIndex + 1); };
-  resetBtn.onclick = () => { if (state.original) { state.history = []; setImageFromBlob(state.original, state.original.name).then(() => { pushHistory(state.original, state.original.name); }); } };
+  resetBtn.onclick = async () => {
+    const init = state.initial;
+    if (!init) return;
+    state.objects = cloneObjs(init.objects);
+    state.selectedObjId = null;
+    await setImageFromBlob(init.blob, init.name);
+    state.history = [{ blob: init.blob, name: init.name, type: init.type, objects: cloneObjs(init.objects) }];
+    state.histIndex = 0;
+    updateHistoryButtons();
+    if (state.currentTool === 'layers') renderLayers();
+    ImgUtils.setStatus('Reverted to original.', 'success');
+  };
 
   document.addEventListener('keydown', e => {
     if (!state.src) return;
-    const t = document.activeElement && document.activeElement.tagName;
-    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+    const a = document.activeElement;
+    const t = a && a.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || (a && a.isContentEditable)) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undoBtn.click(); }
     else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); redoBtn.click(); }
   });
@@ -251,6 +283,7 @@
   function showNewCanvas() {
     state.currentTool = 'newcanvas';
     document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === 'newcanvas'));
+    freshInspector();
     inspectorTitle.textContent = 'New design';
     inspectorHint.textContent = 'Pick a size and background, then add text, shapes and images.';
     const presetOpts = ImageEngine.SIZE_PRESETS.map((p, i) => `<option value="${i}">${p.label}</option>`).join('');
@@ -338,8 +371,9 @@
       actionBar.style.display = 'flex';
       document.querySelectorAll('.tool-btn').forEach(b => b.disabled = false);
       renderViewer();
-      state.history = [{ blob: baseBlob, name: state.baseName + '.png', type: 'image/png' }];
+      state.history = [{ blob: baseBlob, name: state.baseName + '.png', type: 'image/png', objects: cloneObjs() }];
       state.histIndex = 0;
+      state.initial = { blob: baseBlob, name: state.baseName + '.png', type: 'image/png', objects: cloneObjs() };
       updateHistoryButtons();
       setTool(state.objects.length ? 'layers' : 'compress');
       ImgUtils.setStatus(msg, 'success');
@@ -350,7 +384,16 @@
   }
 
   // ---------- Inspector ----------
+  // Swap in a fresh node so listeners from the previous tool's panel
+  // (live previews etc.) don't fire against elements that no longer exist.
+  function freshInspector() {
+    const fresh = inspectorBody.cloneNode(false);
+    inspectorBody.parentNode.replaceChild(fresh, inspectorBody);
+    inspectorBody = fresh;
+  }
+
   function showInspector(tool) {
+    freshInspector();
     inspectorBody.innerHTML = '';
     if (tool === 'text') return inspText();
     if (tool === 'draw') return inspDraw();
@@ -369,17 +412,72 @@
 
   function inspDraw() {
     inspectorTitle.textContent = 'Draw';
-    inspectorHint.textContent = 'Drag on the image to draw freehand. Each stroke is its own layer.';
+    inspectorHint.textContent = 'Drag on the image to draw. Switch to the eraser to remove strokes it touches.';
     inspectorBody.innerHTML = `
+      <div class="field"><label>Mode</label><div class="seg" id="d-mode">
+        <button type="button" data-mode="brush" class="active">✏️ Brush</button>
+        <button type="button" data-mode="erase">🧽 Eraser</button>
+      </div></div>
       <div class="field-row">
         <div class="field"><label>Colour</label><input type="color" id="d-color" value="#ff3b30" /></div>
-        <div class="field"><label>Brush size <span class="range-val" id="d-w-v">8px</span></label><input type="range" id="d-w" min="1" max="60" value="8" /></div>
+        <div class="field"><label>Size <span class="range-val" id="d-w-v">8px</span></label><input type="range" id="d-w" min="1" max="60" value="8" /></div>
       </div>
-      <p class="meta-line">Use the Layers panel to hide or delete strokes.</p>
+      <div class="field-row" style="margin-top:6px;">
+        <button class="btn btn-ghost" id="d-undo" type="button">Undo stroke</button>
+        <button class="btn btn-ghost" id="d-clear" type="button">Clear all</button>
+      </div>
+      <p class="meta-line">The Layers panel can also hide or delete individual strokes.</p>
     `;
-    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    let mode = 'brush';
+    $('#d-mode').querySelectorAll('button').forEach(b => b.onclick = () => {
+      mode = b.dataset.mode;
+      $('#d-mode').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+      cropOverlay.style.cursor = mode === 'erase' ? 'cell' : 'crosshair';
+    });
     $('#d-w').oninput = () => $('#d-w-v').textContent = $('#d-w').value + 'px';
+    $('#d-undo').onclick = () => {
+      for (let i = state.objects.length - 1; i >= 0; i--) {
+        if (state.objects[i].kind === 'draw') { state.objects.splice(i, 1); pushObjects(); renderViewer(); return; }
+      }
+    };
+    $('#d-clear').onclick = () => {
+      const before = state.objects.length;
+      state.objects = state.objects.filter(o => o.kind !== 'draw');
+      if (state.objects.length !== before) { pushObjects(); renderViewer(); }
+    };
+    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    cropOverlay.style.cursor = 'crosshair';
+
+    // Object eraser: removes whole strokes the pointer passes over.
+    function eraseFrom(e) {
+      let removed = 0;
+      const tryErase = ev => {
+        const p = toImagePoint(ev);
+        const k = state.src.width / canvas.getBoundingClientRect().width;
+        const reach = Math.max(12, Number($('#d-w').value)) * k;
+        for (let i = state.objects.length - 1; i >= 0; i--) {
+          const o = state.objects[i];
+          if (o.kind !== 'draw' || o.visible === false) continue;
+          const limit = reach + (o.width || 4) / 2;
+          const hit = o.points.some(q => {
+            const dx = q[0] - p.x, dy = q[1] - p.y;
+            return dx * dx + dy * dy <= limit * limit;
+          });
+          if (hit) { state.objects.splice(i, 1); removed++; }
+        }
+        if (removed) renderViewer();
+      };
+      tryErase(e);
+      const move = ev => tryErase(ev);
+      const up = () => {
+        window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+        if (removed) pushObjects();
+      };
+      window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    }
+
     cropOverlay.onpointerdown = e => {
+      if (mode === 'erase') { eraseFrom(e); return; }
       const color = $('#d-color').value, width = Number($('#d-w').value), pts = [];
       const add = ev => {
         const p = toImagePoint(ev); pts.push([p.x, p.y]);
@@ -391,7 +489,7 @@
       const move = ev => add(ev);
       const up = () => {
         window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
-        if (pts.length) { state.objects.push({ id: uid(), kind: 'draw', color, width, points: pts, visible: true }); renderViewer(); }
+        if (pts.length) { state.objects.push({ id: uid(), kind: 'draw', color, width, points: pts, visible: true }); pushObjects(); renderViewer(); }
       };
       window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
     };
@@ -427,7 +525,7 @@
       };
       const up = () => {
         window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
-        if (Math.abs(o.ex - o.sx) > 2 || Math.abs(o.ey - o.sy) > 2) { state.objects.push(o); renderViewer(); }
+        if (Math.abs(o.ex - o.sx) > 2 || Math.abs(o.ey - o.sy) > 2) { state.objects.push(o); pushObjects(); renderViewer(); }
       };
       window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
     };
@@ -457,13 +555,16 @@
     inspectorBody.querySelectorAll('.layer-row[data-id]').forEach(row => {
       const id = row.dataset.id;
       const idx = () => state.objects.findIndex(o => o.id === id);
-      row.querySelector('.lr-vis').onclick = () => { const o = state.objects[idx()]; o.visible = o.visible === false; renderViewer(); renderLayers(); };
-      row.querySelector('.lr-up').onclick = () => { const i = idx(); if (i < state.objects.length - 1) { [state.objects[i], state.objects[i + 1]] = [state.objects[i + 1], state.objects[i]]; renderViewer(); renderLayers(); } };
-      row.querySelector('.lr-down').onclick = () => { const i = idx(); if (i > 0) { [state.objects[i], state.objects[i - 1]] = [state.objects[i - 1], state.objects[i]]; renderViewer(); renderLayers(); } };
-      row.querySelector('.lr-del').onclick = () => { state.objects.splice(idx(), 1); renderViewer(); renderLayers(); };
+      row.querySelector('.lr-vis').onclick = () => { const o = state.objects[idx()]; o.visible = o.visible === false; pushObjects(); renderViewer(); renderLayers(); };
+      row.querySelector('.lr-up').onclick = () => { const i = idx(); if (i < state.objects.length - 1) { [state.objects[i], state.objects[i + 1]] = [state.objects[i + 1], state.objects[i]]; pushObjects(); renderViewer(); renderLayers(); } };
+      row.querySelector('.lr-down').onclick = () => { const i = idx(); if (i > 0) { [state.objects[i], state.objects[i - 1]] = [state.objects[i - 1], state.objects[i]]; pushObjects(); renderViewer(); renderLayers(); } };
+      row.querySelector('.lr-del').onclick = () => { state.objects.splice(idx(), 1); pushObjects(); renderViewer(); renderLayers(); };
     });
     const fl = $('#lr-flatten');
-    if (fl) fl.onclick = () => flattenObjects().then(() => { renderViewer(); renderLayers(); ImgUtils.setStatus('Flattened into image.', 'success'); });
+    if (fl) fl.onclick = () => flattenObjects().then(blob => {
+      if (blob) pushHistory(blob, state.src.name);
+      renderViewer(); renderLayers(); ImgUtils.setStatus('Flattened into image.', 'success');
+    });
   }
 
   function inspFilters() {
@@ -508,48 +609,92 @@
 
   function inspText() {
     inspectorTitle.textContent = 'Add text';
-    inspectorHint.textContent = 'Type, pick a font/colour, then click on the image to position. Drag to move.';
+    inspectorHint.textContent = 'Click anywhere on the image and type directly. Drag the ✥ handle to move, then apply.';
     const fontOpts = ImageEngine.TEXT_FONTS.map((f, i) => `<option value='${f.css}' ${i === 0 ? 'selected' : ''}>${f.label}</option>`).join('');
+    const maxSize = Math.max(120, Math.round(state.src.width * 0.4));
+    const defSize = Math.max(12, Math.round(state.src.width * 0.08));
     inspectorBody.innerHTML = `
       <div class="field"><label>Text</label><textarea id="tx-text" rows="2">Your text</textarea></div>
       <div class="field"><label>Font</label><select id="tx-font">${fontOpts}</select></div>
-      <div class="field-row">
-        <div class="field"><label>Size</label><input type="number" id="tx-size" value="${Math.round(state.src.width * 0.08)}" min="6" /></div>
-        <div class="field"><label>Colour</label><input type="color" id="tx-color" value="#ffffff" /></div>
-      </div>
+      <div class="field"><label>Size <span class="range-val" id="tx-size-v">${defSize}px</span></label>
+        <input type="range" id="tx-size" min="8" max="${maxSize}" value="${defSize}" /></div>
+      <div class="field"><label>Colour</label><input type="color" id="tx-color" value="#ffffff" /></div>
       <div class="field"><label>Style</label><div class="seg"><button type="button" id="tx-bold" style="font-weight:700">Bold</button><button type="button" id="tx-italic" style="font-style:italic">Italic</button></div></div>
       <button class="btn btn-primary btn-block" id="tx-go" type="button" style="margin-top:12px;">Apply text</button>
     `;
     state.textPos = { x: Math.round(state.src.width * 0.1), y: Math.round(state.src.height * 0.42) };
-    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    cropOverlay.style.display = 'block';
+    cropOverlay.innerHTML = `
+      <div id="tx-wrap">
+        <span id="tx-grip" title="Drag to move">✥</span>
+        <div id="tx-live" contenteditable="true" spellcheck="false"></div>
+      </div>`;
+    const wrap = $('#tx-wrap'), live = $('#tx-live'), grip = $('#tx-grip');
+    const sideText = $('#tx-text'), fontSel = $('#tx-font'), sizeInput = $('#tx-size'), colorInput = $('#tx-color');
     let bold = false, italic = false;
-    const opts = () => ({ text: $('#tx-text').value, font: $('#tx-font').value, size: Number($('#tx-size').value), color: $('#tx-color').value, x: state.textPos.x, y: state.textPos.y, bold, italic });
-    const preview = () => drawTextPreview(opts());
-    ['input', 'change'].forEach(ev => inspectorBody.addEventListener(ev, () => { if (state.src) preview(); }));
-    $('#tx-bold').onclick = () => { bold = !bold; $('#tx-bold').classList.toggle('active', bold); preview(); };
-    $('#tx-italic').onclick = () => { italic = !italic; $('#tx-italic').classList.toggle('active', italic); preview(); };
-    cropOverlay.onpointerdown = e => {
+    live.innerText = 'Your text';
+
+    const currentText = () => live.innerText.replace(/\n$/, '');
+    const opts = () => ({
+      text: currentText(), font: fontSel.value, size: Number(sizeInput.value),
+      color: colorInput.value, x: state.textPos.x, y: state.textPos.y, bold, italic
+    });
+
+    // Position + style the live editable box to match how the text will bake.
+    function layout() {
+      const r = canvas.getBoundingClientRect();
+      const k = r.width / state.src.width;
+      wrap.style.left = (state.textPos.x * k) + 'px';
+      wrap.style.top = (state.textPos.y * (r.height / state.src.height)) + 'px';
+      live.style.fontFamily = fontSel.value;
+      live.style.fontSize = (Number(sizeInput.value) * k) + 'px';
+      live.style.fontWeight = bold ? '700' : '400';
+      live.style.fontStyle = italic ? 'italic' : 'normal';
+      live.style.color = colorInput.value;
+      $('#tx-size-v').textContent = sizeInput.value + 'px';
+    }
+
+    // Sidebar ↔ on-image box stay in sync.
+    live.addEventListener('input', () => { sideText.value = currentText(); });
+    sideText.addEventListener('input', () => { live.innerText = sideText.value; });
+    ['input', 'change'].forEach(ev => inspectorBody.addEventListener(ev, layout));
+    $('#tx-bold').onclick = () => { bold = !bold; $('#tx-bold').classList.toggle('active', bold); layout(); };
+    $('#tx-italic').onclick = () => { italic = !italic; $('#tx-italic').classList.toggle('active', italic); layout(); };
+
+    // Drag the grip to move; click empty image space to reposition and type there.
+    grip.addEventListener('pointerdown', e => {
+      e.preventDefault();
       const r = canvas.getBoundingClientRect();
       const sx = state.src.width / r.width, sy = state.src.height / r.height;
-      const setPos = ev => { state.textPos = { x: Math.max(0, (ev.clientX - r.left) * sx), y: Math.max(0, (ev.clientY - r.top) * sy) }; preview(); };
-      setPos(e);
-      const move = ev => setPos(ev);
+      const startX = e.clientX, startY = e.clientY;
+      const orig = { ...state.textPos };
+      const move = ev => {
+        state.textPos = {
+          x: Math.max(0, orig.x + (ev.clientX - startX) * sx),
+          y: Math.max(0, orig.y + (ev.clientY - startY) * sy)
+        };
+        layout();
+      };
       const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
       window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+    });
+    cropOverlay.onpointerdown = e => {
+      if (wrap.contains(e.target)) return; // typing or dragging inside the box
+      const r = canvas.getBoundingClientRect();
+      state.textPos = {
+        x: Math.max(0, (e.clientX - r.left) * (state.src.width / r.width)),
+        y: Math.max(0, (e.clientY - r.top) * (state.src.height / r.height))
+      };
+      layout();
+      requestAnimationFrame(() => live.focus());
     };
-    preview();
-    $('#tx-go').onclick = () => applyOp(() => ImageEngine.addText(state.src, { ...opts(), mime: state.src.type }), 'Adding text…').then(() => setTool('text'));
-  }
 
-  function drawTextPreview(o) {
-    renderViewer();
-    if (!o.text) return;
-    ctx.save();
-    ctx.font = `${o.bold ? '700 ' : ''}${o.italic ? 'italic ' : ''}${o.size}px ${o.font}`;
-    ctx.fillStyle = o.color; ctx.textBaseline = 'top';
-    const lines = o.text.split('\n'), lh = o.size * 1.25;
-    lines.forEach((ln, i) => ctx.fillText(ln, o.x, o.y + i * lh));
-    ctx.restore();
+    layout();
+    requestAnimationFrame(() => { live.focus(); document.getSelection()?.selectAllChildren(live); });
+    $('#tx-go').onclick = () => {
+      if (!currentText().trim()) { ImgUtils.setStatus('Type some text first.', 'error'); return; }
+      applyOp(() => ImageEngine.addText(state.src, { ...opts(), mime: state.src.type }), 'Adding text…').then(() => setTool('text'));
+    };
   }
 
   function inspCompress() {

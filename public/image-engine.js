@@ -175,11 +175,19 @@
   // Web-safe fonts — rasterised into the image, so no embedding needed.
   Engine.TEXT_FONTS = [
     { label: 'Arial', css: 'Arial, Helvetica, sans-serif' },
+    { label: 'Helvetica', css: 'Helvetica, Arial, sans-serif' },
     { label: 'Times New Roman', css: '"Times New Roman", Times, serif' },
     { label: 'Georgia', css: 'Georgia, serif' },
+    { label: 'Garamond', css: 'Garamond, "Times New Roman", serif' },
+    { label: 'Palatino', css: '"Palatino Linotype", Palatino, serif' },
     { label: 'Courier New', css: '"Courier New", monospace' },
+    { label: 'Lucida Console', css: '"Lucida Console", Monaco, monospace' },
     { label: 'Verdana', css: 'Verdana, Geneva, sans-serif' },
-    { label: 'Impact', css: 'Impact, Charcoal, sans-serif' }
+    { label: 'Tahoma', css: 'Tahoma, Geneva, sans-serif' },
+    { label: 'Trebuchet MS', css: '"Trebuchet MS", Helvetica, sans-serif' },
+    { label: 'Impact', css: 'Impact, Charcoal, sans-serif' },
+    { label: 'Comic Sans MS', css: '"Comic Sans MS", "Comic Sans", cursive' },
+    { label: 'Brush Script', css: '"Brush Script MT", "Segoe Script", cursive' }
   ];
 
   // ---------- Filters / adjustments ----------

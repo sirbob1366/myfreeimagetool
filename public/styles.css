@@ -590,6 +590,22 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .crop-overlay { position: absolute; inset: 0; cursor: crosshair; }
 .crop-rect { position: absolute; border: 1px dashed #fff; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55); box-sizing: border-box; }
 
+/* Live on-image text editing (Add text tool) */
+#tx-wrap { position: absolute; min-width: 24px; max-width: 100%; }
+#tx-live {
+  min-width: 1ch; line-height: 1.25; white-space: pre-wrap;
+  cursor: text; caret-color: var(--accent);
+  outline: 1.5px dashed rgba(124, 92, 255, 0.85); outline-offset: 5px;
+}
+#tx-live:focus { outline-style: solid; }
+#tx-grip {
+  position: absolute; top: -30px; left: -6px; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-size: 13px;
+  border-radius: 7px; cursor: move; user-select: none;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
 .editor-inspector {
   background: var(--glass);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
