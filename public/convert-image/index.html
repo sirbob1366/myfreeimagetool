@@ -50,13 +50,13 @@
   <div class="container" style="max-width: 920px;">
     <div class="tool-header">
       <h1>Convert Image</h1>
-      <p>JPG to PNG, PNG to JPG, or anything to WebP — instantly and privately.</p>
+      <p>Open any image type, export to any format — PNG, JPG, WebP, GIF, BMP, TIFF, ICO or PDF.</p>
     </div>
 
     <label class="dropzone" id="dropzone" for="file-input">
       <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
       <h2>Drop an image here or click to choose</h2>
-      <p>JPG, PNG or WebP · your file never leaves your device</p>
+      <p>JPG, PNG, WebP, GIF, BMP, ICO, SVG or AVIF · your file never leaves your device</p>
       <input id="file-input" type="file" accept="image/*" />
     </label>
 
@@ -64,7 +64,7 @@
       <div class="preview-pane"><canvas id="c"></canvas></div>
       <div class="controls">
         <h3>Convert</h3>
-        <div class="field"><label>Output format</label><select id="fmt"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option></select></div>
+        <div class="field"><label>Output format</label><select id="fmt"></select></div>
         <div class="field" id="qwrap"><label>Quality <span class="range-val" id="q-val">92%</span></label><input type="range" id="q" min="10" max="100" value="92" /></div>
         <p class="meta-line">Original: <strong id="m-orig">—</strong></p>
         <button class="btn btn-primary btn-block" id="go" type="button" style="margin-top:12px;">Convert &amp; download</button>
@@ -107,13 +107,20 @@
 
 <script src="/app.js" defer></script>
 <script src="/motion.js" defer></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
 <script src="/image-engine.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const $ = s => document.querySelector(s);
   let src = null;
+  $('#fmt').innerHTML = ImageEngine.EXPORT_FORMATS
+    .map(f => `<option value="${f.mime}">${f.label}</option>`).join('');
   ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
-  function syncQ() { $('#qwrap').style.display = $('#fmt').value === 'image/png' ? 'none' : 'block'; }
+  const isLossy = () => {
+    const f = ImageEngine.EXPORT_FORMATS.find(x => x.mime === $('#fmt').value);
+    return f && f.lossy;
+  };
+  function syncQ() { $('#qwrap').style.display = isLossy() ? 'block' : 'none'; }
   async function load(file) {
     try {
       src = await ImageEngine.loadImage(file);
@@ -124,12 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   $('#q').oninput = () => $('#q-val').textContent = $('#q').value + '%';
   $('#fmt').onchange = syncQ;
+  syncQ();
   $('#go').onclick = async () => {
     if (!src) return;
     ImgUtils.setStatus('Converting…');
-    const blob = await ImageEngine.convert(src, { mime: $('#fmt').value, quality: Number($('#q').value) / 100 });
-    ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '.' + ImageEngine.extFor(blob.type));
-    ImgUtils.setStatus('Downloaded.', 'success');
+    try {
+      const blob = await ImageEngine.convert(src, { mime: $('#fmt').value, quality: Number($('#q').value) / 100 });
+      ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '.' + ImageEngine.extFor(blob.type));
+      ImgUtils.setStatus('Downloaded.', 'success');
+    } catch (e) { console.error(e); ImgUtils.setStatus('Conversion failed.', 'error'); }
   };
 });
 </script>

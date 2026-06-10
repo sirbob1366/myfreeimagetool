@@ -33,14 +33,42 @@
   Engine.mimeFor = function (format) {
     return format === 'jpg' || format === 'jpeg' ? 'image/jpeg'
       : format === 'webp' ? 'image/webp'
+      : format === 'gif' ? 'image/gif'
+      : format === 'bmp' ? 'image/bmp'
+      : format === 'tiff' || format === 'tif' ? 'image/tiff'
+      : format === 'ico' ? 'image/x-icon'
+      : format === 'pdf' ? 'application/pdf'
       : 'image/png';
   };
   Engine.extFor = function (mime) {
-    return mime === 'image/jpeg' ? 'jpg' : mime === 'image/webp' ? 'webp' : 'png';
+    return mime === 'image/jpeg' ? 'jpg'
+      : mime === 'image/webp' ? 'webp'
+      : mime === 'image/gif' ? 'gif'
+      : mime === 'image/bmp' ? 'bmp'
+      : mime === 'image/tiff' ? 'tiff'
+      : mime === 'image/x-icon' || mime === 'image/vnd.microsoft.icon' ? 'ico'
+      : mime === 'application/pdf' ? 'pdf'
+      : 'png';
   };
 
+  // Every format the converter can write. `chain: false` means browsers can't
+  // re-decode it, so the editor downloads it instead of continuing to edit.
+  Engine.EXPORT_FORMATS = [
+    { mime: 'image/png', label: 'PNG — lossless, transparency', lossy: false, chain: true },
+    { mime: 'image/jpeg', label: 'JPG — small files, photos', lossy: true, chain: true },
+    { mime: 'image/webp', label: 'WebP — modern, smallest', lossy: true, chain: true },
+    { mime: 'image/gif', label: 'GIF — 256 colours, transparency', lossy: false, chain: true },
+    { mime: 'image/bmp', label: 'BMP — uncompressed bitmap', lossy: false, chain: true },
+    { mime: 'image/tiff', label: 'TIFF — print & archiving', lossy: false, chain: false },
+    { mime: 'image/x-icon', label: 'ICO — favicon (max 256px)', lossy: false, chain: true },
+    { mime: 'application/pdf', label: 'PDF — single-page document', lossy: false, chain: false }
+  ];
+
   function toBlob(canvas, mime, quality) {
-    return new Promise(resolve => canvas.toBlob(b => resolve(b), mime, quality));
+    // canvas.toBlob only writes PNG/JPEG/WebP; fall back to PNG for the rest
+    // (e.g. resizing an image that was just converted to GIF or BMP).
+    const safe = mime === 'image/jpeg' || mime === 'image/webp' ? mime : 'image/png';
+    return new Promise(resolve => canvas.toBlob(b => resolve(b), safe, quality));
   }
 
   // Draw onto a white background for formats without alpha (JPEG).
@@ -105,10 +133,232 @@
     { label: 'Profile Picture — 400×400', w: 400, h: 400 }
   ];
 
+  // ---------- Manual encoders (formats the browser can't write) ----------
+  function srcImageData(src) {
+    const canvas = makeCanvas(src.width, src.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(src.img, 0, 0, canvas.width, canvas.height);
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
+  // 24-bit BMP (alpha composited onto white; rows bottom-up, BGR, 4-byte padded).
+  function encodeBMP(src) {
+    const { data, width: w, height: h } = srcImageData(src);
+    const rowSize = Math.ceil((w * 3) / 4) * 4;
+    const pixelBytes = rowSize * h;
+    const buf = new ArrayBuffer(54 + pixelBytes);
+    const v = new DataView(buf);
+    v.setUint8(0, 0x42); v.setUint8(1, 0x4d);            // "BM"
+    v.setUint32(2, 54 + pixelBytes, true);               // file size
+    v.setUint32(10, 54, true);                           // pixel data offset
+    v.setUint32(14, 40, true);                           // BITMAPINFOHEADER
+    v.setInt32(18, w, true); v.setInt32(22, h, true);
+    v.setUint16(26, 1, true); v.setUint16(28, 24, true); // planes, bpp
+    v.setUint32(34, pixelBytes, true);
+    v.setInt32(38, 2835, true); v.setInt32(42, 2835, true); // 72 dpi
+    const out = new Uint8Array(buf);
+    for (let y = 0; y < h; y++) {
+      let o = 54 + (h - 1 - y) * rowSize;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const a = data[i + 3] / 255;
+        out[o++] = Math.round(data[i + 2] * a + 255 * (1 - a)); // B
+        out[o++] = Math.round(data[i + 1] * a + 255 * (1 - a)); // G
+        out[o++] = Math.round(data[i] * a + 255 * (1 - a));     // R
+      }
+    }
+    return new Blob([buf], { type: 'image/bmp' });
+  }
+
+  // Uncompressed RGBA TIFF (little-endian, single strip).
+  function encodeTIFF(src) {
+    const { data, width: w, height: h } = srcImageData(src);
+    const tags = 13;
+    const ifdSize = 2 + tags * 12 + 4;
+    const bpsOff = 8 + ifdSize;          // [8,8,8,8] shorts
+    const xresOff = bpsOff + 8;
+    const yresOff = xresOff + 8;
+    const dataOff = yresOff + 8;
+    const buf = new ArrayBuffer(dataOff + data.length);
+    const v = new DataView(buf);
+    v.setUint8(0, 0x49); v.setUint8(1, 0x49);  // "II" little-endian
+    v.setUint16(2, 42, true);
+    v.setUint32(4, 8, true);                   // IFD offset
+    v.setUint16(8, tags, true);
+    let o = 10;
+    const tag = (id, type, count, value) => {
+      v.setUint16(o, id, true); v.setUint16(o + 2, type, true);
+      v.setUint32(o + 4, count, true); v.setUint32(o + 8, value, true);
+      o += 12;
+    };
+    const shortTag = (id, value) => {
+      v.setUint16(o, id, true); v.setUint16(o + 2, 3, true);
+      v.setUint32(o + 4, 1, true); v.setUint16(o + 8, value, true);
+      o += 12;
+    };
+    tag(256, 4, 1, w);            // ImageWidth
+    tag(257, 4, 1, h);            // ImageLength
+    tag(258, 3, 4, bpsOff);       // BitsPerSample -> offset
+    shortTag(259, 1);             // Compression: none
+    shortTag(262, 2);             // Photometric: RGB
+    tag(273, 4, 1, dataOff);      // StripOffsets
+    shortTag(277, 4);             // SamplesPerPixel
+    tag(278, 4, 1, h);            // RowsPerStrip
+    tag(279, 4, 1, data.length);  // StripByteCounts
+    tag(282, 5, 1, xresOff);      // XResolution
+    tag(283, 5, 1, yresOff);      // YResolution
+    shortTag(296, 2);             // ResolutionUnit: inch
+    shortTag(338, 2);             // ExtraSamples: unassociated alpha
+    v.setUint32(o, 0, true);      // next IFD: none
+    for (let i = 0; i < 4; i++) v.setUint16(bpsOff + i * 2, 8, true);
+    v.setUint32(xresOff, 72, true); v.setUint32(xresOff + 4, 1, true);
+    v.setUint32(yresOff, 72, true); v.setUint32(yresOff + 4, 1, true);
+    new Uint8Array(buf, dataOff).set(data);
+    return new Blob([buf], { type: 'image/tiff' });
+  }
+
+  // ICO containing a single PNG (Vista+ format), scaled to fit 256px.
+  async function encodeICO(src) {
+    const side = Math.min(256, Math.max(src.width, src.height, 16));
+    const canvas = makeCanvas(side, side);
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    const s = Math.min(side / src.width, side / src.height);
+    const dw = src.width * s, dh = src.height * s;
+    ctx.drawImage(src.img, (side - dw) / 2, (side - dh) / 2, dw, dh);
+    const png = await toBlob(canvas, 'image/png');
+    const pngBytes = new Uint8Array(await png.arrayBuffer());
+    const head = new ArrayBuffer(22);
+    const v = new DataView(head);
+    v.setUint16(0, 0, true); v.setUint16(2, 1, true); v.setUint16(4, 1, true);
+    v.setUint8(6, side >= 256 ? 0 : side);  // width (0 = 256)
+    v.setUint8(7, side >= 256 ? 0 : side);  // height
+    v.setUint16(10, 1, true);               // planes
+    v.setUint16(12, 32, true);              // bpp
+    v.setUint32(14, pngBytes.length, true);
+    v.setUint32(18, 22, true);              // data offset
+    return new Blob([head, pngBytes], { type: 'image/x-icon' });
+  }
+
+  // Static GIF89a with LZW compression. Exact palette when the image has
+  // <=255 unique colours, otherwise a uniform 6x7x6 colour cube.
+  function encodeGIF(src) {
+    const { data, width: w, height: h } = srcImageData(src);
+    const npix = w * h;
+    const indices = new Uint8Array(npix);
+    let hasAlpha = false;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < 128) { hasAlpha = true; break; }
+    }
+
+    // -- Build palette (index 0 reserved for transparency when needed) --
+    const base = hasAlpha ? 1 : 0;
+    let palette = [];
+    const exact = new Map();
+    let overflow = false;
+    for (let p = 0; p < npix; p++) {
+      const i = p * 4;
+      if (hasAlpha && data[i + 3] < 128) { indices[p] = 0; continue; }
+      const key = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
+      let idx = exact.get(key);
+      if (idx === undefined) {
+        if (exact.size >= 255 - base) { overflow = true; break; }
+        idx = base + exact.size;
+        exact.set(key, idx);
+      }
+      indices[p] = idx;
+    }
+    if (!overflow) {
+      palette = new Array(base + exact.size);
+      exact.forEach((idx, key) => { palette[idx] = [(key >> 16) & 255, (key >> 8) & 255, key & 255]; });
+    } else {
+      // uniform 6x7x6 cube (252 colours)
+      palette = new Array(base + 252);
+      for (let r = 0; r < 6; r++) for (let g = 0; g < 7; g++) for (let b = 0; b < 6; b++) {
+        palette[base + r * 42 + g * 6 + b] = [Math.round(r * 51), Math.round(g * 42.5), Math.round(b * 51)];
+      }
+      for (let p = 0; p < npix; p++) {
+        const i = p * 4;
+        if (hasAlpha && data[i + 3] < 128) { indices[p] = 0; continue; }
+        const r = Math.min(5, Math.round(data[i] / 51));
+        const g = Math.min(6, Math.round(data[i + 1] / 42.5));
+        const b = Math.min(5, Math.round(data[i + 2] / 51));
+        indices[p] = base + r * 42 + g * 6 + b;
+      }
+    }
+    if (hasAlpha) palette[0] = [0, 0, 0];
+
+    let sizeExp = 0; // global colour table holds 2^(sizeExp+1) entries
+    while ((2 << sizeExp) < palette.length) sizeExp++;
+    const tableSize = 2 << sizeExp;
+    const minCodeSize = Math.max(2, sizeExp + 1);
+
+    const out = [];
+    const push16 = n => { out.push(n & 255, (n >> 8) & 255); };
+    // Header + logical screen descriptor
+    for (const c of 'GIF89a') out.push(c.charCodeAt(0));
+    push16(w); push16(h);
+    out.push(0x80 | (0x07 << 4) | sizeExp, 0, 0);
+    for (let i = 0; i < tableSize; i++) {
+      const c = palette[i] || [0, 0, 0];
+      out.push(c[0], c[1], c[2]);
+    }
+    if (hasAlpha) out.push(0x21, 0xf9, 0x04, 0x01, 0, 0, 0, 0); // GCE: transparent index 0
+    out.push(0x2c); push16(0); push16(0); push16(w); push16(h); out.push(0);
+    out.push(minCodeSize);
+
+    // -- LZW (follows the omggif reference logic) --
+    const bytes = [];
+    let cur = 0, curBits = 0;
+    let codeSize = minCodeSize + 1;
+    const clear = 1 << minCodeSize, eoi = clear + 1;
+    let next = eoi + 1;
+    let table = new Map();
+    const emit = code => {
+      cur |= code << curBits; curBits += codeSize;
+      while (curBits >= 8) { bytes.push(cur & 255); cur >>= 8; curBits -= 8; }
+    };
+    emit(clear);
+    let prev = indices[0];
+    for (let p = 1; p < npix; p++) {
+      const k = indices[p];
+      const key = (prev << 8) | k;
+      const code = table.get(key);
+      if (code !== undefined) { prev = code; continue; }
+      emit(prev);
+      if (next === 4096) {
+        emit(clear);
+        next = eoi + 1; codeSize = minCodeSize + 1; table = new Map();
+      } else {
+        if (next >= (1 << codeSize)) codeSize++;
+        table.set(key, next++);
+      }
+      prev = k;
+    }
+    emit(prev);
+    emit(eoi);
+    if (curBits > 0) bytes.push(cur & 255);
+
+    for (let i = 0; i < bytes.length; i += 255) {
+      const chunk = bytes.slice(i, i + 255);
+      out.push(chunk.length, ...chunk);
+    }
+    out.push(0, 0x3b);
+    return new Blob([new Uint8Array(out)], { type: 'image/gif' });
+  }
+
   // ---------- Convert ----------
-  // opts: { mime, quality }
+  // opts: { mime, quality } — handles every EXPORT_FORMATS entry.
   Engine.convert = async function (src, opts = {}) {
     const mime = opts.mime || 'image/png';
+    if (mime === 'image/bmp') return encodeBMP(src);
+    if (mime === 'image/tiff') return encodeTIFF(src);
+    if (mime === 'image/gif') return encodeGIF(src);
+    if (mime === 'image/x-icon' || mime === 'image/vnd.microsoft.icon') return encodeICO(src);
+    if (mime === 'application/pdf') {
+      const bytes = await Engine.imagesToPdf([src]);
+      return new Blob([bytes], { type: 'application/pdf' });
+    }
     const canvas = makeCanvas(src.width, src.height);
     const ctx = canvas.getContext('2d');
     drawImage(ctx, src.img, canvas.width, canvas.height, mime);
@@ -192,7 +442,8 @@
 
   // ---------- Filters / adjustments ----------
   // opts: { brightness, contrast, saturate (percent, 100=normal),
-  //         grayscale, sepia, invert (0..100), mime, quality }
+  //         grayscale, sepia, invert (0..100), hue (deg), blur (px),
+  //         temperature (-100..100), vignette (0..100), mime, quality }
   Engine.filterString = function (o = {}) {
     const f = [];
     if (o.brightness != null && o.brightness !== 100) f.push(`brightness(${o.brightness}%)`);
@@ -201,8 +452,34 @@
     if (o.grayscale) f.push(`grayscale(${o.grayscale}%)`);
     if (o.sepia) f.push(`sepia(${o.sepia}%)`);
     if (o.invert) f.push(`invert(${o.invert}%)`);
+    if (o.hue) f.push(`hue-rotate(${o.hue}deg)`);
+    if (o.blur) f.push(`blur(${o.blur}px)`);
     return f.join(' ') || 'none';
   };
+
+  // Pixel-level passes that CSS filters can't express. Mutates the context.
+  Engine.applyPixelAdjust = function (ctx, w, h, o = {}) {
+    if (o.temperature) {
+      const shift = o.temperature * 0.4;
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i] + shift, b = d[i + 2] - shift;
+        d[i] = r < 0 ? 0 : r > 255 ? 255 : r;
+        d[i + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+    if (o.vignette) {
+      const outer = Math.hypot(w, h) / 2;
+      const g = ctx.createRadialGradient(w / 2, h / 2, outer * 0.4, w / 2, h / 2, outer);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(0,0,0,${(o.vignette / 100) * 0.85})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+  };
+
   Engine.adjust = async function (src, o = {}) {
     const mime = o.mime || src.type || 'image/png';
     const canvas = makeCanvas(src.width, src.height);
@@ -210,6 +487,47 @@
     if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
     ctx.filter = Engine.filterString(o);
     ctx.drawImage(src.img, 0, 0, canvas.width, canvas.height);
+    ctx.filter = 'none';
+    Engine.applyPixelAdjust(ctx, canvas.width, canvas.height, o);
+    return toBlob(canvas, mime, o.quality ?? 0.95);
+  };
+
+  // Named one-click looks (Adobe Express-style presets).
+  Engine.FILTER_PRESETS = [
+    { name: 'None', opts: {} },
+    { name: 'Vintage', opts: { brightness: 96, contrast: 108, saturate: 120, sepia: 45, vignette: 30 } },
+    { name: 'Noir', opts: { grayscale: 100, contrast: 135, brightness: 92, vignette: 35 } },
+    { name: 'Warm', opts: { temperature: 35, saturate: 125, brightness: 103 } },
+    { name: 'Cool', opts: { temperature: -30, saturate: 115, brightness: 102 } },
+    { name: 'Vivid', opts: { saturate: 160, contrast: 112 } },
+    { name: 'Fade', opts: { contrast: 84, brightness: 110, saturate: 80 } }
+  ];
+
+  // ---------- Frame / border ----------
+  // opts: { width (px), color, radius (px), mime, quality }
+  Engine.frame = async function (src, o = {}) {
+    const bw = Math.max(0, Math.round(o.width || 0));
+    const radius = Math.max(0, Math.round(o.radius || 0));
+    const mime = (radius > 0 || bw === 0) && (o.mime === 'image/jpeg') ? 'image/jpeg' : (o.mime || src.type || 'image/png');
+    const W = src.width + bw * 2, H = src.height + bw * 2;
+    const canvas = makeCanvas(W, H);
+    const ctx = canvas.getContext('2d');
+    if (mime === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); }
+    if (bw > 0) {
+      ctx.fillStyle = o.color || '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, W, H, radius);
+      ctx.fill();
+    }
+    ctx.save();
+    const innerR = Math.max(0, radius - Math.round(bw * 0.6));
+    if (radius > 0) {
+      ctx.beginPath();
+      ctx.roundRect(bw, bw, src.width, src.height, bw > 0 ? innerR : radius);
+      ctx.clip();
+    }
+    ctx.drawImage(src.img, bw, bw, src.width, src.height);
+    ctx.restore();
     return toBlob(canvas, mime, o.quality ?? 0.95);
   };
 

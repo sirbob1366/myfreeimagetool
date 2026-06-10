@@ -276,6 +276,140 @@ await page.goto(`${BASE}/editor/`);
 		'editor: undo disabled after reset',
 		await page.locator('#undo-btn').isDisabled(),
 	);
+
+	// --- Preview-style toolbar present ---
+	check(
+		'editor: top toolbar with 18 tools',
+		(await page.locator('.editor-topbar .tool-btn').count()) === 18,
+		`count=${await page.locator('.editor-topbar .tool-btn').count()}`,
+	);
+
+	// --- Universal converter: GIF/BMP/ICO encode then re-decode ---
+	for (const fmt of [
+		{ mime: 'image/gif', name: 'GIF' },
+		{ mime: 'image/bmp', name: 'BMP' },
+		{ mime: 'image/x-icon', name: 'ICO' },
+		{ mime: 'image/tiff', name: 'TIFF' },
+	]) {
+		const result = await page.evaluate(async (mime) => {
+			const c = document.createElement('canvas');
+			c.width = 60; c.height = 40;
+			const x = c.getContext('2d');
+			x.fillStyle = '#ff0000'; x.fillRect(0, 0, 30, 40);
+			x.fillStyle = '#0000ff'; x.fillRect(30, 0, 30, 40);
+			const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+			const src = await ImageEngine.loadImage(new File([blob], 't.png', { type: 'image/png' }));
+			const out = await ImageEngine.convert(src, { mime });
+			if (!out || out.size < 50) return { ok: false, why: 'empty output' };
+			if (mime === 'image/tiff') return { ok: out.type === 'image/tiff', why: 'tiff produced ' + out.size + 'B' };
+			// re-decode and check a pixel from each half
+			const back = await ImageEngine.loadImage(new File([out], 't', { type: out.type }));
+			const c2 = document.createElement('canvas');
+			c2.width = back.width; c2.height = back.height;
+			const x2 = c2.getContext('2d');
+			x2.drawImage(back.img, 0, 0);
+			// ICO is square-fit; sample relative positions inside the drawn area
+			const lx = Math.round(back.width * 0.25), rx = Math.round(back.width * 0.75);
+			const my = Math.round(back.height * 0.5);
+			const L = x2.getImageData(lx, my, 1, 1).data;
+			const R = x2.getImageData(rx, my, 1, 1).data;
+			return {
+				ok: L[0] > 180 && L[2] < 90 && R[2] > 180 && R[0] < 90,
+				why: `L=${[...L]} R=${[...R]}`,
+			};
+		}, fmt.mime);
+		check(`converter: ${fmt.name} round-trip`, result.ok, result.why);
+	}
+
+	// --- Adjust panel: presets + new sliders ---
+	await page.click('[data-tool="filters"]');
+	await page.waitForSelector('#f-presets');
+	check(
+		'editor: 7 filter presets',
+		(await page.locator('#f-presets button').count()) === 7,
+	);
+	check(
+		'editor: temperature/hue/blur/vignette sliders',
+		(await page.locator('#f-te, #f-hu, #f-bl, #f-vg').count()) === 4,
+	);
+	await page.locator('#f-presets button', { hasText: 'Noir' }).click();
+	await page.waitForTimeout(250);
+	const noirPixel = await ePixel(60, 80);
+	check(
+		'editor: Noir preset previews grayscale',
+		noirPixel[0] === noirPixel[1] && noirPixel[1] === noirPixel[2],
+		`pixel=${noirPixel}`,
+	);
+
+	// --- Frame tool ---
+	await page.click('[data-tool="frame"]');
+	await page.waitForSelector('#fr-go');
+	await page.locator('#fr-c').fill('#00ff00');
+	await page.click('#fr-go');
+	await page.waitForTimeout(600);
+	const framedSize = await page.evaluate(() => {
+		const c = document.getElementById('img-canvas');
+		return { w: c.width, h: c.height };
+	});
+	check(
+		'editor: frame grows canvas by border',
+		framedSize.w > 240 && framedSize.h > 160,
+		JSON.stringify(framedSize),
+	);
+	// switch tools to clear the frame tool's live preview overlay
+	await page.click('[data-tool="layers"]');
+	await page.waitForTimeout(200);
+	const borderPixel = await ePixel(2, 2);
+	check(
+		'editor: frame border colour applied',
+		borderPixel[1] > 200 && borderPixel[0] < 80,
+		`pixel=${borderPixel}`,
+	);
+	await page.click('#reset-btn');
+	await page.waitForTimeout(400);
+
+	// --- Insert image tool ---
+	await page.click('[data-tool="insert"]');
+	await page.waitForSelector('#ins-pick');
+	const insertBuffer = await page.evaluate(() => {
+		const c = document.createElement('canvas');
+		c.width = 40; c.height = 40;
+		const x = c.getContext('2d');
+		x.fillStyle = '#ffff00'; x.fillRect(0, 0, 40, 40);
+		return c.toDataURL('image/png').split(',')[1];
+	});
+	await page.setInputFiles('#insert-image-input', {
+		name: 'overlay.png',
+		mimeType: 'image/png',
+		buffer: Buffer.from(insertBuffer, 'base64'),
+	});
+	await page.waitForTimeout(400);
+	const insertedPixel = await ePixel(120, 80);
+	check(
+		'editor: inserted image drawn at center',
+		insertedPixel[0] > 200 && insertedPixel[1] > 200 && insertedPixel[2] < 80,
+		`pixel=${insertedPixel}`,
+	);
+	check(
+		'editor: insert is undoable',
+		!(await page.locator('#undo-btn').isDisabled()),
+	);
+	await page.click('#undo-btn');
+	await page.waitForTimeout(300);
+	const afterInsertUndo = await ePixel(120, 80);
+	check(
+		'editor: undo removes inserted image',
+		!(afterInsertUndo[0] > 200 && afterInsertUndo[1] > 200),
+		`pixel=${afterInsertUndo}`,
+	);
+
+	// --- Crop aspect presets present ---
+	await page.click('[data-tool="crop"]');
+	await page.waitForSelector('#crop-aspect');
+	check(
+		'editor: crop aspect presets',
+		(await page.locator('#crop-aspect button').count()) === 5,
+	);
 }
 
 // ---------- Adjust ----------

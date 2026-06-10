@@ -119,7 +119,8 @@
       } else if (o.kind === 'shape') {
         drawShape(cx, o);
       } else if (o.kind === 'image' && o.canvas) {
-        cx.drawImage(o.canvas, o.x || 0, o.y || 0);
+        cx.globalAlpha = o.alpha ?? 1;
+        cx.drawImage(o.canvas, o.x || 0, o.y || 0, o.w || o.canvas.width, o.h || o.canvas.height);
       }
       cx.restore();
     });
@@ -259,6 +260,7 @@
     cropOverlay.style.display = 'none';
     cropOverlay.innerHTML = '';
     cropOverlay.onpointerdown = null;
+    cropOverlay.style.cursor = 'crosshair';
     state.cropRect = null;
     renderViewer(); // reset any live preview
     showInspector(tool);
@@ -398,6 +400,8 @@
     if (tool === 'text') return inspText();
     if (tool === 'draw') return inspDraw();
     if (tool === 'shapes') return inspShapes();
+    if (tool === 'insert') return inspInsert();
+    if (tool === 'frame') return inspFrame();
     if (tool === 'layers') return inspLayers();
     if (tool === 'filters') return inspFilters();
     if (tool === 'compress') return inspCompress();
@@ -568,13 +572,20 @@
   }
 
   function inspFilters() {
-    inspectorTitle.textContent = 'Filters & adjustments';
-    inspectorHint.textContent = 'Drag the sliders or pick a preset. Preview updates live.';
+    inspectorTitle.textContent = 'Adjust & filters';
+    inspectorHint.textContent = 'Pick a one-click look or fine-tune with sliders. Preview updates live.';
+    const presetBtns = ImageEngine.FILTER_PRESETS
+      .map((p, i) => `<button type="button" data-preset="${i}" ${i === 0 ? 'class="active"' : ''}>${p.name}</button>`).join('');
     inspectorBody.innerHTML = `
+      <div class="field"><label>Looks</label><div class="seg" id="f-presets">${presetBtns}</div></div>
       <div class="field"><label>Brightness <span class="range-val" id="f-br-v">100%</span></label><input type="range" id="f-br" min="0" max="200" value="100" /></div>
       <div class="field"><label>Contrast <span class="range-val" id="f-co-v">100%</span></label><input type="range" id="f-co" min="0" max="200" value="100" /></div>
       <div class="field"><label>Saturation <span class="range-val" id="f-sa-v">100%</span></label><input type="range" id="f-sa" min="0" max="200" value="100" /></div>
-      <div class="field"><label>Presets</label><div class="seg">
+      <div class="field"><label>Temperature <span class="range-val" id="f-te-v">0</span></label><input type="range" id="f-te" min="-100" max="100" value="0" /></div>
+      <div class="field"><label>Hue <span class="range-val" id="f-hu-v">0°</span></label><input type="range" id="f-hu" min="-180" max="180" value="0" /></div>
+      <div class="field"><label>Blur <span class="range-val" id="f-bl-v">0px</span></label><input type="range" id="f-bl" min="0" max="20" value="0" /></div>
+      <div class="field"><label>Vignette <span class="range-val" id="f-vg-v">0%</span></label><input type="range" id="f-vg" min="0" max="100" value="0" /></div>
+      <div class="field"><label>Effects</label><div class="seg">
         <button type="button" id="f-gray">B&amp;W</button>
         <button type="button" id="f-sepia">Sepia</button>
         <button type="button" id="f-invert">Invert</button>
@@ -584,27 +595,204 @@
         <button class="btn btn-primary" id="f-go" type="button">Apply</button>
       </div>
     `;
-    let gray = false, sepia = false, invert = false;
+    let gray = false, sepia = 0, invert = false;
+    const setSlider = (id, value) => { $(id).value = value; };
     const opts = () => ({
       brightness: Number($('#f-br').value), contrast: Number($('#f-co').value), saturate: Number($('#f-sa').value),
-      grayscale: gray ? 100 : 0, sepia: sepia ? 100 : 0, invert: invert ? 100 : 0
+      temperature: Number($('#f-te').value), hue: Number($('#f-hu').value),
+      blur: Number($('#f-bl').value), vignette: Number($('#f-vg').value),
+      grayscale: gray ? 100 : 0, sepia: sepia, invert: invert ? 100 : 0
     });
+    let previewQueued = false;
     const preview = () => {
-      $('#f-br-v').textContent = $('#f-br').value + '%';
-      $('#f-co-v').textContent = $('#f-co').value + '%';
-      $('#f-sa-v').textContent = $('#f-sa').value + '%';
+      if (previewQueued) return;
+      previewQueued = true;
+      requestAnimationFrame(() => {
+        previewQueued = false;
+        $('#f-br-v').textContent = $('#f-br').value + '%';
+        $('#f-co-v').textContent = $('#f-co').value + '%';
+        $('#f-sa-v').textContent = $('#f-sa').value + '%';
+        $('#f-te-v').textContent = $('#f-te').value;
+        $('#f-hu-v').textContent = $('#f-hu').value + '°';
+        $('#f-bl-v').textContent = $('#f-bl').value + 'px';
+        $('#f-vg-v').textContent = $('#f-vg').value + '%';
+        const o = opts();
+        ctx.save(); ctx.filter = ImageEngine.filterString(o);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(state.src.img, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        ImageEngine.applyPixelAdjust(ctx, canvas.width, canvas.height, o);
+        drawObjects(ctx);
+      });
+    };
+    const resetSliders = () => {
+      setSlider('#f-br', 100); setSlider('#f-co', 100); setSlider('#f-sa', 100);
+      setSlider('#f-te', 0); setSlider('#f-hu', 0); setSlider('#f-bl', 0); setSlider('#f-vg', 0);
+      gray = false; sepia = 0; invert = false;
+      ['#f-gray', '#f-sepia', '#f-invert'].forEach(s => $(s).classList.remove('active'));
+    };
+    $('#f-presets').querySelectorAll('button').forEach(btn => {
+      btn.onclick = () => {
+        $('#f-presets').querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+        resetSliders();
+        const p = ImageEngine.FILTER_PRESETS[Number(btn.dataset.preset)].opts;
+        if (p.brightness != null) setSlider('#f-br', p.brightness);
+        if (p.contrast != null) setSlider('#f-co', p.contrast);
+        if (p.saturate != null) setSlider('#f-sa', p.saturate);
+        if (p.temperature != null) setSlider('#f-te', p.temperature);
+        if (p.vignette != null) setSlider('#f-vg', p.vignette);
+        if (p.grayscale) { gray = true; $('#f-gray').classList.add('active'); }
+        if (p.sepia) sepia = p.sepia;
+        preview();
+      };
+    });
+    inspectorBody.addEventListener('input', preview);
+    $('#f-gray').onclick = () => { gray = !gray; $('#f-gray').classList.toggle('active', gray); preview(); };
+    $('#f-sepia').onclick = () => { sepia = sepia ? 0 : 100; $('#f-sepia').classList.toggle('active', !!sepia); preview(); };
+    $('#f-invert').onclick = () => { invert = !invert; $('#f-invert').classList.toggle('active', invert); preview(); };
+    $('#f-reset').onclick = () => { resetSliders(); $('#f-presets').querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === 0)); preview(); };
+    $('#f-go').onclick = () => applyOp(() => ImageEngine.adjust(state.src, { ...opts(), mime: state.src.type }), 'Applying…').then(() => setTool('filters'));
+    preview();
+  }
+
+  // ---------- Insert image (overlay) ----------
+  const insertInput = $('#insert-image-input');
+  function inspInsert() {
+    inspectorTitle.textContent = 'Insert image';
+    inspectorHint.textContent = 'Add a logo or photo on top, then drag it into place on the image.';
+    inspectorBody.innerHTML = `
+      <button class="btn btn-primary btn-block" id="ins-pick" type="button">Choose image…</button>
+      <div id="ins-controls" style="display:none; margin-top:14px;">
+        <div class="field"><label>Scale <span class="range-val" id="ins-sc-v">100%</span></label><input type="range" id="ins-sc" min="5" max="300" value="100" /></div>
+        <div class="field"><label>Opacity <span class="range-val" id="ins-op-v">100%</span></label><input type="range" id="ins-op" min="5" max="100" value="100" /></div>
+        <p class="meta-line">Drag the inserted image on the canvas to position it. Manage or delete it in Layers.</p>
+      </div>
+    `;
+    cropOverlay.style.display = 'block'; cropOverlay.innerHTML = '';
+    cropOverlay.style.cursor = 'move';
+    $('#ins-pick').onclick = () => insertInput.click();
+
+    const selected = () => state.objects.find(o => o.id === state.selectedObjId && o.kind === 'image');
+    const showControls = () => {
+      const o = selected();
+      $('#ins-controls').style.display = o ? 'block' : 'none';
+      if (!o) return;
+      const pct = Math.round((o.w / o.canvas.width) * 100);
+      $('#ins-sc').value = Math.min(300, Math.max(5, pct));
+      $('#ins-sc-v').textContent = pct + '%';
+      $('#ins-op').value = Math.round((o.alpha ?? 1) * 100);
+      $('#ins-op-v').textContent = Math.round((o.alpha ?? 1) * 100) + '%';
+    };
+    $('#ins-sc').oninput = () => {
+      const o = selected(); if (!o) return;
+      const pct = Number($('#ins-sc').value);
+      const cx0 = o.x + o.w / 2, cy0 = o.y + o.h / 2;
+      o.w = Math.max(8, Math.round(o.canvas.width * pct / 100));
+      o.h = Math.max(8, Math.round(o.canvas.height * pct / 100));
+      o.x = cx0 - o.w / 2; o.y = cy0 - o.h / 2;
+      $('#ins-sc-v').textContent = pct + '%';
       renderViewer();
-      ctx.save(); ctx.filter = ImageEngine.filterString(opts());
-      ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(state.src.img, 0, 0, canvas.width, canvas.height);
+    };
+    $('#ins-sc').onchange = () => { if (selected()) pushObjects(); };
+    $('#ins-op').oninput = () => {
+      const o = selected(); if (!o) return;
+      o.alpha = Number($('#ins-op').value) / 100;
+      $('#ins-op-v').textContent = $('#ins-op').value + '%';
+      renderViewer();
+    };
+    $('#ins-op').onchange = () => { if (selected()) pushObjects(); };
+
+    insertInput.onchange = async e => {
+      const file = e.target.files && e.target.files[0];
+      insertInput.value = '';
+      if (!file) return;
+      try {
+        const loaded = await ImageEngine.loadImage(file);
+        const c = document.createElement('canvas');
+        c.width = loaded.width; c.height = loaded.height;
+        c.getContext('2d').drawImage(loaded.img, 0, 0);
+        const scale = Math.min(1, (state.src.width * 0.4) / loaded.width, (state.src.height * 0.4) / loaded.height);
+        const w = Math.round(loaded.width * scale), h = Math.round(loaded.height * scale);
+        const obj = {
+          id: uid(), kind: 'image', canvas: c, alpha: 1,
+          x: Math.round((state.src.width - w) / 2), y: Math.round((state.src.height - h) / 2),
+          w, h, name: file.name, visible: true
+        };
+        state.objects.push(obj);
+        state.selectedObjId = obj.id;
+        pushObjects();
+        renderViewer();
+        showControls();
+        ImgUtils.setStatus('Image inserted — drag to position.', 'success');
+      } catch (err) { console.error(err); ImgUtils.setStatus('Could not open that image.', 'error'); }
+    };
+
+    cropOverlay.onpointerdown = e => {
+      const p = toImagePoint(e);
+      // pick the topmost image object under the pointer
+      for (let i = state.objects.length - 1; i >= 0; i--) {
+        const o = state.objects[i];
+        if (o.kind !== 'image' || o.visible === false) continue;
+        const w = o.w || o.canvas.width, h = o.h || o.canvas.height;
+        if (p.x >= o.x && p.x <= o.x + w && p.y >= o.y && p.y <= o.y + h) {
+          state.selectedObjId = o.id;
+          showControls();
+          const offX = p.x - o.x, offY = p.y - o.y;
+          const move = ev => {
+            const q = toImagePoint(ev);
+            o.x = q.x - offX; o.y = q.y - offY;
+            renderViewer();
+          };
+          const up = () => {
+            window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+            pushObjects();
+          };
+          window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+          return;
+        }
+      }
+    };
+    showControls();
+  }
+
+  // ---------- Frame / border ----------
+  function inspFrame() {
+    inspectorTitle.textContent = 'Frame & border';
+    inspectorHint.textContent = 'Add a coloured border, round the corners, or both.';
+    const minDim = Math.min(state.src.width, state.src.height);
+    const maxBorder = Math.round(minDim * 0.15);
+    const maxRadius = Math.round(minDim * 0.3);
+    const defBorder = Math.round(minDim * 0.04);
+    inspectorBody.innerHTML = `
+      <div class="field"><label>Border width <span class="range-val" id="fr-w-v">${defBorder}px</span></label>
+        <input type="range" id="fr-w" min="0" max="${maxBorder}" value="${defBorder}" /></div>
+      <div class="field"><label>Border colour</label><input type="color" id="fr-c" value="#ffffff" /></div>
+      <div class="field"><label>Corner radius <span class="range-val" id="fr-r-v">0px</span></label>
+        <input type="range" id="fr-r" min="0" max="${maxRadius}" value="0" /></div>
+      <p class="meta-line">Rounded corners need PNG or WebP to stay transparent outside the frame.</p>
+      <button class="btn btn-primary btn-block" id="fr-go" type="button" style="margin-top:12px;">Apply frame</button>
+    `;
+    const preview = () => {
+      $('#fr-w-v').textContent = $('#fr-w').value + 'px';
+      $('#fr-r-v').textContent = $('#fr-r').value + 'px';
+      const bw = Number($('#fr-w').value), radius = Number($('#fr-r').value);
+      renderViewer();
+      // approximate preview at current canvas scale (border drawn inward)
+      ctx.save();
+      if (bw > 0) {
+        ctx.strokeStyle = $('#fr-c').value;
+        ctx.lineWidth = bw * 2;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+      }
       ctx.restore();
     };
     inspectorBody.addEventListener('input', preview);
-    $('#f-gray').onclick = () => { gray = !gray; $('#f-gray').classList.toggle('active', gray); preview(); };
-    $('#f-sepia').onclick = () => { sepia = !sepia; $('#f-sepia').classList.toggle('active', sepia); preview(); };
-    $('#f-invert').onclick = () => { invert = !invert; $('#f-invert').classList.toggle('active', invert); preview(); };
-    $('#f-reset').onclick = () => { $('#f-br').value = 100; $('#f-co').value = 100; $('#f-sa').value = 100; gray = sepia = invert = false; inspectorBody.querySelectorAll('.seg button').forEach(b => b.classList.remove('active')); preview(); };
-    $('#f-go').onclick = () => applyOp(() => ImageEngine.adjust(state.src, { ...opts(), mime: state.src.type }), 'Applying…').then(() => setTool('filters'));
     preview();
+    $('#fr-go').onclick = () => {
+      const o = { width: Number($('#fr-w').value), color: $('#fr-c').value, radius: Number($('#fr-r').value) };
+      const mime = o.radius > 0 && state.src.type === 'image/jpeg' ? 'image/png' : state.src.type;
+      applyOp(() => ImageEngine.frame(state.src, { ...o, mime }), 'Framing…').then(() => setTool('frame'));
+    };
   }
 
   function inspText() {
@@ -742,13 +930,45 @@
 
   function inspConvert() {
     inspectorTitle.textContent = 'Convert';
-    inspectorHint.textContent = 'Change the file format.';
+    inspectorHint.textContent = 'Open any image type, export to any format.';
+    const formatOpts = ImageEngine.EXPORT_FORMATS
+      .map(f => `<option value="${f.mime}">${f.label}</option>`).join('');
     inspectorBody.innerHTML = `
       <div class="field"><label>Convert to</label>
-        <select id="cvf"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option></select></div>
+        <select id="cvf">${formatOpts}</select></div>
+      <div class="field" id="cvq-wrap" style="display:none;"><label>Quality <span class="range-val" id="cvq-val">92%</span></label>
+        <input type="range" id="cvq" min="10" max="100" value="92" /></div>
       <button class="btn btn-primary btn-block" id="cvgo" type="button">Convert</button>
+      <p class="meta-line" id="cv-note"></p>
     `;
-    $('#cvgo').onclick = () => applyOp(() => ImageEngine.convert(state.src, { mime: $('#cvf').value }), 'Converting…');
+    const sel = $('#cvf');
+    const formatFor = () => ImageEngine.EXPORT_FORMATS.find(f => f.mime === sel.value);
+    const sync = () => {
+      const f = formatFor();
+      $('#cvq-wrap').style.display = f.lossy ? 'block' : 'none';
+      $('#cv-note').textContent = f.chain
+        ? ''
+        : 'Browsers can’t re-open this format, so it downloads straight away.';
+    };
+    sel.onchange = sync;
+    $('#cvq').oninput = () => $('#cvq-val').textContent = $('#cvq').value + '%';
+    sync();
+    $('#cvgo').onclick = async () => {
+      const f = formatFor();
+      const quality = Number($('#cvq').value) / 100;
+      if (f.chain) {
+        applyOp(() => ImageEngine.convert(state.src, { mime: f.mime, quality }), 'Converting…');
+        return;
+      }
+      // Non-redecodable target (TIFF/PDF): bake overlays, then download directly.
+      ImgUtils.setStatus('Converting…');
+      try {
+        await flattenObjects();
+        const blob = await ImageEngine.convert(state.src, { mime: f.mime, quality });
+        ImgUtils.download(blob, state.baseName + '.' + ImageEngine.extFor(f.mime));
+        ImgUtils.setStatus('Downloaded as ' + ImageEngine.extFor(f.mime).toUpperCase() + '.', 'success');
+      } catch (e) { console.error(e); ImgUtils.setStatus('Conversion failed.', 'error'); }
+    };
   }
 
   function inspRotate() {
@@ -871,14 +1091,26 @@
     inspectorTitle.textContent = 'Crop';
     inspectorHint.textContent = 'Drag on the image to select an area, then apply.';
     inspectorBody.innerHTML = `
+      <div class="field"><label>Aspect ratio</label><div class="seg" id="crop-aspect">
+        <button type="button" data-aspect="" class="active">Free</button>
+        <button type="button" data-aspect="1">1:1</button>
+        <button type="button" data-aspect="1.3333">4:3</button>
+        <button type="button" data-aspect="1.5">3:2</button>
+        <button type="button" data-aspect="1.7778">16:9</button>
+      </div></div>
       <div class="meta-line" id="crop-meta">Drag a selection on the image.</div>
       <button class="btn btn-primary btn-block" id="crop-go" type="button" style="margin-top:12px;" disabled>Apply crop</button>
       <button class="btn btn-ghost btn-block" id="crop-clear" type="button" style="margin-top:8px;">Clear selection</button>
     `;
+    let aspect = null;
+    $('#crop-aspect').querySelectorAll('button').forEach(b => b.onclick = () => {
+      aspect = b.dataset.aspect ? Number(b.dataset.aspect) : null;
+      $('#crop-aspect').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    });
     cropOverlay.style.display = 'block';
     cropOverlay.innerHTML = '';
     state.cropRect = null;
-    setupCropDrag();
+    setupCropDrag(() => aspect);
     $('#crop-clear').onclick = () => { cropOverlay.innerHTML = ''; state.cropRect = null; $('#crop-go').disabled = true; $('#crop-meta').textContent = 'Drag a selection on the image.'; };
     $('#crop-go').onclick = () => {
       if (!state.cropRect) return;
@@ -894,7 +1126,7 @@
     };
   }
 
-  function setupCropDrag() {
+  function setupCropDrag(getAspect) {
     let box = null, start = null;
     cropOverlay.onpointerdown = e => {
       const r = cropOverlay.getBoundingClientRect();
@@ -906,8 +1138,15 @@
       const move = ev => {
         const x = Math.max(0, Math.min(ev.clientX - r.left, r.width));
         const y = Math.max(0, Math.min(ev.clientY - r.top, r.height));
-        const left = Math.min(x, start.x), top = Math.min(y, start.y);
-        const w = Math.abs(x - start.x), h = Math.abs(y - start.y);
+        let w = Math.abs(x - start.x), h = Math.abs(y - start.y);
+        const aspect = getAspect ? getAspect() : null;
+        if (aspect) {
+          h = w / aspect;
+          const maxH = y >= start.y ? r.height - start.y : start.y;
+          if (h > maxH) { h = maxH; w = h * aspect; }
+        }
+        const left = x >= start.x ? start.x : start.x - w;
+        const top = y >= start.y ? start.y : start.y - h;
         box.style.left = left + 'px'; box.style.top = top + 'px';
         box.style.width = w + 'px'; box.style.height = h + 'px';
         state.cropRect = { x: left, y: top, w, h };
