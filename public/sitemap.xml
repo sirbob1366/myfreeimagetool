@@ -35,7 +35,7 @@
   <url><loc>https://myfreeimagetool.com/shapes/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/crop/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/resize/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/about/</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/about/</loc><lastmod>2026-06-12</lastmod><priority>0.5</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/privacy/</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/terms/</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/contact/</loc><priority>0.4</priority><changefreq>yearly</changefreq></url>

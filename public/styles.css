@@ -400,6 +400,31 @@ body[data-scene="lite"] #bg3d { opacity: 0.45; }
 }
 .footer-col a:hover { color: var(--text); }
 
+/* Sibling apps cross-promo */
+.footer-apps {
+  max-width: var(--container); margin: 0 auto;
+  padding: 28px 24px 26px; border-top: 1px solid var(--border);
+}
+.footer-apps-title {
+  text-align: center; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text); margin: 0 0 16px;
+}
+.footer-apps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.footer-app {
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s ease;
+}
+.footer-app:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
+.footer-app-icon { width: 20px; height: 20px; color: var(--accent); margin-bottom: 8px; }
+.footer-app-icon svg { width: 20px; height: 20px; }
+.footer-app b { font-size: 14px; font-weight: 600; color: var(--text); }
+.footer-app span { font-size: 12.5px; color: var(--text-muted); }
+.footer-apps-note { text-align: center; margin: 18px 0 0; font-size: 12px; color: var(--text-muted); }
+.footer-copy a { color: var(--text-secondary); font-weight: 500; transition: color 0.2s ease; }
+.footer-copy a:hover { color: var(--text); }
+
 /* ----------------------------- Tool page ----------------------------- */
 .tool-page { padding: 64px 0 120px; }
 .tool-header { text-align: center; margin-bottom: 48px; }

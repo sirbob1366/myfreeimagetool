@@ -20,6 +20,21 @@
   // ---------- Footer year ----------
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // ---------- Support widget ----------
+  // Lazy-loaded once the page is interactive. Skipped on the full-screen
+  // editor, where it would overlap the workspace — its nav links Help instead.
+  if (!location.pathname.startsWith('/editor')) {
+    window.addEventListener('load', () => {
+      const idle = window.requestIdleCallback || (fn => setTimeout(fn, 1));
+      idle(() => {
+        const s = document.createElement('script');
+        s.src = '/js/support-widget.js';
+        s.defer = true;
+        document.body.appendChild(s);
+      });
+    });
+  }
 })();
 
 /* Exposed helpers */
