@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Batch Image Editor — Resize, Compress &amp; Convert Unlimited Files | MyFreeImageTool</title>
+<meta name="description" content="Batch resize, compress, convert, watermark or rename unlimited images at once — no 30-file cap, no upload. Per-file progress and one-click zip download." />
+<link rel="canonical" href="https://myfreeimagetool.com/batch-editor/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/batch-editor/" />
+<meta property="og:title" content="Batch Image Editor — Unlimited Files, No Upload" />
+<meta property="og:description" content="One operation, every image: resize, compress, convert, watermark, rename. Free with no caps." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Batch Image Editor — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/batch-editor/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Apply resize, compress, convert, watermark or rename to unlimited images at once, entirely in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "How many images can I process at once?",
+    "acceptedAnswer": { "@type": "Answer", "text": "There is no limit. Popular batch tools cap free users at 30 files per task because their servers do the work; here your own device does it, so 300 files cost us the same as 3 — nothing." } },
+  { "@type": "Question", "name": "Are my images uploaded?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. Every file is processed locally with the Canvas API and zipped in your browser. Nothing crosses the network." } },
+  { "@type": "Question", "name": "How does batch rename work?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Choose a pattern like holiday-{n} and each file becomes holiday-1.jpg, holiday-2.jpg and so on. {name} keeps the original name, {n} is the counter." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 980px;">
+    <div class="tool-header">
+      <p class="eyebrow">Optimize · Bulk processing</p>
+      <h1>Batch Editor</h1>
+      <p>One operation, every image. Resize, compress, convert, watermark or rename a whole folder — there's no 30-file cap here, because there's no server.</p>
+      <div class="tool-wedge"><span><b>Unlimited</b> files — not 30</span><span><b>Per-file</b> progress</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+      <h2>Drop any number of images</h2>
+      <p>JPG, PNG, WebP — 3 files or 300, no difference · processed on your device</p>
+      <input id="file-input" type="file" accept="image/*" multiple />
+    </label>
+
+    <div id="op-panel" class="controls" style="display:none; margin-top:20px;">
+      <h3>Operation</h3>
+      <div class="seg" id="op-seg">
+        <button type="button" data-op="resize" class="active">Resize</button>
+        <button type="button" data-op="compress">Compress</button>
+        <button type="button" data-op="convert">Convert</button>
+        <button type="button" data-op="watermark">Watermark</button>
+        <button type="button" data-op="rename">Rename</button>
+      </div>
+
+      <div data-panel="resize" style="margin-top:14px;">
+        <div class="field-row">
+          <div class="field"><label for="rz-mode">Mode</label>
+            <select id="rz-mode">
+              <option value="maxdim" selected>Longest side (px)</option>
+              <option value="width">Exact width (px)</option>
+              <option value="percent">Percent</option>
+            </select></div>
+          <div class="field"><label for="rz-val">Value</label><input type="number" id="rz-val" value="1920" min="1" /></div>
+        </div>
+      </div>
+      <div data-panel="compress" style="display:none; margin-top:14px;">
+        <div class="field"><label>Quality <span class="range-val" id="cp-q-v">75%</span></label><input type="range" id="cp-q" min="20" max="95" value="75" /></div>
+        <div class="field"><label for="cp-fmt">Format</label>
+          <select id="cp-fmt"><option value="image/jpeg" selected>JPG</option><option value="image/webp">WebP</option></select></div>
+      </div>
+      <div data-panel="convert" style="display:none; margin-top:14px;">
+        <div class="field"><label for="cv-fmt">Convert to</label>
+          <select id="cv-fmt">
+            <option value="image/png" selected>PNG</option><option value="image/jpeg">JPG</option>
+            <option value="image/webp">WebP</option><option value="image/bmp">BMP</option><option value="image/gif">GIF</option>
+          </select></div>
+      </div>
+      <div data-panel="watermark" style="display:none; margin-top:14px;">
+        <div class="field"><label for="wm-text">Watermark text</label><input type="text" id="wm-text" value="© My Brand" /></div>
+        <div class="field-row">
+          <div class="field"><label for="wm-pos">Position</label>
+            <select id="wm-pos">
+              <option value="bottom-right" selected>Bottom right</option><option value="bottom-left">Bottom left</option>
+              <option value="top-right">Top right</option><option value="top-left">Top left</option><option value="center">Centre</option>
+            </select></div>
+          <div class="field"><label>Opacity <span class="range-val" id="wm-op-v">50%</span></label><input type="range" id="wm-op" min="10" max="100" value="50" style="margin-top:12px;" /></div>
+        </div>
+      </div>
+      <div data-panel="rename" style="display:none; margin-top:14px;">
+        <div class="field"><label for="rn-pattern">Pattern — {n} = number, {name} = original</label>
+          <input type="text" id="rn-pattern" value="image-{n}" /></div>
+        <p class="meta-line">Files are re-encoded as-is and renamed in the zip.</p>
+      </div>
+
+      <div class="action-bar" style="justify-content:flex-start;">
+        <button class="btn btn-primary" id="run" type="button">Process all</button>
+        <button class="btn btn-ghost" id="dl-zip" type="button" style="display:none;">Download zip</button>
+        <button class="btn btn-ghost" id="clear" type="button">Clear list</button>
+      </div>
+      <div id="total-prog"></div>
+    </div>
+
+    <div id="results" class="batch-list"></div>
+    <div class="status" role="status"></div>
+
+    <section class="tool-copy">
+      <h2>Built to delete the 30-file cap</h2>
+      <p>If you've ever resized a product catalogue or compressed a wedding album online, you know the routine: upload 30 files, wait, download, repeat ten times — or pay. The cap exists because every image you upload costs the site server time. This batch editor moves the work to the only machine that should ever see your photos anyway: yours. Drop in 300 images and the only difference from 3 is how long your own CPU hums.</p>
+      <h3>Five operations, one pass</h3>
+      <ul>
+        <li><strong>Resize</strong> — cap the longest side (perfect for web galleries), set an exact width, or scale by percent. Aspect ratio is always preserved.</li>
+        <li><strong>Compress</strong> — re-encode everything as JPG or WebP at your chosen quality and watch the per-file savings tally up.</li>
+        <li><strong>Convert</strong> — normalise a mixed folder to PNG, JPG, WebP, BMP or GIF in one go.</li>
+        <li><strong>Watermark</strong> — stamp your name or brand on every image, scaled to each photo's size, at any corner or centred.</li>
+        <li><strong>Rename</strong> — turn IMG_4023.JPG chaos into product-1.jpg, product-2.jpg with {n} and {name} patterns.</li>
+      </ul>
+      <p>Each file shows its own progress and result size, failures are reported per-file without stopping the run, and the finished set downloads as a single zip — assembled in your browser too. For one-off edits with finer control, the dedicated <a href="/resize-image/">resize</a>, <a href="/compress-image/">compress</a> and <a href="/add-watermark/">watermark</a> tools go deeper.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Is there really no file limit?</summary><p>None. Memory on your device is the practical ceiling — hundreds of normal photos are fine.</p></details>
+      <details class="faq-item"><summary>Do all files get the same settings?</summary><p>Yes — that's the point of batch. Settings like watermark size scale relative to each image so results look consistent.</p></details>
+      <details class="faq-item"><summary>What happens to files that fail?</summary><p>They're marked in the list and skipped; the rest of the batch continues and zips normally.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/compress-image/"><b>Compress Image</b><span>Single file, live size preview</span></a>
+      <a href="/resize-image/"><b>Resize Image</b><span>Exact pixels with presets</span></a>
+      <a href="/heic-to-jpg/"><b>HEIC to JPG</b><span>Batch-convert iPhone photos</span></a>
+      <a href="/exif-remover/"><b>EXIF Remover</b><span>Strip metadata before sharing</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const results = $('#results');
+  let queue = []; // { file, row, blob, outName }
+  let op = 'resize';
+  let running = false;
+
+  function addFiles(files) {
+    for (const file of files) {
+      const row = document.createElement('div');
+      row.className = 'batch-row';
+      const url = URL.createObjectURL(file);
+      row.innerHTML =
+        '<img class="batch-thumb" alt="" loading="lazy" src="' + url + '" />' +
+        '<span class="batch-name">' + ImgUtils.escapeHTML(file.name) + '</span>' +
+        '<span class="batch-meta">' + ImgUtils.formatBytes(file.size) + '</span>' +
+        '<button class="batch-x" type="button" aria-label="Remove">✕</button>';
+      results.appendChild(row);
+      const item = { file, row, blob: null };
+      row.querySelector('.batch-x').onclick = () => {
+        queue = queue.filter(q => q !== item);
+        row.remove();
+        if (!queue.length) $('#op-panel').style.display = 'none';
+      };
+      queue.push(item);
+    }
+    $('#op-panel').style.display = 'block';
+    ImgUtils.setStatus(queue.length + ' file(s) ready. No cap — add as many as you like.');
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), multiple: true, onFiles: addFiles });
+  ToolUI.pageDrop(addFiles);
+
+  $('#op-seg').querySelectorAll('button').forEach(b => b.onclick = () => {
+    op = b.dataset.op;
+    $('#op-seg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('[data-panel]').forEach(p => p.style.display = p.dataset.panel === op ? 'block' : 'none');
+  });
+  $('#cp-q').oninput = () => $('#cp-q-v').textContent = $('#cp-q').value + '%';
+  $('#wm-op').oninput = () => $('#wm-op-v').textContent = $('#wm-op').value + '%';
+  $('#clear').onclick = () => {
+    queue = [];
+    results.innerHTML = '';
+    $('#op-panel').style.display = 'none';
+    $('#dl-zip').style.display = 'none';
+    ImgUtils.setStatus('');
+  };
+
+  async function processOne(item, index) {
+    const src = await ImageEngine.loadImage(item.file);
+    const keepMime = src.type === 'image/png' || src.type === 'image/webp' ? src.type : 'image/jpeg';
+    let blob, outName;
+    if (op === 'resize') {
+      const mode = $('#rz-mode').value, val = Math.max(1, Number($('#rz-val').value));
+      let w, h;
+      if (mode === 'percent') { w = src.width * val / 100; h = src.height * val / 100; }
+      else if (mode === 'width') { w = val; h = val * src.height / src.width; }
+      else { const s = Math.min(1, val / Math.max(src.width, src.height)); w = src.width * s; h = src.height * s; }
+      blob = await ImageEngine.resize(src, { width: Math.round(w), height: Math.round(h), mime: keepMime });
+      outName = ImgUtils.stripExt(item.file.name) + '_' + Math.round(w) + 'px.' + ImageEngine.extFor(keepMime);
+    } else if (op === 'compress') {
+      const mime = $('#cp-fmt').value;
+      blob = await ImageEngine.compress(src, { quality: Number($('#cp-q').value) / 100, mime });
+      outName = ImgUtils.stripExt(item.file.name) + '_compressed.' + ImageEngine.extFor(mime);
+    } else if (op === 'convert') {
+      const mime = $('#cv-fmt').value;
+      blob = await ImageEngine.convert(src, { mime });
+      outName = ImgUtils.stripExt(item.file.name) + '.' + ImageEngine.extFor(blob.type || mime);
+    } else if (op === 'watermark') {
+      blob = await ImageEngine.watermark(src, {
+        text: $('#wm-text').value || '©',
+        position: $('#wm-pos').value,
+        opacity: Number($('#wm-op').value) / 100,
+        mime: keepMime
+      });
+      outName = ImgUtils.stripExt(item.file.name) + '_wm.' + ImageEngine.extFor(keepMime);
+    } else { // rename
+      blob = item.file;
+      const pattern = $('#rn-pattern').value || '{name}';
+      const ext = item.file.name.split('.').pop();
+      outName = pattern.replace(/\{n\}/g, index + 1).replace(/\{name\}/g, ImgUtils.stripExt(item.file.name)) + '.' + ext;
+    }
+    URL.revokeObjectURL(src.url);
+    return { blob, outName };
+  }
+
+  $('#run').onclick = async () => {
+    if (running || !queue.length) return;
+    running = true;
+    $('#run').disabled = true;
+    const total = ToolUI.progress($('#total-prog'), 'Processing 0 / ' + queue.length);
+    let done = 0, failed = 0;
+    for (let i = 0; i < queue.length; i++) {
+      const item = queue[i];
+      const prog = ToolUI.progress(item.row, '');
+      prog.set(0.4);
+      try {
+        const { blob, outName } = await processOne(item, i);
+        item.blob = blob;
+        item.outName = outName;
+        prog.remove();
+        const saved = item.file.size > blob.size ? Math.round((1 - blob.size / item.file.size) * 100) : 0;
+        item.row.querySelector('.batch-name').textContent = outName;
+        item.row.querySelector('.batch-meta').innerHTML =
+          ImgUtils.formatBytes(blob.size) + (saved > 0 ? ' <span class="saved">−' + saved + '%</span>' : '');
+      } catch (e) {
+        console.error(e);
+        failed++;
+        prog.fail('Failed — skipped');
+      }
+      done++;
+      total.set(done / queue.length, 'Processing ' + done + ' / ' + queue.length);
+      await new Promise(r => setTimeout(r)); // let the UI breathe
+    }
+    total.done('Finished — ' + (done - failed) + ' processed' + (failed ? ', ' + failed + ' failed' : ''));
+    setTimeout(() => total.remove(), 2500);
+    const ok = queue.filter(q => q.blob);
+    if (ok.length === 1) {
+      ImgUtils.download(ok[0].blob, ok[0].outName);
+      ImgUtils.setStatus('Downloaded.', 'success');
+    } else if (ok.length) {
+      $('#dl-zip').style.display = '';
+      ImgUtils.setStatus('Ready — download everything as a zip.', 'success');
+    }
+    $('#run').disabled = false;
+    running = false;
+  };
+
+  $('#dl-zip').onclick = async () => {
+    const unique = ToolUI.uniqueNames();
+    const files = queue.filter(q => q.blob).map(q => ({ name: unique(q.outName), blob: q.blob }));
+    if (!files.length) return;
+    const prog = ToolUI.progress($('#total-prog'), 'Building zip…');
+    await ToolUI.zip(files, 'batch-' + files.length + '-images.zip', f => prog.set(f));
+    prog.done('Zip downloaded');
+    setTimeout(() => prog.remove(), 2000);
+  };
+});
+</script>
+</body>
+</html>

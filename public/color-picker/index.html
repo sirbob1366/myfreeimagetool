@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Color Picker from Image — Eyedropper &amp; Palette Extractor | MyFreeImageTool</title>
+<meta name="description" content="Pick any pixel's color from an image with a zoom loupe, extract the dominant palette, and copy HEX, RGB or HSL. Free, in your browser, no upload." />
+<link rel="canonical" href="https://myfreeimagetool.com/color-picker/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/color-picker/" />
+<meta property="og:title" content="Color Picker — Eyedropper &amp; Palette from Any Image" />
+<meta property="og:description" content="Zoom-loupe eyedropper, dominant palette extraction, HEX/RGB/HSL copy. Free and private." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Color Picker — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/color-picker/",
+  "applicationCategory": "DesignApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Eyedropper with zoom loupe and k-means palette extraction from any image, in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "How accurate is the eyedropper?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Pixel-exact. The zoom loupe magnifies the area under your cursor so you can land on a single pixel, and the value is read straight from the image data." } },
+  { "@type": "Question", "name": "How is the palette generated?",
+    "acceptedAnswer": { "@type": "Answer", "text": "K-means clustering groups the image's pixels into 5–8 clusters and returns each cluster's average color, ordered by how much of the image it covers — the same approach design tools use." } },
+  { "@type": "Question", "name": "Can I save the palette?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — copy individual values as HEX, RGB or HSL, or export the whole palette as a labelled PNG swatch card." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  #stage-wrap { position: relative; }
+  #canvas { cursor: crosshair; border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+  #loupe {
+    position: absolute; width: 110px; height: 110px; border-radius: 50%;
+    border: 3px solid #fff; box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    pointer-events: none; display: none; overflow: hidden; z-index: 5;
+    transform: translate(-50%, -130%);
+  }
+  #loupe canvas { width: 110px; height: 110px; image-rendering: pixelated; }
+  #loupe::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 10px; height: 10px; transform: translate(-50%, -50%);
+    border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.6);
+  }
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .swatch {
+    width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border);
+    cursor: pointer; transition: transform 0.2s var(--ease-out);
+  }
+  .swatch:hover { transform: scale(1.12); }
+  .cur-color { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  .cur-chip { width: 56px; height: 56px; border-radius: 12px; border: 1px solid var(--border); flex-shrink: 0; }
+  .val-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .val-row code {
+    flex: 1; font-size: 13px; background: var(--bg-elevated); padding: 7px 10px;
+    border-radius: 8px; color: var(--text); font-variant-numeric: tabular-nums;
+  }
+  .val-copy { min-height: 30px; padding: 4px 12px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Create · For designers</p>
+      <h1>Color Picker</h1>
+      <p>Eyedrop any pixel with a zoom loupe, extract the image's dominant palette, and copy values as HEX, RGB or HSL.</p>
+      <div class="tool-wedge"><span><b>Pixel</b>-exact</span><span><b>K-means</b> palette</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 6.5l4 4L9 19H5v-4l8.5-8.5ZM15 5l2-2 4 4-2 2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2>Drop an image here or click to choose</h2>
+      <p>JPG, PNG or WebP · colours are read on your device</p>
+      <input id="file-input" type="file" accept="image/*" />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div id="stage-wrap" style="align-self:start; min-width:0;">
+        <canvas id="canvas"></canvas>
+        <div id="loupe"><canvas id="loupe-canvas" width="11" height="11"></canvas></div>
+      </div>
+      <div class="controls">
+        <h3>Picked colour</h3>
+        <div class="cur-color">
+          <div class="cur-chip" id="cur-chip" style="background:#4f46e5;"></div>
+          <p class="meta-line" style="margin:0;">Hover to preview,<br/>click to lock a pixel.</p>
+        </div>
+        <div class="val-row"><code id="v-hex">#4f46e5</code><button class="btn btn-ghost val-copy" data-v="hex" type="button">Copy</button></div>
+        <div class="val-row"><code id="v-rgb">rgb(79, 70, 229)</code><button class="btn btn-ghost val-copy" data-v="rgb" type="button">Copy</button></div>
+        <div class="val-row"><code id="v-hsl">hsl(243, 75%, 59%)</code><button class="btn btn-ghost val-copy" data-v="hsl" type="button">Copy</button></div>
+        <div class="divider"></div>
+        <h3>Dominant palette</h3>
+        <div class="field"><label>Swatches <span class="range-val" id="k-v">6</span></label><input type="range" id="k" min="5" max="8" value="6" /></div>
+        <div class="swatches" id="swatches"></div>
+        <button class="btn btn-primary btn-block" id="export" type="button" style="margin-top:14px;">Export palette as image</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+    <div id="readout"></div>
+
+    <section class="tool-copy">
+      <h2>The color tool designers keep in a tab</h2>
+      <p>Every designer has done the squint-and-screenshot dance: zoom way in, screenshot, zoom the screenshot, guess which pixel is the “real” colour. This page replaces that ritual. The <strong>loupe</strong> magnifies the pixels under your cursor eleven-fold with a crosshair on the exact pixel being read, so picking the precise edge of a gradient or a single pixel of a logo is trivial. Click to lock the colour, then copy it in whichever syntax your stack wants — HEX for CSS, RGB for design tools, HSL when you plan to derive shades.</p>
+      <p>Below the eyedropper, the <strong>palette extractor</strong> runs k-means clustering over the image — the same algorithm behind the palette features in major design suites — and returns 5 to 8 swatches ordered by coverage. It's how you turn a brand photo into a colour system, match UI chrome to a hero image, or pull a poster's mood into a slide deck. Click any swatch to load it into the picker for copying.</p>
+      <h3>Built for the real workflow</h3>
+      <ul>
+        <li><strong>Paste-friendly values</strong> — lowercase hex, comma-separated RGB, rounded HSL: drop them straight into code.</li>
+        <li><strong>Palette export</strong> — download the swatch card as a labelled PNG to share in a brief or pin in Figma.</li>
+        <li><strong>Private by architecture</strong> — colours are read from canvas data on your device. Unreleased product shots and client work never upload anywhere.</li>
+      </ul>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Why does my picked colour differ from another tool's?</summary><p>Browsers colour-manage images; values here are read in sRGB, the web's standard. Tools reading raw camera profiles can differ slightly.</p></details>
+      <details class="faq-item"><summary>Can I pick from a website screenshot?</summary><p>Yes — screenshot the page, drop it here, and eyedrop anything. That's often faster than digging through DevTools.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/replace-color/"><b>Replace Color</b><span>Swap a picked colour for another</span></a>
+      <a href="/add-border/"><b>Add Border</b><span>Mat with a sampled colour</span></a>
+      <a href="/photo-editor/"><b>Photo Editor</b><span>Tune colours before sampling</span></a>
+      <a href="/svg-to-png/"><b>SVG to PNG</b><span>Rasterise logos to sample</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const canvas = $('#canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const loupe = $('#loupe');
+  const loupeCanvas = $('#loupe-canvas');
+  const lctx = loupeCanvas.getContext('2d');
+  let src = null;
+  let palette = [];
+  let current = [79, 70, 229];
+
+  const toHex = rgb => '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('');
+  function toHsl([r, g, b]) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      h = max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      h *= 60;
+    }
+    return 'hsl(' + Math.round(h) + ', ' + Math.round(s * 100) + '%, ' + Math.round(l * 100) + '%)';
+  }
+
+  function setCurrent(rgb) {
+    current = rgb;
+    $('#cur-chip').style.background = toHex(rgb);
+    $('#v-hex').textContent = toHex(rgb);
+    $('#v-rgb').textContent = 'rgb(' + rgb.join(', ') + ')';
+    $('#v-hsl').textContent = toHsl(rgb);
+  }
+
+  function pixelAt(e) {
+    const r = canvas.getBoundingClientRect();
+    const x = Math.max(0, Math.min(canvas.width - 1, Math.floor((e.clientX - r.left) * canvas.width / r.width)));
+    const y = Math.max(0, Math.min(canvas.height - 1, Math.floor((e.clientY - r.top) * canvas.height / r.height)));
+    return { x, y };
+  }
+
+  canvas.addEventListener('pointermove', e => {
+    if (!src) return;
+    const { x, y } = pixelAt(e);
+    lctx.clearRect(0, 0, 11, 11);
+    lctx.drawImage(canvas, x - 5, y - 5, 11, 11, 0, 0, 11, 11);
+    const wrap = $('#stage-wrap').getBoundingClientRect();
+    loupe.style.display = 'block';
+    loupe.style.left = (e.clientX - wrap.left) + 'px';
+    loupe.style.top = (e.clientY - wrap.top) + 'px';
+    const p = ctx.getImageData(x, y, 1, 1).data;
+    setCurrent([p[0], p[1], p[2]]);
+  });
+  canvas.addEventListener('pointerleave', () => { loupe.style.display = 'none'; });
+  canvas.addEventListener('pointerdown', e => {
+    if (!src) return;
+    const { x, y } = pixelAt(e);
+    const p = ctx.getImageData(x, y, 1, 1).data;
+    setCurrent([p[0], p[1], p[2]]);
+    ImgUtils.setStatus('Picked ' + toHex(current) + ' at ' + x + ', ' + y + '.', 'success');
+  });
+
+  document.querySelectorAll('.val-copy').forEach(b => b.onclick = async () => {
+    const text = $('#v-' + b.dataset.v).textContent;
+    await navigator.clipboard.writeText(text);
+    ToolUI.checkmark(b.parentElement);
+  });
+
+  // ---------- K-means palette ----------
+  function extractPalette(k) {
+    const small = ToolUI.downscale(src.img, 120);
+    const d = small.getContext('2d').getImageData(0, 0, small.width, small.height).data;
+    const pts = [];
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] > 128) pts.push([d[i], d[i + 1], d[i + 2]]);
+    }
+    if (!pts.length) return [];
+    // Init centroids spread across luminance.
+    const sorted = [...pts].sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]));
+    let centroids = Array.from({ length: k }, (_, i) => [...sorted[Math.floor((i + 0.5) * sorted.length / k)]]);
+    let assign = new Array(pts.length).fill(0);
+    for (let iter = 0; iter < 12; iter++) {
+      for (let p = 0; p < pts.length; p++) {
+        let best = 0, bd = Infinity;
+        for (let c = 0; c < k; c++) {
+          const dr = pts[p][0] - centroids[c][0], dg = pts[p][1] - centroids[c][1], db = pts[p][2] - centroids[c][2];
+          const dist = dr * dr + dg * dg + db * db;
+          if (dist < bd) { bd = dist; best = c; }
+        }
+        assign[p] = best;
+      }
+      const sums = Array.from({ length: k }, () => [0, 0, 0, 0]);
+      for (let p = 0; p < pts.length; p++) {
+        const s = sums[assign[p]];
+        s[0] += pts[p][0]; s[1] += pts[p][1]; s[2] += pts[p][2]; s[3]++;
+      }
+      centroids = sums.map((s, c) => s[3] ? [s[0] / s[3], s[1] / s[3], s[2] / s[3]] : centroids[c]);
+    }
+    const counts = new Array(k).fill(0);
+    assign.forEach(a => counts[a]++);
+    return centroids
+      .map((c, i) => ({ rgb: c.map(Math.round), n: counts[i] }))
+      .filter(c => c.n > 0)
+      .sort((a, b) => b.n - a.n);
+  }
+
+  function renderPalette() {
+    palette = extractPalette(Number($('#k').value));
+    $('#swatches').innerHTML = palette.map((p, i) =>
+      '<div class="swatch" title="' + toHex(p.rgb) + '" data-i="' + i + '" style="background:' + toHex(p.rgb) + '"></div>'
+    ).join('');
+    $('#swatches').querySelectorAll('.swatch').forEach(s => s.onclick = () => setCurrent(palette[Number(s.dataset.i)].rgb));
+  }
+  $('#k').oninput = () => { $('#k-v').textContent = $('#k').value; renderPalette(); };
+
+  $('#export').onclick = () => {
+    if (!palette.length) return;
+    const sw = 180, sh = 220;
+    const out = document.createElement('canvas');
+    out.width = sw * palette.length;
+    out.height = sh;
+    const octx = out.getContext('2d');
+    palette.forEach((p, i) => {
+      octx.fillStyle = toHex(p.rgb);
+      octx.fillRect(i * sw, 0, sw, sh - 56);
+      octx.fillStyle = '#ffffff';
+      octx.fillRect(i * sw, sh - 56, sw, 56);
+      octx.fillStyle = '#0d0d0f';
+      octx.font = '600 18px -apple-system, Arial, sans-serif';
+      octx.textAlign = 'center';
+      octx.fillText(toHex(p.rgb), i * sw + sw / 2, sh - 24);
+    });
+    out.toBlob(blob => {
+      ImgUtils.download(blob, 'palette.png');
+      ImgUtils.setStatus('Palette exported.', 'success');
+    }, 'image/png');
+  };
+
+  async function load(file) {
+    try {
+      src = await ImageEngine.loadImage(file);
+      const view = ToolUI.downscale(src.img, 1400);
+      canvas.width = view.width; canvas.height = view.height;
+      ctx.drawImage(view, 0, 0);
+      $('#workbench').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      ToolUI.readout($('#readout'), src, file);
+      renderPalette();
+      ImgUtils.setStatus('');
+    } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
+  ToolUI.pageDrop(f => load(f[0]));
+});
+</script>
+</body>
+</html>

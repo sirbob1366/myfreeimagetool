@@ -531,6 +531,17 @@
     return toBlob(canvas, mime, o.quality ?? 0.95);
   };
 
+  // Average of the four corners — a good default background colour guess.
+  Engine.cornerColor = function (src) {
+    const c = makeCanvas(src.width, src.height);
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(src.img, 0, 0);
+    const pts = [[0, 0], [c.width - 1, 0], [0, c.height - 1], [c.width - 1, c.height - 1]];
+    let r = 0, g = 0, b = 0;
+    for (const [x, y] of pts) { const p = ctx.getImageData(x, y, 1, 1).data; r += p[0]; g += p[1]; b += p[2]; }
+    return [Math.round(r / 4), Math.round(g / 4), Math.round(b / 4)];
+  };
+
   // ---------- Add text ----------
   // opts: { text, x, y (top-left, image px), size, font(css stack), color, bold, italic, mime, quality }
   Engine.addText = async function (src, o = {}) {

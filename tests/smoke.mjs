@@ -715,6 +715,153 @@ await page.goto(`${BASE}/upscale-image/`);
 	);
 }
 
+// ---------- Utility tool pages ----------
+console.log('utility pages');
+for (const path of [
+	'/photo-editor/',
+	'/batch-editor/',
+	'/round-image/',
+	'/add-border/',
+	'/collage-maker/',
+	'/color-picker/',
+	'/replace-color/',
+	'/exif-remover/',
+]) {
+	const res = await page.goto(`${BASE}${path}`);
+	check(`utility ${path} returns 200`, res !== null && res.status() === 200);
+	check(
+		`utility ${path} has dropzone`,
+		(await page.locator('#dropzone').count()) === 1,
+	);
+}
+
+async function uploadTo(page, selector = '#file-input', count = 1) {
+	const buffer = await makeTestImage(page);
+	const files = Array.from({ length: count }, (_, i) => ({
+		name: `test-${i}.png`,
+		mimeType: 'image/png',
+		buffer,
+	}));
+	await page.setInputFiles(selector, files);
+}
+
+// Photo editor: exposure -60 darkens the red half; histogram canvas present.
+await page.goto(`${BASE}/photo-editor/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.locator('#s-ex').fill('-60');
+	await page.locator('#s-ex').dispatchEvent('input');
+	await page.waitForTimeout(300);
+	const px = await page.evaluate(() => {
+		const c = document.getElementById('preview');
+		return Array.from(c.getContext('2d').getImageData(10, 10, 1, 1).data);
+	});
+	check('photo-editor: exposure darkens red', px[0] < 220 && px[0] > 80, `pixel=${px}`);
+	check('photo-editor: histogram present', (await page.locator('#hist').count()) === 1);
+}
+
+// Batch editor: two files through 50% resize produce zip option.
+await page.goto(`${BASE}/batch-editor/`);
+{
+	await uploadTo(page, '#file-input', 2);
+	await page.waitForSelector('#op-panel', { state: 'visible' });
+	await page.selectOption('#rz-mode', 'percent');
+	await page.locator('#rz-val').fill('50');
+	await page.click('#run');
+	await page.waitForSelector('#dl-zip:not([style*="none"])', { timeout: 15000 });
+	check('batch-editor: processed batch offers zip', true);
+	const meta = await page.locator('.batch-meta').first().textContent();
+	check('batch-editor: per-file result size shown', /B/.test(meta), meta);
+}
+
+// Round image: circle output is square with transparent corners.
+await page.goto(`${BASE}/round-image/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.waitForTimeout(200);
+	const r = await page.evaluate(() => {
+		const c = document.getElementById('canvas');
+		const corner = c.getContext('2d').getImageData(1, 1, 1, 1).data;
+		const centre = c.getContext('2d').getImageData(c.width / 2, c.height / 2, 1, 1).data;
+		return { w: c.width, h: c.height, corner: Array.from(corner), centre: Array.from(centre) };
+	});
+	check('round-image: square canvas', r.w === r.h, JSON.stringify(r));
+	check('round-image: corner transparent', r.corner[3] === 0, `corner=${r.corner}`);
+	check('round-image: centre opaque', r.centre[3] === 255, `centre=${r.centre}`);
+}
+
+// Add border: default 4% border grows the canvas and colours the corner.
+await page.goto(`${BASE}/add-border/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.waitForTimeout(200);
+	const r = await page.evaluate(() => {
+		const c = document.getElementById('canvas');
+		return { w: c.width, h: c.height, corner: Array.from(c.getContext('2d').getImageData(1, 1, 1, 1).data) };
+	});
+	check('add-border: canvas grows by border', r.w > 240 && r.h > 160, JSON.stringify(r));
+	check('add-border: corner is border colour', r.corner[0] < 40 && r.corner[3] === 255, `corner=${r.corner}`);
+}
+
+// Collage: two photos render into a 900px square preview.
+await page.goto(`${BASE}/collage-maker/`);
+{
+	await uploadTo(page, '#file-input', 2);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	const r = await page.evaluate(() => {
+		const c = document.getElementById('canvas');
+		return { w: c.width, h: c.height };
+	});
+	check('collage: 900px square preview', r.w === 900 && r.h === 900, JSON.stringify(r));
+}
+
+// Color picker: clicking the blue half reports #0000ff.
+await page.goto(`${BASE}/color-picker/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	const box = await page.locator('#canvas').boundingBox();
+	await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2);
+	await page.waitForTimeout(150);
+	const hex = await page.locator('#v-hex').textContent();
+	check('color-picker: picks pure blue', hex === '#0000ff', hex);
+	check('color-picker: palette swatches rendered', (await page.locator('.swatch').count()) >= 2);
+}
+
+// Replace color: pick red, recolour to green, check the after layer.
+await page.goto(`${BASE}/replace-color/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.waitForSelector('.cmp-stage', { timeout: 5000 });
+	const stage = await page.locator('.cmp-stage').boundingBox();
+	await page.mouse.click(stage.x + stage.width * 0.25, stage.y + stage.height / 2);
+	await page.evaluate(() => {
+		const input = document.getElementById('to-color');
+		input.value = '#00ff00';
+		input.dispatchEvent(new Event('input'));
+	});
+	await page.waitForTimeout(500);
+	const px = await page.evaluate(() => {
+		const c = document.querySelector('.cmp-after canvas');
+		const x = Math.floor(c.width * 0.25), y = Math.floor(c.height / 2);
+		return Array.from(c.getContext('2d').getImageData(x, y, 1, 1).data);
+	});
+	check('replace-color: red half recoloured green', px[1] > 150 && px[0] < 90, `pixel=${px}`);
+}
+
+// EXIF remover: a plain canvas PNG reports no EXIF.
+await page.goto(`${BASE}/exif-remover/`);
+{
+	await uploadTo(page);
+	await page.waitForTimeout(400);
+	const meta = await page.locator('.meta-line').first().textContent();
+	check('exif-remover: clean PNG reports no EXIF', meta.includes('no EXIF'), meta);
+}
+
 // ---------- Console errors ----------
 check(
 	'no console/page errors across all pages',

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Collage Maker — Photo Grids up to 4K, Free | MyFreeImageTool</title>
+<meta name="description" content="Combine 2–9 photos into clean grid and strip collages with gap, corner and background controls. Drag photos between cells, export up to 4K — free, no upload." />
+<link rel="canonical" href="https://myfreeimagetool.com/collage-maker/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/collage-maker/" />
+<meta property="og:title" content="Collage Maker — Grids &amp; Strips up to 4K" />
+<meta property="og:description" content="2–9 photos into clean layouts. Drag to rearrange, export up to 4K. Free and private." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Collage Maker — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/collage-maker/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Grid and strip photo collages with drag-to-arrange, exported up to 4K in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "How many photos can a collage hold?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Layouts range from 2 to 9 photos — pairs, strips, 2×2, 1+2 feature layouts and full 3×3 grids." } },
+  { "@type": "Question", "name": "What resolution is the exported collage?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Your choice of 1080, 2048 or 3840 pixels square — the 4K option prints cleanly at around 12 inches." } },
+  { "@type": "Question", "name": "Can I rearrange photos after adding them?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — drag any photo onto another cell and they swap places instantly." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  #canvas { cursor: grab; }
+  #canvas.dragging { cursor: grabbing; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Create · Grids &amp; strips</p>
+      <h1>Collage Maker</h1>
+      <p>Two to nine photos in a clean layout. Drag photos between cells, tune gaps and corners, export up to 4K.</p>
+      <div class="tool-wedge"><span><b>Up to</b> 4K export</span><span><b>Drag</b> to arrange</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+      <h2>Drop 2–9 photos here or click to choose</h2>
+      <p>JPG, PNG or WebP · assembled on your device</p>
+      <input id="file-input" type="file" accept="image/*" multiple />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div class="preview-pane" style="align-items:flex-start;">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="controls">
+        <h3>Layout</h3>
+        <div class="field"><select id="layout"></select></div>
+        <button class="btn btn-ghost btn-block" id="add-more" type="button">+ Add more photos</button>
+        <input id="more-input" type="file" accept="image/*" multiple style="display:none;" />
+        <p class="meta-line">Drag a photo onto another cell to swap them.</p>
+        <div class="divider"></div>
+        <h3>Style</h3>
+        <div class="field"><label>Gap <span class="range-val" id="gap-v">2%</span></label><input type="range" id="gap" min="0" max="8" value="2" step="0.5" /></div>
+        <div class="field"><label>Corner radius <span class="range-val" id="rad-v">0%</span></label><input type="range" id="rad" min="0" max="10" value="0" step="0.5" /></div>
+        <div class="field"><label for="bg">Background</label><input type="color" id="bg" value="#ffffff" style="width:100%;height:38px;border:1px solid var(--border-strong);border-radius:9px;background:var(--bg);padding:3px;" /></div>
+        <div class="divider"></div>
+        <div class="field"><label for="size">Export size</label>
+          <select id="size"><option value="1080">1080 × 1080 — social</option><option value="2048" selected>2048 × 2048 — sharp</option><option value="3840">3840 × 3840 — 4K / print</option></select>
+        </div>
+        <div class="field"><label for="fmt">Save as</label>
+          <select id="fmt"><option value="image/jpeg" selected>JPG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select>
+        </div>
+        <button class="btn btn-primary btn-block" id="save" type="button">Download collage</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+
+    <section class="tool-copy">
+      <h2>Nine photos, one story</h2>
+      <p>A collage earns its place when one photo can't carry the moment — the before/during/after, the trip in six frames, the product from every angle. This maker keeps the craft decisions (which photos, what order) yours and automates the fiddly parts: photos are cover-fitted into each cell so nothing distorts, gaps stay mathematically even, and the whole grid exports as one crisp file up to 3840×3840 — enough to print around 30cm square at photo quality.</p>
+      <h3>Layouts that cover the classics</h3>
+      <ul>
+        <li><strong>Pairs</strong> — side-by-side or stacked, the before/after workhorse.</li>
+        <li><strong>Strips</strong> — three or four in a row, photo-booth style.</li>
+        <li><strong>1 + 2 feature</strong> — one hero image with two supporting shots.</li>
+        <li><strong>2×2, 3×2, 3×3 grids</strong> — the Instagram-native looks.</li>
+      </ul>
+      <p>Drop photos in any order and drag them between cells to rearrange — the swap happens live on the canvas. Then style the frame: tighten the gap to zero for a seamless mosaic, widen it with a white background for the gallery look, or round the corners and pick a background colour sampled from the photos themselves (the <a href="/color-picker/">color picker</a> is handy for that).</p>
+      <p>As always on this site, the collage is assembled in your browser's canvas, not on a server. Family photos stay on your device, the export carries no watermark, and there's no “premium layout” upsell — all of it is just free.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Why do my photos get cropped in cells?</summary><p>Cells cover-fit: each photo fills its cell completely, cropping overflow rather than distorting. Pick a layout whose cells roughly match your photos' orientation for minimal cropping.</p></details>
+      <details class="faq-item"><summary>Can I make non-square collages?</summary><p>The canvas is square — the universal safe shape for social. Strips inside it include built-in matting; for custom shapes, crop the export with the <a href="/crop-image/">crop tool</a>.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/meme-generator/"><b>Meme Generator</b><span>Caption the result</span></a>
+      <a href="/add-border/"><b>Add Border</b><span>Frame the finished collage</span></a>
+      <a href="/compress-image/"><b>Compress Image</b><span>Shrink the 4K export</span></a>
+      <a href="/image-to-pdf/"><b>Image to PDF</b><span>Collages into an album PDF</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const canvas = $('#canvas');
+  const ctx = canvas.getContext('2d');
+  const PREVIEW = 900;
+  let photos = []; // ImageEngine src objects, in cell order
+
+  // Cells as fractions {x,y,w,h} of the square canvas.
+  function grid(cols, rows) {
+    const cells = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      cells.push({ x: c / cols, y: r / rows, w: 1 / cols, h: 1 / rows });
+    }
+    return cells;
+  }
+  const LAYOUTS = [
+    { id: '2v', label: '2 — side by side', cells: grid(2, 1) },
+    { id: '2h', label: '2 — stacked', cells: grid(1, 2) },
+    { id: '3v', label: '3 — strip', cells: grid(3, 1) },
+    { id: '3h', label: '3 — stacked strip', cells: grid(1, 3) },
+    { id: '1p2', label: '3 — feature + 2', cells: [
+      { x: 0, y: 0, w: 2 / 3, h: 1 },
+      { x: 2 / 3, y: 0, w: 1 / 3, h: 0.5 },
+      { x: 2 / 3, y: 0.5, w: 1 / 3, h: 0.5 }] },
+    { id: '2x2', label: '4 — 2×2 grid', cells: grid(2, 2) },
+    { id: '4v', label: '4 — strip', cells: grid(4, 1) },
+    { id: '1p3', label: '4 — feature + 3', cells: [
+      { x: 0, y: 0, w: 1, h: 2 / 3 },
+      { x: 0, y: 2 / 3, w: 1 / 3, h: 1 / 3 },
+      { x: 1 / 3, y: 2 / 3, w: 1 / 3, h: 1 / 3 },
+      { x: 2 / 3, y: 2 / 3, w: 1 / 3, h: 1 / 3 }] },
+    { id: '3x2', label: '6 — 3×2 grid', cells: grid(3, 2) },
+    { id: '2x4', label: '8 — 2×4 grid', cells: grid(2, 4) },
+    { id: '3x3', label: '9 — 3×3 grid', cells: grid(3, 3) }
+  ];
+
+  function currentLayout() {
+    return LAYOUTS.find(l => l.id === $('#layout').value) || LAYOUTS[0];
+  }
+
+  function refreshLayoutOptions() {
+    const n = photos.length;
+    const sel = $('#layout');
+    const prev = sel.value;
+    sel.innerHTML = LAYOUTS
+      .map(l => '<option value="' + l.id + '">' + l.label + (l.cells.length > n ? ' (needs ' + l.cells.length + ')' : '') + '</option>')
+      .join('');
+    // Default to the largest layout the photos fill.
+    const fit = [...LAYOUTS].reverse().find(l => l.cells.length <= n) || LAYOUTS[0];
+    sel.value = LAYOUTS.some(l => l.id === prev && l.cells.length <= n) ? prev : fit.id;
+  }
+
+  function drawTo(targetCtx, side) {
+    const layout = currentLayout();
+    const gap = side * Number($('#gap').value) / 100;
+    const rad = side * Number($('#rad').value) / 100;
+    targetCtx.canvas.width = side;
+    targetCtx.canvas.height = side;
+    targetCtx.fillStyle = $('#bg').value;
+    targetCtx.fillRect(0, 0, side, side);
+    targetCtx.imageSmoothingQuality = 'high';
+    layout.cells.forEach((cell, i) => {
+      const p = photos[i];
+      const x = cell.x * side + gap / 2, y = cell.y * side + gap / 2;
+      const w = cell.w * side - gap, h = cell.h * side - gap;
+      targetCtx.save();
+      targetCtx.beginPath();
+      targetCtx.roundRect(x, y, w, h, rad);
+      targetCtx.clip();
+      if (p) {
+        const s = Math.max(w / p.width, h / p.height);
+        const dw = p.width * s, dh = p.height * s;
+        targetCtx.drawImage(p.img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+      } else {
+        targetCtx.fillStyle = 'rgba(13,13,15,0.06)';
+        targetCtx.fillRect(x, y, w, h);
+        targetCtx.fillStyle = 'rgba(13,13,15,0.35)';
+        targetCtx.font = (side * 0.03) + 'px sans-serif';
+        targetCtx.textAlign = 'center';
+        targetCtx.textBaseline = 'middle';
+        targetCtx.fillText('add a photo', x + w / 2, y + h / 2);
+      }
+      targetCtx.restore();
+    });
+  }
+
+  const render = () => drawTo(ctx, PREVIEW);
+
+  // Drag photos between cells to swap.
+  function cellAt(e) {
+    const r = canvas.getBoundingClientRect();
+    const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+    return currentLayout().cells.findIndex(c => fx >= c.x && fx < c.x + c.w && fy >= c.y && fy < c.y + c.h);
+  }
+  canvas.addEventListener('pointerdown', e => {
+    const from = cellAt(e);
+    if (from < 0 || !photos[from]) return;
+    e.preventDefault();
+    canvas.classList.add('dragging');
+    const up = ev => {
+      canvas.classList.remove('dragging');
+      window.removeEventListener('pointerup', up);
+      const to = cellAt(ev);
+      if (to >= 0 && to !== from) {
+        [photos[from], photos[to]] = [photos[to], photos[from]];
+        render();
+      }
+    };
+    window.addEventListener('pointerup', up);
+  });
+
+  async function addFiles(files) {
+    ImgUtils.setStatus('Loading photos…');
+    for (const f of files.slice(0, 9 - photos.length)) {
+      try { photos.push(await ImageEngine.loadImage(f)); } catch (e) {}
+    }
+    if (photos.length < 2) { ImgUtils.setStatus('Add at least 2 photos for a collage.', 'error'); return; }
+    refreshLayoutOptions();
+    $('#workbench').style.display = 'grid';
+    $('#dropzone').style.display = 'none';
+    render();
+    ImgUtils.setStatus(photos.length + ' photo(s) loaded' + (photos.length >= 9 ? ' (max 9)' : '') + '.');
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), multiple: true, onFiles: addFiles });
+  ToolUI.pageDrop(addFiles);
+  $('#add-more').onclick = () => $('#more-input').click();
+  $('#more-input').addEventListener('change', e => addFiles(Array.from(e.target.files)));
+
+  $('#layout').onchange = render;
+  $('#gap').oninput = () => { $('#gap-v').textContent = $('#gap').value + '%'; render(); };
+  $('#rad').oninput = () => { $('#rad-v').textContent = $('#rad').value + '%'; render(); };
+  $('#bg').addEventListener('input', render);
+
+  $('#save').onclick = () => {
+    if (!photos.length) return;
+    const side = Number($('#size').value);
+    const out = document.createElement('canvas');
+    drawTo(out.getContext('2d'), side);
+    const mime = $('#fmt').value;
+    out.toBlob(blob => {
+      ImgUtils.download(blob, 'collage-' + side + '.' + ImageEngine.extFor(mime));
+      ImgUtils.setStatus('Collage downloaded.', 'success');
+    }, mime, 0.93);
+  };
+});
+</script>
+</body>
+</html>

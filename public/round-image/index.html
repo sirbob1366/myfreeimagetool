@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Round Image — Circle Crop &amp; Rounded Corners Free | MyFreeImageTool</title>
+<meta name="description" content="Crop any photo into a circle or add rounded corners, with a transparent PNG result. Perfect for profile pictures — free, private, in your browser." />
+<link rel="canonical" href="https://myfreeimagetool.com/round-image/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/round-image/" />
+<meta property="og:title" content="Round Image — Circle Crop, Transparent PNG" />
+<meta property="og:description" content="Circle-crop photos or round their corners. Free, no upload, transparent PNG out." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Round Image — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/round-image/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Circle crop and adjustable rounded corners with transparent PNG output, in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Will the background of the circle be transparent?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — the result downloads as a PNG with true transparency outside the circle or rounded corners, so it sits cleanly on any background." } },
+  { "@type": "Question", "name": "Can I choose which part of the photo is in the circle?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes. Drag the circle on the preview to position it anywhere, and use the size slider to zoom the crop in or out." } },
+  { "@type": "Question", "name": "Is the image uploaded?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No — the crop happens on your device with the Canvas API. Nothing is sent anywhere." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .stagebox {
+    position: relative; border-radius: var(--radius-md); overflow: hidden;
+    background-image:
+      linear-gradient(45deg, #e8e8ee 25%, transparent 25%),
+      linear-gradient(-45deg, #e8e8ee 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e8e8ee 75%),
+      linear-gradient(-45deg, transparent 75%, #e8e8ee 75%);
+    background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    background-color: #f4f4f7; box-shadow: var(--shadow-card);
+  }
+  .stagebox canvas { width: 100%; height: auto; display: block; cursor: move; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Edit · Profile pictures</p>
+      <h1>Round Image</h1>
+      <p>Circle-crop any photo or give it adjustable rounded corners — transparent PNG out, drag to frame it perfectly.</p>
+      <div class="tool-wedge"><span><b>True</b> transparency</span><span><b>Drag</b> to position</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M4 4l3 3M20 4l-3 3M4 20l3-3M20 20l-3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/></svg>
+      <h2>Drop a photo here or click to choose</h2>
+      <p>JPG, PNG or WebP · cropped on your device</p>
+      <input id="file-input" type="file" accept="image/*" />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div class="stagebox" style="align-self:start;">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="controls">
+        <h3>Shape</h3>
+        <div class="seg" id="shape-seg">
+          <button type="button" data-shape="circle" class="active">Circle</button>
+          <button type="button" data-shape="rounded">Rounded corners</button>
+        </div>
+        <div id="panel-circle">
+          <div class="field" style="margin-top:14px;"><label>Crop size <span class="range-val" id="size-v">100%</span></label>
+            <input type="range" id="size" min="30" max="100" value="100" /></div>
+          <p class="meta-line">Drag the image to position the circle.</p>
+        </div>
+        <div id="panel-rounded" style="display:none;">
+          <div class="field" style="margin-top:14px;"><label>Corner radius <span class="range-val" id="radius-v">12%</span></label>
+            <input type="range" id="radius" min="1" max="50" value="12" /></div>
+        </div>
+        <div class="divider"></div>
+        <p class="meta-line">Output: <strong id="out-dims">—</strong> · transparent PNG</p>
+        <button class="btn btn-primary btn-block" id="save" type="button" style="margin-top:10px;">Download PNG</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+    <div id="readout"></div>
+
+    <section class="tool-copy">
+      <h2>Profile-ready circles, frame-ready corners</h2>
+      <p>Square photos and circular avatar slots don't agree on what matters: the platform will happily centre-crop your forehead out of frame. Doing the circle crop yourself — positioned where <em>you</em> want it — fixes that everywhere at once, because a pre-cropped image looks right on Slack, Discord, GitHub, LinkedIn, forums and email signatures alike. The output is a true transparent PNG, so it composes cleanly onto any background a platform or document throws behind it.</p>
+      <p><strong>Circle mode</strong> crops to a perfect circle: drag the photo to position the framing and use the size slider to zoom in or out of the crop. <strong>Rounded-corner mode</strong> keeps the full rectangle but radiuses the corners — from a subtle 4% card look to fully pill-shaped at 50% — which is exactly what app screenshots, hero images and testimonial photos want.</p>
+      <h3>Tips for a good avatar</h3>
+      <ul>
+        <li><strong>Eyes above centre.</strong> Faces read best when the eyes sit in the top third of the circle — drag the crop down slightly.</li>
+        <li><strong>Leave breathing room.</strong> Crop a touch wider than feels natural; platforms often shrink avatars to 32px where tight crops turn to mush.</li>
+        <li><strong>Start big.</strong> Crop from the original photo, not an already-tiny copy. If the source is small, <a href="/upscale-image/">upscale it</a> first.</li>
+      </ul>
+      <p>Everything happens in your browser, full-stop — the photo never uploads, and the transparent PNG downloads at the crop's native resolution. Pair it with the <a href="/remove-background/">background remover</a> for the floating-headshot look, or <a href="/add-border/">add a ring border</a> after cropping.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Why PNG and not JPG?</summary><p>JPG can't store transparency — the area outside the circle would turn solid white. PNG keeps it genuinely clear.</p></details>
+      <details class="faq-item"><summary>What resolution comes out?</summary><p>The crop's native pixels — a circle cut from a 3000px photo downloads at that scale, ready for retina displays.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/remove-background/"><b>Remove Background</b><span>Cut yourself out first</span></a>
+      <a href="/add-border/"><b>Add Border</b><span>Ring or frame the result</span></a>
+      <a href="/crop-image/"><b>Crop Image</b><span>Rectangular crops</span></a>
+      <a href="/resize-image/"><b>Resize Image</b><span>Exact avatar dimensions</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const canvas = $('#canvas');
+  const ctx = canvas.getContext('2d');
+  let src = null;
+  let shape = 'circle';
+  let cx = 0.5, cy = 0.5; // circle centre as fraction of image
+
+  function circleR() {
+    if (!src) return 0;
+    return (Math.min(src.width, src.height) / 2) * (Number($('#size').value) / 100);
+  }
+
+  function render() {
+    if (!src) return;
+    if (shape === 'circle') {
+      const r = circleR();
+      const side = Math.round(r * 2);
+      canvas.width = side; canvas.height = side;
+      const px = cx * src.width, py = cy * src.height;
+      ctx.clearRect(0, 0, side, side);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(r, r, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(src.img, px - r, py - r, side, side, 0, 0, side, side);
+      ctx.restore();
+      $('#out-dims').textContent = side + ' × ' + side;
+    } else {
+      canvas.width = src.width; canvas.height = src.height;
+      const rad = (Math.min(src.width, src.height) / 2) * (Number($('#radius').value) / 50);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(0, 0, canvas.width, canvas.height, rad);
+      ctx.clip();
+      ctx.drawImage(src.img, 0, 0);
+      ctx.restore();
+      $('#out-dims').textContent = src.width + ' × ' + src.height;
+    }
+  }
+
+  // Drag repositions the circle centre (clamped so the circle stays inside).
+  canvas.addEventListener('pointerdown', e => {
+    if (!src || shape !== 'circle') return;
+    e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    const ox = cx, oy = cy;
+    const rect = canvas.getBoundingClientRect();
+    const move = ev => {
+      // Dragging the image under a fixed circle: move opposite the pointer.
+      const dx = (ev.clientX - startX) * (canvas.width / rect.width) / src.width;
+      const dy = (ev.clientY - startY) * (canvas.height / rect.height) / src.height;
+      const r = circleR();
+      cx = Math.min(1 - r / src.width, Math.max(r / src.width, ox - dx));
+      cy = Math.min(1 - r / src.height, Math.max(r / src.height, oy - dy));
+      render();
+    };
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+
+  $('#shape-seg').querySelectorAll('button').forEach(b => b.onclick = () => {
+    shape = b.dataset.shape;
+    $('#shape-seg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    $('#panel-circle').style.display = shape === 'circle' ? 'block' : 'none';
+    $('#panel-rounded').style.display = shape === 'rounded' ? 'block' : 'none';
+    render();
+  });
+  $('#size').oninput = () => {
+    $('#size-v').textContent = $('#size').value + '%';
+    const r = circleR();
+    cx = Math.min(1 - r / src.width, Math.max(r / src.width, cx));
+    cy = Math.min(1 - r / src.height, Math.max(r / src.height, cy));
+    render();
+  };
+  $('#radius').oninput = () => { $('#radius-v').textContent = $('#radius').value + '%'; render(); };
+
+  $('#save').onclick = () => {
+    if (!src) return;
+    canvas.toBlob(blob => {
+      ImgUtils.download(blob, ImgUtils.stripExt(src.name) + (shape === 'circle' ? '_circle.png' : '_rounded.png'));
+      ImgUtils.setStatus('Downloaded.', 'success');
+    }, 'image/png');
+  };
+
+  async function load(file) {
+    try {
+      src = await ImageEngine.loadImage(file);
+      cx = 0.5; cy = 0.5;
+      $('#workbench').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      ToolUI.readout($('#readout'), src, file);
+      render();
+      ImgUtils.setStatus('');
+    } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
+  ToolUI.pageDrop(f => load(f[0]));
+});
+</script>
+</body>
+</html>

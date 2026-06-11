@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Photo Editor — Adjust Exposure, Color &amp; Sharpness Free | MyFreeImageTool</title>
+<meta name="description" content="Free online photo editor with exposure, contrast, saturation, temperature, vignette and sharpening sliders, one-tap film presets and a live histogram. No upload, no signup." />
+<link rel="canonical" href="https://myfreeimagetool.com/photo-editor/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/photo-editor/" />
+<meta property="og:title" content="Photo Editor — Free, Private, In-Browser" />
+<meta property="og:description" content="Pro-style adjustments with live preview and histogram. Photos never leave your device." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Photo Editor — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/photo-editor/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "In-browser photo adjustment suite: exposure, contrast, saturation, temperature, vignette, sharpen, presets and histogram." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Is this photo editor really free?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — every slider, preset and the full-resolution export. Processing happens in your browser, so there is nothing to meter and nothing to subscribe to." } },
+  { "@type": "Question", "name": "Are my photos uploaded?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. Adjustments are computed on your device using the Canvas API. The preview, the histogram and the final export never touch a server." } },
+  { "@type": "Question", "name": "What is the histogram for?",
+    "acceptedAnswer": { "@type": "Answer", "text": "It shows the distribution of tones from shadows (left) to highlights (right). If it's piled against either edge, the photo is clipping — pull exposure or contrast until detail comes back." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  #hist { width: 100%; height: 72px; border-radius: 8px; background: var(--bg-elevated); display: block; }
+  .preset-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .preset-row button {
+    padding: 8px 4px; background: var(--bg); border: 1px solid var(--border-strong);
+    border-radius: 8px; color: var(--text); font-size: 12px; font-weight: 500;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .preset-row button:hover { background: var(--bg-elevated); }
+  .preset-row button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Edit · Adjustment suite</p>
+      <h1>Photo Editor</h1>
+      <p>Exposure, colour, vignette and sharpening with a live preview and histogram — then a one-click full-resolution export.</p>
+      <div class="tool-wedge"><span><b>Live</b> preview</span><span><b>Real</b> histogram</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="6" r="2.2" fill="currentColor"/><circle cx="15" cy="12" r="2.2" fill="currentColor"/><circle cx="7" cy="18" r="2.2" fill="currentColor"/></svg>
+      <h2>Drop a photo here or click to choose</h2>
+      <p>JPG, PNG or WebP · edited entirely on your device</p>
+      <input id="file-input" type="file" accept="image/*" />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div class="preview-pane" style="align-items:flex-start;">
+        <canvas id="preview"></canvas>
+      </div>
+      <div class="controls">
+        <canvas id="hist" width="256" height="72" aria-label="Histogram"></canvas>
+        <div class="divider"></div>
+        <h3>Presets</h3>
+        <div class="preset-row" id="presets">
+          <button type="button" data-p="none" class="active">None</button>
+          <button type="button" data-p="vivid">Vivid</button>
+          <button type="button" data-p="mono">Mono</button>
+          <button type="button" data-p="warm">Warm</button>
+          <button type="button" data-p="film">Film</button>
+          <button type="button" data-p="fade">Fade</button>
+        </div>
+        <div class="divider"></div>
+        <h3>Adjust</h3>
+        <div class="field"><label>Exposure <span class="range-val" id="v-ex">0</span></label><input type="range" id="s-ex" min="-100" max="100" value="0" /></div>
+        <div class="field"><label>Contrast <span class="range-val" id="v-co">0</span></label><input type="range" id="s-co" min="-100" max="100" value="0" /></div>
+        <div class="field"><label>Saturation <span class="range-val" id="v-sa">0</span></label><input type="range" id="s-sa" min="-100" max="100" value="0" /></div>
+        <div class="field"><label>Temperature <span class="range-val" id="v-te">0</span></label><input type="range" id="s-te" min="-100" max="100" value="0" /></div>
+        <div class="field"><label>Vignette <span class="range-val" id="v-vg">0</span></label><input type="range" id="s-vg" min="0" max="100" value="0" /></div>
+        <div class="field"><label>Sharpen <span class="range-val" id="v-sh">0</span></label><input type="range" id="s-sh" min="0" max="100" value="0" /></div>
+        <div class="field-row" style="margin-top:6px;">
+          <button class="btn btn-ghost" id="reset" type="button">Reset</button>
+        </div>
+        <div class="divider"></div>
+        <div class="field"><label for="fmt">Save as</label>
+          <select id="fmt"><option value="image/jpeg" selected>JPG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select>
+        </div>
+        <button class="btn btn-primary btn-block" id="save" type="button">Download edited photo</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+    <div id="readout"></div>
+
+    <section class="tool-copy">
+      <h2>The adjustments that matter, without the suite bloat</h2>
+      <p>Most photos don't need 200 tools — they need six good sliders. This editor covers the adjustments photographers actually reach for: <strong>exposure</strong> to rescue dark shots, <strong>contrast</strong> for punch, <strong>saturation</strong> for colour intensity, <strong>temperature</strong> to fix that blue indoor cast or add golden-hour warmth, <strong>vignette</strong> to pull the eye inward, and <strong>sharpening</strong> for a crisp finish. Every slider updates the preview live, and the export re-applies your edits at full resolution.</p>
+      <p>The histogram up top is the same instrument pro tools show: the distribution of tones from shadows on the left to highlights on the right. If the graph slams against the right edge, you've blown the highlights; against the left, you're crushing shadows. Drag exposure or contrast and watch it move — it's the fastest way to learn what these sliders really do.</p>
+      <h3>One-tap looks</h3>
+      <ul>
+        <li><strong>Vivid</strong> — saturated and contrasty, made for product shots and travel photos.</li>
+        <li><strong>Mono</strong> — true black &amp; white with lifted contrast.</li>
+        <li><strong>Warm</strong> — golden cast and gentle saturation, flattering for portraits.</li>
+        <li><strong>Film</strong> — softened contrast, warm shift and a subtle vignette.</li>
+        <li><strong>Fade</strong> — the matte, low-contrast look that flatters moody scenes.</li>
+      </ul>
+      <p>Presets just position the sliders — tap one, then keep adjusting. Nothing here is destructive until you download, and even then the original file on your device is untouched. Need crop or rotation too? They live in the <a href="/crop-image/">crop</a> and <a href="/rotate-image/">rotate</a> tools, or all together in the <a href="/editor/">full editor</a>.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Does the editor reduce quality?</summary><p>Edits are computed once at export on the full-resolution image. Save as PNG for lossless output or JPG/WebP at 93% quality for smaller files.</p></details>
+      <details class="faq-item"><summary>Why do my edits look different at export?</summary><p>They shouldn't — the preview applies identical math on a downscaled copy for speed, and the export re-runs it on every original pixel.</p></details>
+      <details class="faq-item"><summary>Is anything uploaded?</summary><p>No. All processing is local Canvas work; the page works offline once loaded.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/filters/"><b>Photo Filters</b><span>12 looks with intensity control</span></a>
+      <a href="/adjust/"><b>Adjust Colors</b><span>Quick brightness &amp; contrast</span></a>
+      <a href="/upscale-image/"><b>Upscale Image</b><span>Enlarge 2x or 4x cleanly</span></a>
+      <a href="/crop-image/"><b>Crop Image</b><span>Reframe before editing</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const preview = $('#preview');
+  const pctx = preview.getContext('2d', { willReadFrequently: true });
+  let src = null;
+  let small = null; // downscaled source for live preview
+  let raf = 0;
+
+  const PRESETS = {
+    none: {},
+    vivid: { sa: 50, co: 12 },
+    mono: { sa: -100, co: 10 },
+    warm: { te: 30, sa: 15, ex: 3 },
+    film: { co: -12, sa: -12, te: 12, vg: 25 },
+    fade: { co: -18, ex: 10, sa: -22 }
+  };
+  const SLIDERS = ['ex', 'co', 'sa', 'te', 'vg', 'sh'];
+  const vals = () => Object.fromEntries(SLIDERS.map(k => [k, Number($('#s-' + k).value)]));
+
+  function setSliders(p) {
+    SLIDERS.forEach(k => {
+      $('#s-' + k).value = p[k] || 0;
+      $('#v-' + k).textContent = p[k] || 0;
+    });
+  }
+
+  // Apply the full adjustment chain onto ctx (which already holds nothing).
+  function applyTo(ctx, sourceCanvas, v) {
+    const w = sourceCanvas.width, h = sourceCanvas.height;
+    ctx.canvas.width = w; ctx.canvas.height = h;
+    ctx.filter = ImageEngine.filterString({
+      brightness: 100 + v.ex * 0.6,
+      contrast: 100 + v.co * 0.7,
+      saturate: Math.max(0, 100 + v.sa)
+    });
+    ctx.drawImage(sourceCanvas, 0, 0);
+    ctx.filter = 'none';
+    ImageEngine.applyPixelAdjust(ctx, w, h, { temperature: v.te, vignette: v.vg });
+    if (v.sh > 0) sharpen(ctx, w, h, v.sh / 100);
+  }
+
+  // 3x3 unsharp: out = px + amount * (px - localMean)
+  function sharpen(ctx, w, h, amount) {
+    const id = ctx.getImageData(0, 0, w, h);
+    const d = id.data;
+    const copy = new Uint8ClampedArray(d);
+    const k = amount * 0.9;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const mean = (
+            copy[i - w * 4 - 4 + c] + copy[i - w * 4 + c] + copy[i - w * 4 + 4 + c] +
+            copy[i - 4 + c] + copy[i + c] + copy[i + 4 + c] +
+            copy[i + w * 4 - 4 + c] + copy[i + w * 4 + c] + copy[i + w * 4 + 4 + c]) / 9;
+          d[i + c] = copy[i + c] + k * (copy[i + c] - mean);
+        }
+      }
+    }
+    ctx.putImageData(id, 0, 0);
+  }
+
+  function drawHistogram() {
+    const hist = $('#hist');
+    const hctx = hist.getContext('2d');
+    const id = pctx.getImageData(0, 0, preview.width, preview.height).data;
+    const bins = new Uint32Array(256);
+    // Sample every 4th pixel — plenty for a 72px-tall graph.
+    for (let i = 0; i < id.length; i += 16) {
+      bins[(id[i] * 0.2126 + id[i + 1] * 0.7152 + id[i + 2] * 0.0722) | 0]++;
+    }
+    let max = 1;
+    for (let b = 0; b < 256; b++) if (bins[b] > max) max = bins[b];
+    hctx.clearRect(0, 0, 256, 72);
+    hctx.fillStyle = 'rgba(79, 70, 229, 0.55)';
+    for (let b = 0; b < 256; b++) {
+      const v = Math.pow(bins[b] / max, 0.5) * 70;
+      hctx.fillRect(b, 72 - v, 1, v);
+    }
+  }
+
+  function render() {
+    if (!small) return;
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      applyTo(pctx, small, vals());
+      drawHistogram();
+    });
+  }
+
+  SLIDERS.forEach(k => {
+    $('#s-' + k).addEventListener('input', () => {
+      $('#v-' + k).textContent = $('#s-' + k).value;
+      $('#presets').querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      render();
+    });
+  });
+  $('#presets').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('#presets').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    setSliders(PRESETS[b.dataset.p]);
+    render();
+  });
+  $('#reset').onclick = () => {
+    setSliders({});
+    $('#presets').querySelectorAll('button').forEach(x => x.classList.toggle('active', x.dataset.p === 'none'));
+    render();
+  };
+
+  $('#save').onclick = async () => {
+    if (!src) return;
+    ImgUtils.setStatus('Exporting at full resolution…');
+    const full = document.createElement('canvas');
+    applyTo(full.getContext('2d', { willReadFrequently: true }), ToolUI.toCanvas(src), vals());
+    const mime = $('#fmt').value;
+    const out = document.createElement('canvas');
+    out.width = full.width; out.height = full.height;
+    const octx = out.getContext('2d');
+    if (mime === 'image/jpeg') { octx.fillStyle = '#fff'; octx.fillRect(0, 0, out.width, out.height); }
+    octx.drawImage(full, 0, 0);
+    out.toBlob(blob => {
+      ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '_edited.' + ImageEngine.extFor(mime));
+      ImgUtils.setStatus('Downloaded.', 'success');
+      ToolUI.checkmark($('#save').parentElement);
+    }, mime, 0.93);
+  };
+
+  async function load(file) {
+    try {
+      src = await ImageEngine.loadImage(file);
+      small = ToolUI.downscale(src.img, 1200);
+      $('#workbench').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      ToolUI.readout($('#readout'), src, file);
+      setSliders({});
+      render();
+      ImgUtils.setStatus('');
+    } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
+  ToolUI.pageDrop(f => load(f[0]));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>EXIF Remover — View &amp; Strip Photo Metadata Free | MyFreeImageTool</title>
+<meta name="description" content="See everything hidden in your photo's metadata — GPS location, camera, timestamps — then strip it all in one click, losslessly. Free, in your browser, no upload." />
+<link rel="canonical" href="https://myfreeimagetool.com/exif-remover/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/exif-remover/" />
+<meta property="og:title" content="EXIF Remover — View &amp; Strip Photo Metadata" />
+<meta property="og:description" content="View GPS, camera and timestamp metadata, then remove it losslessly. On your device." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "EXIF Remover — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/exif-remover/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "View full EXIF metadata including GPS, then strip it losslessly in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "What does EXIF metadata reveal about me?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Phone photos typically embed the GPS coordinates of where the photo was taken, the exact time, your camera or phone model, and editing software. Anyone who downloads the file can read all of it." } },
+  { "@type": "Question", "name": "Does stripping EXIF reduce image quality?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. For JPG and PNG the metadata blocks are removed surgically — the compressed pixel data is byte-for-byte untouched, so quality is identical and the file gets slightly smaller." } },
+  { "@type": "Question", "name": "Is my photo uploaded to read its metadata?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No — which matters, since the metadata is the sensitive part. Parsing and stripping happen entirely in your browser." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .exif-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13.5px; }
+  .exif-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .exif-table td:first-child { color: var(--text-muted); white-space: nowrap; width: 38%; }
+  .exif-table td:last-child { color: var(--text); word-break: break-word; }
+  .gps-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fef3c7; color: #92400e; border-radius: 999px;
+    padding: 3px 12px; font-size: 12px; font-weight: 600;
+  }
+  .gps-pill a { color: #92400e; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 980px;">
+    <div class="tool-header">
+      <p class="eyebrow">Privacy · Metadata</p>
+      <h1>EXIF Remover</h1>
+      <p>See everything your photo quietly carries — GPS location, device, timestamps — then strip it all in one click, without touching a single pixel.</p>
+      <div class="tool-wedge"><span><b>Lossless</b> strip</span><span><b>GPS</b> revealed</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.3-6.5-10.2a6.5 6.5 0 1 1 13 0C18.5 15.7 12 21 12 21Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="2.3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <h2>Drop photos here or click to choose</h2>
+      <p>JPG or PNG · metadata is read and removed on your device</p>
+      <input id="file-input" type="file" accept="image/jpeg,image/png" multiple />
+    </label>
+
+    <div id="results"></div>
+    <div class="action-bar">
+      <button class="btn btn-primary" id="strip-all" type="button" style="display:none;">Strip metadata from all</button>
+    </div>
+    <div class="status" role="status"></div>
+
+    <section class="tool-copy">
+      <h2>Your photos talk behind your back</h2>
+      <p>Every photo from a phone carries a hidden dossier: the GPS coordinates of your home, the minute it was taken, your exact phone model, sometimes even the owner name configured in a camera. Upload that photo to a marketplace listing, a forum, or send it to a stranger, and you've handed all of it over. Most big social networks strip metadata on upload — but email, messaging apps, cloud drives, marketplaces and many forums pass the file through intact.</p>
+      <p>This tool makes the invisible visible first: drop a photo and read the full table — camera, lens, exposure, software, timestamps, and if GPS is present, the coordinates with a map link so you can see exactly what you'd be sharing. Then one click removes everything.</p>
+      <h3>Lossless, literally</h3>
+      <p>The strip is surgical, not a re-export. For JPG, the metadata segments (EXIF, XMP, IPTC, comments) are removed from the file structure while the compressed image data passes through byte-for-byte — identical pixels, zero generation loss, slightly smaller file. PNG gets the same treatment for its text and EXIF chunks. Colour profiles are kept so the image still renders correctly.</p>
+      <p>And the obvious point, which still needs saying: a privacy tool that uploads your photo to a server to “remove the private parts” is a contradiction. Here the parsing and stripping run in your browser — the photo with the GPS data of your house never leaves your device.</p>
+      <ul>
+        <li><strong>Selling online?</strong> Strip before listing — buyers can read your home coordinates from marketplace photos.</li>
+        <li><strong>Sharing screenshots of photos?</strong> Screenshots are clean, but the original you might attach isn't.</li>
+        <li><strong>Posting elsewhere?</strong> Pair with the <a href="/blur-face/">face blur</a> tool for the full anonymising pass.</li>
+      </ul>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Does it work on WebP or HEIC?</summary><p>Directly, no — convert <a href="/heic-to-jpg/">HEIC</a> or <a href="/webp-converter/">WebP</a> to JPG first (conversion itself drops the metadata).</p></details>
+      <details class="faq-item"><summary>Will my camera's colour profile be removed?</summary><p>No — ICC colour profiles are preserved so the image looks identical; only identifying metadata goes.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/blur-face/"><b>Blur Face</b><span>Anonymise the pixels too</span></a>
+      <a href="/compress-image/"><b>Compress Image</b><span>Shrink before sharing</span></a>
+      <a href="/heic-to-jpg/"><b>HEIC to JPG</b><span>Convert iPhone photos first</span></a>
+      <a href="/batch-editor/"><b>Batch Editor</b><span>Bulk-process a folder</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script src="/js/exif.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const results = $('#results');
+  let items = []; // { file, buffer, info, card }
+
+  function fmtValue(v) {
+    if (Array.isArray(v)) return v.map(x => typeof x === 'number' ? +x.toFixed(3) : x).join(', ');
+    if (typeof v === 'number') return +v.toFixed(4);
+    return ImgUtils.escapeHTML(String(v));
+  }
+
+  async function addFiles(files) {
+    for (const file of files) {
+      if (!/image\/(jpeg|png)/.test(file.type)) continue;
+      const buffer = await file.arrayBuffer();
+      const info = ExifTool.parse(buffer);
+      const card = document.createElement('div');
+      card.className = 'controls';
+      card.style.marginTop = '20px';
+      const url = URL.createObjectURL(file);
+
+      let gpsHtml = '';
+      if (info.gps) {
+        const { lat, lon } = info.gps;
+        gpsHtml = '<p style="margin:10px 0 0;"><span class="gps-pill">⚠ GPS embedded: ' +
+          lat.toFixed(5) + ', ' + lon.toFixed(5) +
+          ' — <a href="https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lon + '&zoom=15" target="_blank" rel="noopener">view on map</a></span></p>';
+      }
+
+      const rows = info.tags.map(t => '<tr><td>' + t.tag + '</td><td>' + fmtValue(t.value) + '</td></tr>').join('');
+      card.innerHTML =
+        '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">' +
+        '  <img src="' + url + '" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--border);" />' +
+        '  <div style="flex:1;min-width:200px;">' +
+        '    <strong style="color:var(--text);">' + ImgUtils.escapeHTML(file.name) + '</strong>' +
+        '    <p class="meta-line" style="margin:2px 0 0;">' + ImgUtils.formatBytes(file.size) + ' · ' +
+             (info.present ? info.tags.length + ' metadata field(s)' + (info.gps ? ' · GPS' : '') : 'no EXIF found') + '</p>' +
+        '  </div>' +
+        '  <button class="btn btn-primary strip-one" type="button"' + (info.present ? '' : ' disabled') + '>Strip &amp; save</button>' +
+        '</div>' +
+        gpsHtml +
+        (rows ? '<details style="margin-top:12px;"><summary style="cursor:pointer;font-size:13px;color:var(--text-secondary);">Show all ' + info.tags.length + ' fields</summary><table class="exif-table">' + rows + '</table></details>' : '');
+      results.appendChild(card);
+      const item = { file, buffer, info, card };
+      card.querySelector('.strip-one').onclick = () => strip(item);
+      items.push(item);
+    }
+    $('#strip-all').style.display = items.filter(i => i.info.present).length > 1 ? '' : 'none';
+    ImgUtils.setStatus('');
+  }
+
+  function strip(item) {
+    const blob = item.file.type === 'image/png'
+      ? ExifTool.stripPng(item.buffer)
+      : ExifTool.stripJpeg(item.buffer);
+    if (!blob) { ImgUtils.setStatus('Could not parse this file.', 'error'); return; }
+    const ext = item.file.type === 'image/png' ? 'png' : 'jpg';
+    ImgUtils.download(blob, ImgUtils.stripExt(item.file.name) + '_clean.' + ext);
+    const saved = item.file.size - blob.size;
+    ImgUtils.setStatus('Stripped — pixels untouched, ' + ImgUtils.formatBytes(saved) + ' of metadata removed.', 'success');
+    ToolUI.checkmark(item.card.querySelector('.strip-one').parentElement);
+  }
+
+  $('#strip-all').onclick = () => {
+    items.filter(i => i.info.present).forEach((item, idx) => setTimeout(() => strip(item), idx * 400));
+  };
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), multiple: true, onFiles: addFiles });
+  ToolUI.pageDrop(addFiles);
+});
+</script>
+</body>
+</html>
