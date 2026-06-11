@@ -617,14 +617,23 @@ check(
 );
 await expectDownload(page, 'resize');
 
-// ---------- Remove background ----------
+// ---------- Remove background (static page: AI + color + brush) ----------
 console.log('remove-background');
-await page.goto(`${BASE}/remove-background`);
-await uploadImage(page);
+await page.goto(`${BASE}/remove-background/`);
+{
+	const buffer = await makeTestImage(page);
+	await page.setInputFiles('#file-input', {
+		name: 'test.png',
+		mimeType: 'image/png',
+		buffer,
+	});
+	await page.waitForSelector('#editor', { state: 'visible', timeout: 5000 });
+}
+await page.click('[data-mode="color"]');
 const rbBox = await page.locator('#canvas').boundingBox();
 // Click in the red (left) half.
 await page.mouse.click(rbBox.x + rbBox.width * 0.25, rbBox.y + rbBox.height / 2);
-await page.waitForTimeout(200);
+await page.waitForTimeout(300);
 const removedPixel = await pixelAt(page, 60, 80);
 check(
 	'remove-bg: clicked red area is transparent',
@@ -638,7 +647,7 @@ check(
 	`pixel=${keptPixel}`,
 );
 await page.click('#undo-btn');
-await page.waitForTimeout(100);
+await page.waitForTimeout(200);
 const undonePixel = await pixelAt(page, 60, 80);
 check(
 	'remove-bg: undo restores red pixels (not black)',
@@ -646,6 +655,65 @@ check(
 	`pixel=${undonePixel}`,
 );
 await expectDownload(page, 'remove-background');
+
+// ---------- Flagship tool pages ----------
+console.log('flagship pages');
+for (const path of [
+	'/image-to-text/',
+	'/heic-to-jpg/',
+	'/meme-generator/',
+	'/upscale-image/',
+	'/blur-face/',
+]) {
+	const res = await page.goto(`${BASE}${path}`);
+	check(`flagship ${path} returns 200`, res !== null && res.status() === 200);
+	check(
+		`flagship ${path} has dropzone`,
+		(await page.locator('#dropzone').count()) === 1,
+	);
+}
+
+// Meme generator: type top text, expect white block letters near the top.
+await page.goto(`${BASE}/meme-generator/`);
+{
+	const buffer = await makeTestImage(page);
+	await page.setInputFiles('#file-input', {
+		name: 'test.png',
+		mimeType: 'image/png',
+		buffer,
+	});
+	await page.waitForSelector('#workbench', { state: 'visible', timeout: 5000 });
+	await page.locator('#mm-top').fill('HELLO');
+	await page.waitForTimeout(600); // font load + render
+	const hasWhiteTop = await page.evaluate(() => {
+		const c = document.getElementById('meme-canvas');
+		const d = c.getContext('2d').getImageData(0, 0, c.width, 60).data;
+		for (let i = 0; i < d.length; i += 4) {
+			if (d[i] > 230 && d[i + 1] > 230 && d[i + 2] > 230) return true;
+		}
+		return false;
+	});
+	check('meme: top text rendered in white', hasWhiteTop);
+}
+
+// Upscale: output dimensions update and the compare preview builds.
+await page.goto(`${BASE}/upscale-image/`);
+{
+	const buffer = await makeTestImage(page);
+	await page.setInputFiles('#file-input', {
+		name: 'test.png',
+		mimeType: 'image/png',
+		buffer,
+	});
+	await page.waitForSelector('#workbench', { state: 'visible', timeout: 5000 });
+	const dims = await page.locator('#out-dims').textContent();
+	check('upscale: 2x output dims shown', dims.includes('480') && dims.includes('320'), dims);
+	await page.waitForSelector('.cmp-stage canvas', { timeout: 10000 });
+	check(
+		'upscale: before/after compare renders',
+		(await page.locator('.cmp-layer canvas').count()) === 2,
+	);
+}
 
 // ---------- Console errors ----------
 check(

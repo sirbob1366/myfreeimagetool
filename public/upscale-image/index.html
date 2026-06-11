@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Upscale Image — Enlarge 2x or 4x Free, No Size Limit | MyFreeImageTool</title>
+<meta name="description" content="Enlarge images 2x or 4x with high-quality Lanczos resampling and smart sharpening — free, in your browser, no 6MB limit, no upload. Crisp results for print and web." />
+<link rel="canonical" href="https://myfreeimagetool.com/upscale-image/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/upscale-image/" />
+<meta property="og:title" content="Upscale Image — 2x / 4x, No Size Limit" />
+<meta property="og:description" content="High-quality enlargement with advanced resampling and sharpening. Free, private, unlimited." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Upscale Image — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/upscale-image/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Enlarge images 2x or 4x with Lanczos resampling and unsharp masking, entirely in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Is there a file size limit for upscaling?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. Other sites cap free upscales at around 6MB because their servers do the work. Here your own device does it, so a 40MB photo is as welcome as a 400KB one." } },
+  { "@type": "Question", "name": "Does this use AI to invent detail?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No, and that's deliberate. It uses Lanczos resampling plus an unsharp-mask pass — the technique print professionals have trusted for decades. Everything in the result was in your photo; nothing is hallucinated." } },
+  { "@type": "Question", "name": "How large can I upscale?",
+    "acceptedAnswer": { "@type": "Answer", "text": "2x or 4x, up to a maximum output side of 16,384 pixels (browser canvas limit). A 12MP phone photo upscales to 4x without hitting it." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Optimize · Lanczos + sharpening</p>
+      <h1>Upscale Image</h1>
+      <p>Crisp, clean 2x and 4x enlargements for print and web. Advanced resampling and sharpening — not AI hallucination: what's in your photo stays true.</p>
+      <div class="tool-wedge"><span><b>No</b> 6MB cap</span><span><b>Up to</b> 4x</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M10 10L7.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <h2>Drop an image here or click to choose</h2>
+      <p>JPG, PNG or WebP — any size, no 6MB nonsense · processed on your device</p>
+      <input id="file-input" type="file" accept="image/*" />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div style="min-width:0;">
+        <div id="cmp-holder"></div>
+        <p class="meta-line" style="text-align:center;">Drag the slider — left: standard browser upscale · right: Lanczos + sharpening</p>
+      </div>
+      <div class="controls">
+        <h3>Enlargement</h3>
+        <div class="field"><label for="scale">Scale</label>
+          <select id="scale">
+            <option value="2" selected>2× — double width &amp; height</option>
+            <option value="3">3×</option>
+            <option value="4">4× — quadruple</option>
+          </select>
+        </div>
+        <p class="meta-line">Output: <strong id="out-dims">—</strong></p>
+        <div class="field" style="margin-top:14px;"><label>Sharpening <span class="range-val" id="sharp-v">Standard</span></label>
+          <input type="range" id="sharp" min="0" max="160" value="80" />
+        </div>
+        <div class="field"><label for="fmt">Format</label>
+          <select id="fmt">
+            <option value="image/png" selected>PNG — lossless</option>
+            <option value="image/jpeg">JPG — smaller file</option>
+            <option value="image/webp">WebP — smallest</option>
+          </select>
+        </div>
+        <div id="up-prog"></div>
+        <button class="btn btn-primary btn-block" id="run" type="button" style="margin-top:6px;">Upscale &amp; download</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+    <div id="readout"></div>
+
+    <section class="tool-copy">
+      <h2>Honest upscaling: resampling, not hallucination</h2>
+      <p>A quick word about how this tool is different. “AI upscalers” run your photo through a generative model that invents plausible detail — sometimes beautifully, sometimes by giving your kid an extra knuckle or rewriting the text on a sign. This tool doesn't invent anything. It enlarges with <strong>Lanczos resampling</strong>, the gold-standard interpolation filter used in professional imaging pipelines, then applies a calibrated <strong>unsharp mask</strong> to restore the edge contrast that any enlargement softens. Every pixel in the result is derived from your photo. For print work, product shots, documents and archival scans — anywhere accuracy matters — that's exactly what you want.</p>
+      <p>It's also why there are no limits here. The popular free upscalers cap input at about 6MB and a couple of images per day, because GPU servers are expensive. This runs on your device: a full-resolution 48MP phone photo, a 30MB scan — all fine, all free, as many as you like.</p>
+      <h3>When to use 2x vs 4x</h3>
+      <ul>
+        <li><strong>2x</strong> is the sweet spot — prints one size up, sharper thumbnails-to-full-size, recovering images saved too small.</li>
+        <li><strong>4x</strong> works best on clean, sharp sources like screenshots, logos rendered as PNG, and scans. Heavily compressed JPGs will faithfully enlarge their compression artifacts too — fix those first with the <a href="/compress-image/">compressor</a> at high quality if needed.</li>
+        <li><strong>Sharpening slider:</strong> the default suits photos; nudge it down for soft portraits, up for text and line art.</li>
+      </ul>
+      <p>The before/after slider shows a live preview comparing a standard browser enlargement against the Lanczos + sharpening result, so you can judge with your own eyes before downloading.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Is there really no size limit?</summary><p>Your browser's canvas memory is the only ceiling (about 16,384px per side). There's no upload, so there's no server limit to hit.</p></details>
+      <details class="faq-item"><summary>Why not use AI?</summary><p>Generative upscalers change your image content. For the many uses where fidelity matters more than invented texture, classic resampling done well is the better — and more honest — tool.</p></details>
+      <details class="faq-item"><summary>What's the best format to save in?</summary><p>PNG keeps every pixel exactly. Use JPG or WebP when file size matters more — at quality 92 they're visually identical for photos.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/resize-image/"><b>Resize Image</b><span>Scale down to exact pixels</span></a>
+      <a href="/photo-editor/"><b>Photo Editor</b><span>Sharpen, adjust, finish</span></a>
+      <a href="/compress-image/"><b>Compress Image</b><span>Shrink the result for the web</span></a>
+      <a href="/add-border/"><b>Add Border</b><span>Mat it for printing</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script src="/js/compare-slider.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const MAX_SIDE = 16384;
+  let src = null;
+  let cmp = null;
+  let previewTimer = null;
+
+  function sharpOpts() {
+    const amount = Number($('#sharp').value);
+    return amount > 0 ? { unsharpAmount: amount, unsharpRadius: 0.6, unsharpThreshold: 2 } : {};
+  }
+  function scaleVal() {
+    let s = Number($('#scale').value);
+    if (src && Math.max(src.width, src.height) * s > MAX_SIDE) {
+      s = Math.max(1, Math.floor(MAX_SIDE / Math.max(src.width, src.height)));
+    }
+    return s;
+  }
+  function updateDims() {
+    if (!src) return;
+    const s = scaleVal();
+    const capped = s < Number($('#scale').value);
+    $('#out-dims').textContent = (src.width * s).toLocaleString() + ' × ' + (src.height * s).toLocaleString() +
+      ' px' + (capped ? ' (capped at browser limit)' : '');
+  }
+
+  // Live preview on a crop of the image so the slider compares real pixels 1:1.
+  async function preview() {
+    if (!src) return;
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(async () => {
+      const s = scaleVal();
+      // Take a centred region whose upscaled size fits a preview canvas.
+      const regionW = Math.min(src.width, Math.round(900 / s));
+      const regionH = Math.min(src.height, Math.round(620 / s));
+      const sx = Math.max(0, Math.round((src.width - regionW) / 2));
+      const sy = Math.max(0, Math.round((src.height - regionH) / 2));
+      const region = document.createElement('canvas');
+      region.width = regionW; region.height = regionH;
+      region.getContext('2d').drawImage(src.img, sx, sy, regionW, regionH, 0, 0, regionW, regionH);
+
+      // BEFORE: plain browser scaling.
+      const naive = document.createElement('canvas');
+      naive.width = regionW * s; naive.height = regionH * s;
+      const nctx = naive.getContext('2d');
+      nctx.imageSmoothingEnabled = true;
+      nctx.drawImage(region, 0, 0, naive.width, naive.height);
+
+      // AFTER: pica Lanczos + unsharp.
+      await ToolUI.lazyScript('/vendor/pica/pica.min.js');
+      const fine = document.createElement('canvas');
+      fine.width = naive.width; fine.height = naive.height;
+      await window.pica().resize(region, fine, sharpOpts());
+
+      if (!cmp) cmp = CompareSlider.create($('#cmp-holder'), { labels: ['Standard', 'Enhanced'] });
+      cmp.setBefore(naive);
+      cmp.setAfter(fine);
+    }, 150);
+  }
+
+  async function load(file) {
+    try {
+      src = await ImageEngine.loadImage(file);
+      $('#workbench').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      ToolUI.readout($('#readout'), src, file);
+      updateDims();
+      preview();
+      ImgUtils.setStatus('');
+    } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
+  ToolUI.pageDrop(f => load(f[0]));
+
+  $('#scale').onchange = () => { updateDims(); preview(); };
+  $('#sharp').oninput = () => {
+    const v = Number($('#sharp').value);
+    $('#sharp-v').textContent = v === 0 ? 'Off' : v < 60 ? 'Gentle' : v <= 100 ? 'Standard' : 'Strong';
+    preview();
+  };
+
+  $('#run').onclick = async () => {
+    if (!src) return;
+    $('#run').disabled = true;
+    const prog = ToolUI.progress($('#up-prog'), 'Upscaling…');
+    try {
+      await ToolUI.lazyScript('/vendor/pica/pica.min.js');
+      const s = scaleVal();
+      prog.set(0.15, 'Resampling at ' + s + '× (Lanczos)…');
+      const source = ToolUI.toCanvas(src);
+      const out = document.createElement('canvas');
+      out.width = src.width * s;
+      out.height = src.height * s;
+      await window.pica().resize(source, out, sharpOpts());
+      prog.set(0.8, 'Encoding…');
+      const mime = $('#fmt').value;
+      const blob = await new Promise(r => {
+        if (mime === 'image/jpeg') {
+          // flatten transparency onto white for JPG
+          const flat = document.createElement('canvas');
+          flat.width = out.width; flat.height = out.height;
+          const fctx = flat.getContext('2d');
+          fctx.fillStyle = '#fff'; fctx.fillRect(0, 0, flat.width, flat.height);
+          fctx.drawImage(out, 0, 0);
+          flat.toBlob(r, mime, 0.92);
+        } else out.toBlob(r, mime, 0.92);
+      });
+      prog.done('Done — ' + out.width.toLocaleString() + ' × ' + out.height.toLocaleString() + ' px, ' + ImgUtils.formatBytes(blob.size));
+      ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '_' + s + 'x.' + ImageEngine.extFor(mime));
+      ToolUI.checkmark($('#run').parentElement);
+      setTimeout(() => prog.remove(), 2500);
+    } catch (e) {
+      console.error(e);
+      prog.fail('Upscale failed — the image may exceed canvas memory at this scale.');
+    }
+    $('#run').disabled = false;
+  };
+});
+</script>
+</body>
+</html>

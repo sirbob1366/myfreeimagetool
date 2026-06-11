@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Remove Background — Free AI Cutout, Unlimited &amp; Private | MyFreeImageTool</title>
+<meta name="description" content="Remove image backgrounds free with on-device AI for people and portraits, smart color removal for flat backgrounds, and a manual erase brush. Unlimited use, no upload." />
+<link rel="canonical" href="https://myfreeimagetool.com/remove-background/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/remove-background/" />
+<meta property="og:title" content="Remove Background — Free AI Cutout, On-Device" />
+<meta property="og:description" content="AI portrait cutout + smart color removal + erase brush. Unlimited, free, nothing uploads." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Remove Background — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/remove-background/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Background remover with on-device AI matting for people, color-based removal for flat backgrounds, and a manual brush. No uploads, no usage caps." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "How many backgrounds can I remove for free?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Unlimited. Services that meter background removal (often 3 free, then pay) run GPU servers. Here the AI model downloads once and runs on your device, so there is nothing for us to meter." } },
+  { "@type": "Question", "name": "Is my photo uploaded to remove the background?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. The segmentation model (about 7MB, cached after first use) runs in your browser via WebAssembly. Photos never leave your device." } },
+  { "@type": "Question", "name": "What does the AI mode work best on?",
+    "acceptedAnswer": { "@type": "Answer", "text": "People and portraits — the bundled model is a portrait-matting network. For product shots on flat backgrounds, the color-removal mode is often even cleaner, and the erase brush handles everything else." } },
+  { "@type": "Question", "name": "Can I replace the background instead of making it transparent?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — choose a solid color or a blurred version of the original behind the cutout, or keep it transparent and download a PNG." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .stagebox {
+    position: relative; border-radius: var(--radius-md); overflow: hidden;
+    background-image:
+      linear-gradient(45deg, #e8e8ee 25%, transparent 25%),
+      linear-gradient(-45deg, #e8e8ee 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e8e8ee 75%),
+      linear-gradient(-45deg, transparent 75%, #e8e8ee 75%);
+    background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    background-color: #f4f4f7;
+    box-shadow: var(--shadow-card);
+  }
+  .stagebox canvas { width: 100%; height: auto; display: block; }
+  #canvas[data-mode="color"] { cursor: crosshair; }
+  #canvas[data-mode="erase"], #canvas[data-mode="restore"] { cursor: none; }
+  #brush-cursor {
+    position: absolute; border: 1.5px solid #4f46e5; border-radius: 50%;
+    pointer-events: none; transform: translate(-50%, -50%); display: none;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.8);
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Privacy · On-device AI</p>
+      <h1>Remove Background</h1>
+      <p>AI cutout for people and portraits, smart color removal for flat backgrounds, and an erase brush for everything else — all on your device.</p>
+      <div class="tool-wedge"><span><b>Unlimited</b> — not 3-then-pay</span><span><b>AI on</b> your device</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" fill="none"/><path d="M12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6c.8-2.3 2.7-3.5 5-3.5s4.2 1.2 5 3.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      <h2>Drop a photo here or click to choose</h2>
+      <p>JPG, PNG or WebP · the AI runs in your browser — nothing uploads</p>
+      <input id="file-input" type="file" accept="image/*" />
+    </label>
+
+    <div class="workbench" id="editor" style="display:none;">
+      <div style="min-width:0;">
+        <div class="stagebox">
+          <canvas id="canvas"></canvas>
+          <div id="brush-cursor"></div>
+        </div>
+        <div id="ai-prog"></div>
+      </div>
+      <div class="controls">
+        <h3>Mode</h3>
+        <div class="seg" id="mode-seg">
+          <button type="button" data-mode="ai" class="active">AI cutout</button>
+          <button type="button" data-mode="color">Color</button>
+          <button type="button" data-mode="erase">Erase</button>
+        </div>
+        <p class="meta-line" id="mode-hint">Best for people &amp; portraits. Runs entirely on your device.</p>
+
+        <div id="panel-ai">
+          <button class="btn btn-primary btn-block" id="ai-run" type="button" style="margin-top:10px;">Remove background (AI)</button>
+          <div class="field" style="margin-top:14px;"><label>Edge feathering <span class="range-val" id="feather-v">2px</span></label>
+            <input type="range" id="feather" min="0" max="10" value="2" /></div>
+        </div>
+
+        <div id="panel-color" style="display:none;">
+          <p class="meta-line" style="margin-top:10px;">Click the background on the image to erase that colour.</p>
+          <div class="field" style="margin-top:8px;"><label>Tolerance <span class="range-val" id="tol-v">28</span></label>
+            <input type="range" id="tolerance" min="1" max="100" value="28" /></div>
+          <label class="check"><input type="checkbox" id="contiguous" checked /> Contiguous (connected area only)</label>
+        </div>
+
+        <div id="panel-erase" style="display:none;">
+          <div class="seg" style="margin-top:10px;">
+            <button type="button" id="brush-erase" class="active">Erase</button>
+            <button type="button" id="brush-restore">Restore</button>
+          </div>
+          <div class="field" style="margin-top:10px;"><label>Brush size <span class="range-val" id="brush-v">40px</span></label>
+            <input type="range" id="brush" min="6" max="160" value="40" /></div>
+        </div>
+
+        <div class="divider"></div>
+        <h3>Background</h3>
+        <div class="seg" id="bg-seg">
+          <button type="button" data-bg="transparent" class="active">None</button>
+          <button type="button" data-bg="color">Colour</button>
+          <button type="button" data-bg="blur">Blur</button>
+        </div>
+        <div class="field" id="bg-color-field" style="display:none; margin-top:10px;"><label for="bg-color">Backdrop colour</label>
+          <input type="color" id="bg-color" value="#ffffff" style="width:100%;height:38px;border:1px solid var(--border-strong);border-radius:9px;background:var(--bg);padding:3px;" /></div>
+
+        <div class="divider"></div>
+        <div class="field-row">
+          <button class="btn btn-ghost" id="undo-btn" type="button" disabled>Undo</button>
+          <button class="btn btn-ghost" id="reset-btn" type="button" disabled>Reset</button>
+        </div>
+        <button class="btn btn-primary btn-block" id="download-btn" type="button" style="margin-top:10px;">Download PNG</button>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+    <div id="readout"></div>
+
+    <section class="tool-copy">
+      <h2>Three honest ways to cut out a background</h2>
+      <p>Background removal is the most aggressively paywalled tool on the web — typically three free cutouts, low-resolution previews, then a subscription. The economics force that: every cutout costs the provider GPU time. This page removes the economics. The AI model (a compact portrait-matting network, about 7MB) downloads to your browser once, gets cached, and runs locally. Unlimited cutouts, full resolution, and your photos never touch a server.</p>
+      <p>We're also honest about what each mode is for, because no single technique wins everywhere:</p>
+      <ul>
+        <li><strong>AI cutout</strong> — a matting model tuned for <em>people and portraits</em>. It produces soft, hair-aware edges and is the right choice for profile photos, team pages and selfies. It is not a general object segmenter, and we'd rather tell you that than pretend.</li>
+        <li><strong>Color removal</strong> — click the background to erase everything of that colour, with a tolerance slider and a contiguous option. For product shots, logos and scans on flat backdrops this is often <em>cleaner</em> than any AI.</li>
+        <li><strong>Erase brush</strong> — manual erase and restore at any brush size, for fixing edges or cutting out anything the other two modes can't.</li>
+      </ul>
+      <p>Once the subject is isolated, keep the background transparent (PNG), drop in a solid colour, or blur the original behind the cutout for an instant portrait-mode look. Edge feathering smooths the boundary so the cutout sits naturally on whatever you place it over.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Is it really unlimited?</summary><p>Yes. The work happens on your device, so there's no per-image cost to us and no cap for you — unlike services that limit free users to a handful of cutouts.</p></details>
+      <details class="faq-item"><summary>What happens on first use?</summary><p>Your browser downloads the AI model once (~7MB, with a progress bar), then caches it. After that, cutouts run instantly offline.</p></details>
+      <details class="faq-item"><summary>Why did AI mode struggle with my object photo?</summary><p>The bundled model specialises in people. For objects, try color-removal mode (great on flat backgrounds) or the erase brush — or combine all three.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/blur-face/"><b>Blur Face</b><span>Anonymise photos on-device</span></a>
+      <a href="/round-image/"><b>Round Image</b><span>Circle-crop the cutout</span></a>
+      <a href="/add-border/"><b>Add Border</b><span>Frame the result</span></a>
+      <a href="/replace-color/"><b>Replace Color</b><span>Swap any colour, not just erase</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const canvas = $('#canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const brushCursor = $('#brush-cursor');
+
+  let src = null;
+  let W = 0, H = 0;
+  let orig = null;            // ImageData of the original (RGB source of truth)
+  let alpha = null;           // current alpha channel (Uint8ClampedArray, W*H)
+  let rawMatte = null;        // last AI matte at full size (Float32Array 0..1), pre-feather
+  let blurredBg = null;       // cached blurred-original canvas for the blur backdrop
+  let mode = 'ai';
+  let bgMode = 'transparent';
+  let brushMode = 'erase';
+  const undoStack = [];
+  const MAX_UNDO = 12;
+  let session = null;         // ORT session, kept across runs
+
+  // ---------- Rendering ----------
+  function render() {
+    if (!orig) return;
+    const out = ctx.createImageData(W, H);
+    out.data.set(orig.data);
+    for (let p = 0; p < W * H; p++) out.data[p * 4 + 3] = alpha[p];
+    ctx.clearRect(0, 0, W, H);
+    if (bgMode === 'color') {
+      ctx.fillStyle = $('#bg-color').value;
+      ctx.fillRect(0, 0, W, H);
+    } else if (bgMode === 'blur') {
+      if (!blurredBg) {
+        blurredBg = document.createElement('canvas');
+        blurredBg.width = W; blurredBg.height = H;
+        const bctx = blurredBg.getContext('2d');
+        bctx.filter = 'blur(' + Math.max(8, Math.round(W / 80)) + 'px)';
+        bctx.drawImage(src.img, 0, 0, W, H);
+      }
+      ctx.drawImage(blurredBg, 0, 0);
+    }
+    // putImageData ignores compositing, so go through a scratch canvas.
+    const scratch = document.createElement('canvas');
+    scratch.width = W; scratch.height = H;
+    scratch.getContext('2d').putImageData(out, 0, 0);
+    ctx.drawImage(scratch, 0, 0);
+  }
+
+  function pushUndo() {
+    undoStack.push(alpha.slice());
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    updateButtons();
+  }
+  function updateButtons() {
+    $('#undo-btn').disabled = undoStack.length === 0;
+    $('#reset-btn').disabled = undoStack.length === 0;
+  }
+
+  // ---------- AI matting (MODNet, ONNX Runtime Web) ----------
+  async function ensureSession() {
+    if (session) return session;
+    const prog = ToolUI.progress($('#ai-prog'), 'Loading AI model — one time, then cached');
+    try {
+      await ToolUI.lazyScript('/vendor/ort/ort.min.js');
+      ort.env.wasm.wasmPaths = '/vendor/ort/';
+      ort.env.wasm.numThreads = 1;
+      prog.set(0.1, 'Loading AI model — one time, then cached');
+      const bytes = await ToolUI.fetchWithProgress('/vendor/models/modnet_quant.onnx',
+        f => prog.set(0.1 + f * 0.7, 'Loading AI model — one time, then cached'));
+      prog.set(0.85, 'Initialising…');
+      session = await ort.InferenceSession.create(bytes.buffer, { executionProviders: ['wasm'] });
+      prog.done('Model ready');
+      setTimeout(() => prog.remove(), 800);
+      return session;
+    } catch (e) {
+      prog.fail('Could not load the AI model — try Color or Erase mode.');
+      throw e;
+    }
+  }
+
+  async function runAI() {
+    if (!orig) return;
+    $('#ai-run').disabled = true;
+    try {
+      const sess = await ensureSession();
+      ImgUtils.setStatus('Cutting out the subject…');
+      // Letterbox-free resize to a /32-aligned working size (max side 512).
+      const scale = Math.min(1, 512 / Math.max(W, H));
+      const mw = Math.max(32, Math.round(W * scale / 32) * 32);
+      const mh = Math.max(32, Math.round(H * scale / 32) * 32);
+      const small = document.createElement('canvas');
+      small.width = mw; small.height = mh;
+      const sctx = small.getContext('2d', { willReadFrequently: true });
+      sctx.drawImage(src.img, 0, 0, mw, mh);
+      const sd = sctx.getImageData(0, 0, mw, mh).data;
+      const input = new Float32Array(3 * mw * mh);
+      const plane = mw * mh;
+      for (let p = 0; p < plane; p++) {
+        input[p] = (sd[p * 4] / 255 - 0.5) / 0.5;
+        input[p + plane] = (sd[p * 4 + 1] / 255 - 0.5) / 0.5;
+        input[p + plane * 2] = (sd[p * 4 + 2] / 255 - 0.5) / 0.5;
+      }
+      const feeds = {};
+      feeds[sess.inputNames[0]] = new ort.Tensor('float32', input, [1, 3, mh, mw]);
+      const results = await sess.run(feeds);
+      const matteSmall = results[sess.outputNames[0]].data; // [1,1,mh,mw] 0..1
+
+      // Upscale matte to full resolution via canvas (bilinear).
+      const mc = document.createElement('canvas');
+      mc.width = mw; mc.height = mh;
+      const mctx = mc.getContext('2d');
+      const mid = mctx.createImageData(mw, mh);
+      for (let p = 0; p < plane; p++) {
+        const v = Math.max(0, Math.min(255, Math.round(matteSmall[p] * 255)));
+        mid.data[p * 4] = mid.data[p * 4 + 1] = mid.data[p * 4 + 2] = v;
+        mid.data[p * 4 + 3] = 255;
+      }
+      mctx.putImageData(mid, 0, 0);
+      const fc = document.createElement('canvas');
+      fc.width = W; fc.height = H;
+      const fctx = fc.getContext('2d', { willReadFrequently: true });
+      fctx.imageSmoothingQuality = 'high';
+      fctx.drawImage(mc, 0, 0, W, H);
+      const fd = fctx.getImageData(0, 0, W, H).data;
+      rawMatte = new Float32Array(W * H);
+      for (let p = 0; p < W * H; p++) rawMatte[p] = fd[p * 4] / 255;
+
+      pushUndo();
+      applyMatte();
+      ImgUtils.setStatus('Done. Adjust feathering, switch modes to refine, or download.', 'success');
+    } catch (e) {
+      console.error(e);
+      ImgUtils.setStatus('AI cutout failed on this device — Color and Erase modes still work.', 'error');
+    }
+    $('#ai-run').disabled = false;
+  }
+
+  // Apply rawMatte -> alpha with the current feather setting.
+  function applyMatte() {
+    if (!rawMatte) return;
+    const feather = Number($('#feather').value);
+    let matte = rawMatte;
+    if (feather > 0) {
+      // Feather by blurring the matte on a canvas.
+      const mc = document.createElement('canvas');
+      mc.width = W; mc.height = H;
+      const mctx = mc.getContext('2d', { willReadFrequently: true });
+      const mid = mctx.createImageData(W, H);
+      for (let p = 0; p < W * H; p++) {
+        const v = Math.round(rawMatte[p] * 255);
+        mid.data[p * 4] = mid.data[p * 4 + 1] = mid.data[p * 4 + 2] = v;
+        mid.data[p * 4 + 3] = 255;
+      }
+      mctx.putImageData(mid, 0, 0);
+      mctx.filter = 'blur(' + feather + 'px)';
+      mctx.drawImage(mc, 0, 0);
+      const bd = mctx.getImageData(0, 0, W, H).data;
+      matte = new Float32Array(W * H);
+      for (let p = 0; p < W * H; p++) matte[p] = bd[p * 4] / 255;
+    }
+    for (let p = 0; p < W * H; p++) {
+      alpha[p] = Math.round(orig.data[p * 4 + 3] * matte[p]);
+    }
+    render();
+  }
+
+  // ---------- Color removal ----------
+  function colorRemove(sx, sy) {
+    const d = orig.data;
+    const idx = (sy * W + sx) * 4;
+    if (alpha[sy * W + sx] === 0) return;
+    const tr = d[idx], tg = d[idx + 1], tb = d[idx + 2];
+    const t = (Number($('#tolerance').value) / 100) * 255;
+    const limit = t * t * 3;
+    pushUndo();
+    if (!$('#contiguous').checked) {
+      for (let p = 0; p < W * H; p++) {
+        if (alpha[p] === 0) continue;
+        const i = p * 4;
+        const dr = d[i] - tr, dg = d[i + 1] - tg, db = d[i + 2] - tb;
+        if (dr * dr + dg * dg + db * db <= limit) alpha[p] = 0;
+      }
+    } else {
+      const visited = new Uint8Array(W * H);
+      const stack = [sy * W + sx];
+      visited[sy * W + sx] = 1;
+      while (stack.length) {
+        const p = stack.pop();
+        if (alpha[p] === 0) continue;
+        const i = p * 4;
+        const dr = d[i] - tr, dg = d[i + 1] - tg, db = d[i + 2] - tb;
+        if (dr * dr + dg * dg + db * db > limit) continue;
+        alpha[p] = 0;
+        const px = p % W, py = (p / W) | 0;
+        if (px > 0 && !visited[p - 1]) { visited[p - 1] = 1; stack.push(p - 1); }
+        if (px < W - 1 && !visited[p + 1]) { visited[p + 1] = 1; stack.push(p + 1); }
+        if (py > 0 && !visited[p - W]) { visited[p - W] = 1; stack.push(p - W); }
+        if (py < H - 1 && !visited[p + W]) { visited[p + W] = 1; stack.push(p + W); }
+      }
+    }
+    render();
+  }
+
+  // ---------- Brush ----------
+  function brushAt(cx, cy) {
+    const r = Number($('#brush').value) * (canvas.width / canvas.getBoundingClientRect().width) / 2;
+    const r2 = r * r;
+    const x0 = Math.max(0, Math.floor(cx - r)), x1 = Math.min(W - 1, Math.ceil(cx + r));
+    const y0 = Math.max(0, Math.floor(cy - r)), y1 = Math.min(H - 1, Math.ceil(cy + r));
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy > r2) continue;
+        const p = y * W + x;
+        alpha[p] = brushMode === 'erase' ? 0 : orig.data[p * 4 + 3];
+      }
+    }
+  }
+
+  function canvasPoint(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: Math.floor((e.clientX - r.left) * (W / r.width)), y: Math.floor((e.clientY - r.top) * (H / r.height)) };
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    if (!orig) return;
+    e.preventDefault();
+    const p = canvasPoint(e);
+    if (p.x < 0 || p.y < 0 || p.x >= W || p.y >= H) return;
+    if (mode === 'color') { colorRemove(p.x, p.y); return; }
+    if (mode === 'erase') {
+      pushUndo();
+      brushAt(p.x, p.y);
+      render();
+      const move = ev => { const q = canvasPoint(ev); brushAt(q.x, q.y); render(); };
+      const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (mode !== 'erase') { brushCursor.style.display = 'none'; return; }
+    const stage = canvas.getBoundingClientRect();
+    const holder = canvas.parentElement.getBoundingClientRect();
+    const size = Number($('#brush').value);
+    brushCursor.style.display = 'block';
+    brushCursor.style.width = size + 'px';
+    brushCursor.style.height = size + 'px';
+    brushCursor.style.left = (e.clientX - holder.left) + 'px';
+    brushCursor.style.top = (e.clientY - holder.top) + 'px';
+  });
+  canvas.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; });
+
+  // ---------- Mode / background switching ----------
+  const HINTS = {
+    ai: 'Best for people & portraits. Runs entirely on your device.',
+    color: 'Best for flat or solid backgrounds — product shots, logos, scans.',
+    erase: 'Manual control — erase anything, restore mistakes.'
+  };
+  $('#mode-seg').querySelectorAll('button').forEach(b => b.onclick = () => {
+    mode = b.dataset.mode;
+    $('#mode-seg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    $('#panel-ai').style.display = mode === 'ai' ? 'block' : 'none';
+    $('#panel-color').style.display = mode === 'color' ? 'block' : 'none';
+    $('#panel-erase').style.display = mode === 'erase' ? 'block' : 'none';
+    $('#mode-hint').textContent = HINTS[mode];
+    canvas.dataset.mode = mode;
+  });
+  $('#bg-seg').querySelectorAll('button').forEach(b => b.onclick = () => {
+    bgMode = b.dataset.bg;
+    $('#bg-seg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    $('#bg-color-field').style.display = bgMode === 'color' ? 'block' : 'none';
+    $('#download-btn').textContent = bgMode === 'transparent' ? 'Download PNG' : 'Download image';
+    render();
+  });
+  $('#bg-color').addEventListener('input', render);
+  $('#brush-erase').onclick = () => { brushMode = 'erase'; $('#brush-erase').classList.add('active'); $('#brush-restore').classList.remove('active'); };
+  $('#brush-restore').onclick = () => { brushMode = 'restore'; $('#brush-restore').classList.add('active'); $('#brush-erase').classList.remove('active'); };
+  $('#brush').oninput = () => { $('#brush-v').textContent = $('#brush').value + 'px'; };
+  $('#tolerance').oninput = () => { $('#tol-v').textContent = $('#tolerance').value; };
+  let featherTimer;
+  $('#feather').oninput = () => {
+    $('#feather-v').textContent = $('#feather').value + 'px';
+    clearTimeout(featherTimer);
+    featherTimer = setTimeout(applyMatte, 120);
+  };
+
+  $('#ai-run').onclick = runAI;
+  $('#undo-btn').onclick = () => {
+    const prev = undoStack.pop();
+    if (prev) { alpha = prev; render(); }
+    updateButtons();
+  };
+  $('#reset-btn').onclick = () => {
+    undoStack.length = 0;
+    rawMatte = null;
+    for (let p = 0; p < W * H; p++) alpha[p] = orig.data[p * 4 + 3];
+    render();
+    updateButtons();
+  };
+
+  $('#download-btn').onclick = () => {
+    if (!orig) return;
+    render();
+    canvas.toBlob(blob => {
+      ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '_cutout.png');
+      ImgUtils.setStatus('Downloaded.', 'success');
+    }, 'image/png');
+  };
+
+  // ---------- Load ----------
+  async function load(file) {
+    try {
+      src = await ImageEngine.loadImage(file);
+      W = src.width; H = src.height;
+      canvas.width = W; canvas.height = H;
+      canvas.dataset.mode = mode;
+      const scratch = document.createElement('canvas');
+      scratch.width = W; scratch.height = H;
+      const sctx = scratch.getContext('2d', { willReadFrequently: true });
+      sctx.drawImage(src.img, 0, 0);
+      orig = sctx.getImageData(0, 0, W, H);
+      alpha = new Uint8ClampedArray(W * H);
+      for (let p = 0; p < W * H; p++) alpha[p] = orig.data[p * 4 + 3];
+      rawMatte = null;
+      blurredBg = null;
+      undoStack.length = 0;
+      updateButtons();
+      $('#editor').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      ToolUI.readout($('#readout'), src, file);
+      render();
+      ImgUtils.setStatus('');
+    } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), onFiles: f => load(f[0]) });
+  ToolUI.pageDrop(f => load(f[0]));
+});
+</script>
+</body>
+</html>

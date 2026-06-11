@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>Image to Text — Free OCR Online, 100% Private | MyFreeImageTool</title>
+<meta name="description" content="Extract text from any image or photo with free OCR in your browser. 12 languages, unlimited images, no upload — the AI runs entirely on your device." />
+<link rel="canonical" href="https://myfreeimagetool.com/image-to-text/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/image-to-text/" />
+<meta property="og:title" content="Image to Text — Free Private OCR" />
+<meta property="og:description" content="Copy text out of screenshots, photos and scans. Runs on your device — nothing uploads." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "Image to Text (OCR) — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/image-to-text/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free in-browser OCR. Extract text from images in 12 languages with no upload." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Is my image uploaded to a server for OCR?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No. The OCR engine (Tesseract compiled to WebAssembly) downloads to your browser once and recognises text locally. Your image never leaves your device." } },
+  { "@type": "Question", "name": "Which languages are supported?",
+    "acceptedAnswer": { "@type": "Answer", "text": "English, Spanish, French, German, Italian, Portuguese, Russian, Arabic, Hindi, Japanese, Korean and Simplified Chinese." } },
+  { "@type": "Question", "name": "How many images can I convert to text?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Unlimited. There are no per-day caps, file limits or signups — processing happens on your own hardware." } },
+  { "@type": "Question", "name": "What image quality works best for OCR?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Sharp, well-lit images with horizontal text work best. Screenshots are usually near-perfect; for photos, fill the frame with the text and avoid steep angles." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 980px;">
+    <div class="tool-header">
+      <p class="eyebrow">Convert · On-device OCR</p>
+      <h1>Image to Text</h1>
+      <p>Pull the text out of screenshots, photos, scans and whiteboards. The OCR engine runs in your browser — nothing is uploaded, ever.</p>
+      <div class="tool-wedge"><span><b>Unlimited</b> images</span><span><b>12</b> languages</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M8 9h8M8 12.5h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <h2>Drop images here or click to choose</h2>
+      <p>JPG, PNG, WebP, BMP — multiple files welcome · processed on your device</p>
+      <input id="file-input" type="file" accept="image/*" multiple />
+    </label>
+
+    <div id="lang-bar" style="display:none; margin-top:18px;">
+      <div class="field" style="max-width:340px; margin:0 auto;">
+        <label for="lang">Text language</label>
+        <select id="lang">
+          <option value="eng" selected>English</option>
+          <option value="spa">Spanish — Español</option>
+          <option value="fra">French — Français</option>
+          <option value="deu">German — Deutsch</option>
+          <option value="ita">Italian — Italiano</option>
+          <option value="por">Portuguese — Português</option>
+          <option value="rus">Russian — Русский</option>
+          <option value="ara">Arabic — العربية</option>
+          <option value="hin">Hindi — हिन्दी</option>
+          <option value="jpn">Japanese — 日本語</option>
+          <option value="kor">Korean — 한국어</option>
+          <option value="chi_sim">Chinese (Simplified) — 简体中文</option>
+        </select>
+      </div>
+      <div class="action-bar">
+        <button class="btn btn-primary" id="run" type="button">Extract text</button>
+        <button class="btn btn-ghost" id="copy-all" type="button" style="display:none;">Copy all</button>
+        <button class="btn btn-ghost" id="dl-txt" type="button" style="display:none;">Download .txt</button>
+      </div>
+    </div>
+
+    <div id="engine-prog"></div>
+    <div id="results" class="batch-list"></div>
+    <div class="status" role="status"></div>
+
+    <section class="tool-copy">
+      <h2>Free OCR that never sees your documents</h2>
+      <p>“Image to text” tools usually work by sending your picture to a server, running OCR there, and sending the words back. That is a problem when the picture is a contract, an ID, a medical letter or a whiteboard full of unreleased plans. This tool takes the opposite approach: the recognition engine — Tesseract, the same open-source OCR used by archives and libraries worldwide, compiled to WebAssembly — downloads to <em>your</em> browser and reads the image on <em>your</em> device. Once the engine is cached, it even works offline.</p>
+      <p>That architecture is also why there are no limits here. Sites that pay for OCR servers cap you at a few pages a day or paywall batch processing. Because your own hardware does the work, you can extract text from one screenshot or three hundred scans — free either way, with a separate progress bar for every image.</p>
+      <h3>Getting the best results</h3>
+      <ul>
+        <li><strong>Match the language.</strong> Pick the language of the text before running — each language uses a purpose-trained model (12 available, including Hindi, Japanese, Korean, Arabic and Simplified Chinese).</li>
+        <li><strong>Favour sharp, flat, horizontal text.</strong> Screenshots and scans are nearly perfect; for phone photos, shoot straight-on in good light.</li>
+        <li><strong>Crop to the text first.</strong> If a photo has lots of background, trimming it with the <a href="/crop-image/">crop tool</a> speeds recognition and improves accuracy.</li>
+      </ul>
+      <p>The extracted text appears next to each image in an editable box — fix anything the OCR misread, then copy a single result, copy everything at once, or download the lot as a plain-text file.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Is my image uploaded for OCR?</summary><p>No. The engine runs entirely in your browser via WebAssembly. The first run downloads the engine and your chosen language model (a few MB, cached afterwards); your images never leave the device.</p></details>
+      <details class="faq-item"><summary>How many images can I process?</summary><p>Unlimited — no daily caps, no signup. Each image shows its own progress bar.</p></details>
+      <details class="faq-item"><summary>Can it read handwriting?</summary><p>Clear print works best. Neat handwriting sometimes works; cursive generally doesn't — that's a limitation of OCR models of this class, and we'd rather be honest about it.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/exif-remover/"><b>EXIF Remover</b><span>Strip hidden metadata before sharing</span></a>
+      <a href="/crop-image/"><b>Crop Image</b><span>Trim to just the text region</span></a>
+      <a href="/image-to-pdf/"><b>Image to PDF</b><span>Bundle scans into one document</span></a>
+      <a href="/heic-to-jpg/"><b>HEIC to JPG</b><span>Convert iPhone photos first</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  const results = $('#results');
+  let queue = [];   // [{ file, row, out, prog }]
+  let running = false;
+
+  function addFiles(files) {
+    for (const file of files) {
+      const row = document.createElement('div');
+      row.className = 'batch-row';
+      row.style.flexWrap = 'wrap';
+      const url = URL.createObjectURL(file);
+      row.innerHTML =
+        '<img class="batch-thumb" alt="" src="' + url + '" />' +
+        '<span class="batch-name">' + ImgUtils.escapeHTML(file.name) + '</span>' +
+        '<span class="batch-meta">' + ImgUtils.formatBytes(file.size) + '</span>' +
+        '<button class="batch-x" type="button" aria-label="Remove">✕</button>' +
+        '<div class="ocr-out" style="flex-basis:100%; display:none;">' +
+        '  <textarea class="text-out" rows="6" spellcheck="false"></textarea>' +
+        '  <div class="action-bar" style="justify-content:flex-start; margin-top:8px;">' +
+        '    <button class="btn btn-ghost ocr-copy" type="button">Copy text</button>' +
+        '  </div>' +
+        '</div>';
+      results.appendChild(row);
+      const item = { file, row, done: false };
+      row.querySelector('.batch-x').onclick = () => {
+        queue = queue.filter(q => q !== item);
+        URL.revokeObjectURL(url);
+        row.remove();
+        if (!queue.length) $('#lang-bar').style.display = 'none';
+      };
+      row.querySelector('.ocr-copy').onclick = async e => {
+        await navigator.clipboard.writeText(row.querySelector('.text-out').value);
+        ToolUI.checkmark(e.target.parentElement);
+      };
+      queue.push(item);
+    }
+    $('#lang-bar').style.display = 'block';
+    ImgUtils.setStatus('');
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), multiple: true, onFiles: addFiles });
+  ToolUI.pageDrop(addFiles);
+
+  $('#run').onclick = async () => {
+    if (running || !queue.length) return;
+    running = true;
+    $('#run').disabled = true;
+    const lang = $('#lang').value;
+    const engineProg = ToolUI.progress($('#engine-prog'), 'Loading OCR engine — one time, then cached');
+    try {
+      await ToolUI.lazyScript('/vendor/tesseract/tesseract.min.js');
+      engineProg.set(0.3, 'Loading ' + $('#lang').selectedOptions[0].text.split(' — ')[0] + ' language model…');
+
+      let current = null; // per-file progress hook for the shared logger
+      const worker = await Tesseract.createWorker(lang, 1, {
+        workerPath: '/vendor/tesseract/worker.min.js',
+        corePath: '/vendor/tesseract/core',
+        langPath: '/vendor/tesseract/lang',
+        logger: m => {
+          if (m.status === 'recognizing text' && current) current.set(m.progress, 'Recognizing…');
+        }
+      });
+      engineProg.done('Engine ready');
+      setTimeout(() => engineProg.remove(), 900);
+
+      for (const item of queue) {
+        if (item.done) continue;
+        const slot = document.createElement('div');
+        slot.style.flexBasis = '100%';
+        item.row.appendChild(slot);
+        current = ToolUI.progress(slot, 'Recognizing…');
+        try {
+          const { data } = await worker.recognize(item.file);
+          current.remove();
+          slot.remove();
+          const out = item.row.querySelector('.ocr-out');
+          out.style.display = 'block';
+          out.querySelector('.text-out').value = (data.text || '').trim() || '(no text found)';
+          item.done = true;
+        } catch (e) {
+          current.fail('Could not read this image');
+        }
+      }
+      current = null;
+      await worker.terminate();
+      $('#copy-all').style.display = '';
+      $('#dl-txt').style.display = '';
+      ImgUtils.setStatus('Done — text extracted from ' + queue.filter(q => q.done).length + ' image(s).', 'success');
+    } catch (e) {
+      console.error(e);
+      engineProg.fail('Could not load the OCR engine.');
+      ImgUtils.setStatus('Something went wrong loading the OCR engine.', 'error');
+    }
+    $('#run').disabled = false;
+    running = false;
+    // Allow re-running (e.g. after changing language).
+    queue.forEach(q => { q.done = false; });
+  };
+
+  function allText() {
+    return Array.from(results.querySelectorAll('.text-out')).map(t => t.value).join('\n\n----------\n\n');
+  }
+  $('#copy-all').onclick = async e => {
+    await navigator.clipboard.writeText(allText());
+    ToolUI.checkmark(e.target.parentElement);
+  };
+  $('#dl-txt').onclick = () => {
+    ImgUtils.download(new Blob([allText()], { type: 'text/plain' }), 'extracted-text.txt');
+  };
+});
+</script>
+</body>
+</html>

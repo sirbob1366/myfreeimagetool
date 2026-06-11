@@ -15,16 +15,16 @@
   gtag('config', 'G-69S8TY48JV');
 </script>
 
-<title>Convert Image — JPG to PNG, PNG to JPG, WebP Free | MyFreeImageTool</title>
+<title>Convert Image â€” JPG to PNG, PNG to JPG, WebP Free | MyFreeImageTool</title>
 <meta name="description" content="Convert images between JPG, PNG and WebP for free in your browser. No upload, no signup, 100% private. Fast client-side conversion via canvas." />
 <link rel="canonical" href="https://myfreeimagetool.com/convert-image/" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://myfreeimagetool.com/convert-image/" />
-<meta property="og:title" content="Convert Image — JPG, PNG, WebP" />
+<meta property="og:title" content="Convert Image â€” JPG, PNG, WebP" />
 <meta property="og:description" content="Convert between JPG, PNG and WebP in your browser. Free and private." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <script type="application/ld+json">
-{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Convert Image — MyFreeImageTool", "url": "https://myfreeimagetool.com/convert-image/", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Convert Image â€” MyFreeImageTool", "url": "https://myfreeimagetool.com/convert-image/", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
 <link rel="stylesheet" href="/styles.css" />
 </head>
@@ -50,13 +50,13 @@
   <div class="container" style="max-width: 920px;">
     <div class="tool-header">
       <h1>Convert Image</h1>
-      <p>Open any image type, export to any format — PNG, JPG, WebP, GIF, BMP, TIFF, ICO or PDF.</p>
+      <p>Open any image type, export to any format â€” PNG, JPG, WebP, GIF, BMP, TIFF, ICO or PDF.</p>
     </div>
 
     <label class="dropzone" id="dropzone" for="file-input">
       <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
       <h2>Drop an image here or click to choose</h2>
-      <p>JPG, PNG, WebP, GIF, BMP, ICO, SVG or AVIF · your file never leaves your device</p>
+      <p>JPG, PNG, WebP, GIF, BMP, ICO, SVG or AVIF Â· your file never leaves your device</p>
       <input id="file-input" type="file" accept="image/*" />
     </label>
 
@@ -66,7 +66,7 @@
         <h3>Convert</h3>
         <div class="field"><label>Output format</label><select id="fmt"></select></div>
         <div class="field" id="qwrap"><label>Quality <span class="range-val" id="q-val">92%</span></label><input type="range" id="q" min="10" max="100" value="92" /></div>
-        <p class="meta-line">Original: <strong id="m-orig">—</strong></p>
+        <p class="meta-line">Original: <strong id="m-orig">â€”</strong></p>
         <button class="btn btn-primary btn-block" id="go" type="button" style="margin-top:12px;">Convert &amp; download</button>
       </div>
     </div>
@@ -74,7 +74,7 @@
 
     <div class="editor-link">
       <div class="editor-link-text"><strong>Do more in the editor</strong> Compress, resize, crop and more.</div>
-      <a href="/editor/" class="btn btn-primary">Open editor →</a>
+      <a href="/editor/" class="btn btn-primary">Open editor â†’</a>
     </div>
 
     <section style="margin-top: 64px;">
@@ -102,13 +102,13 @@
     <a href="/terms/">Terms</a>
     <a href="/contact/">Contact</a>
   </div>
-  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Your images never leave your device</small></div>
+  <div class="container footer-copy"><small>Â© <span id="year"></span> MyFreeImageTool Â· Your images never leave your device</small></div>
 </footer>
 
 <script src="/app.js" defer></script>
 <script src="/motion.js" defer></script>
 <script src="/scene3d.js" defer></script>
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
+<script src="/vendor/pdf-lib/pdf-lib.min.js" defer></script>
 <script src="/image-engine.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       src = await ImageEngine.loadImage(file);
       const c = $('#c'); c.width = src.width; c.height = src.height; c.getContext('2d').drawImage(src.img, 0, 0);
-      $('#m-orig').textContent = `${ImageEngine.extFor(src.type).toUpperCase()} · ${src.width}×${src.height} · ${ImgUtils.formatBytes(src.size)}`;
+      $('#m-orig').textContent = `${ImageEngine.extFor(src.type).toUpperCase()} Â· ${src.width}Ã—${src.height} Â· ${ImgUtils.formatBytes(src.size)}`;
       $('#workbench').style.display = 'grid'; syncQ(); ImgUtils.setStatus('');
     } catch (e) { ImgUtils.setStatus('Could not open this image.', 'error'); }
   }
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   syncQ();
   $('#go').onclick = async () => {
     if (!src) return;
-    ImgUtils.setStatus('Converting…');
+    ImgUtils.setStatus('Convertingâ€¦');
     try {
       const blob = await ImageEngine.convert(src, { mime: $('#fmt').value, quality: Number($('#q').value) / 100 });
       ImgUtils.download(blob, ImgUtils.stripExt(src.name) + '.' + ImageEngine.extFor(blob.type));

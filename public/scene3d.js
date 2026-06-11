@@ -27,7 +27,7 @@
       var probe = document.createElement('canvas');
       if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return;
     } catch (e) { return; }
-    import('https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js')
+    import('/vendor/three/three.module.min.js')
       .then(init)
       .catch(function (e) { console.warn('3D scene unavailable:', e && e.message); });
   }

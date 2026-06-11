@@ -15,16 +15,16 @@
   gtag('config', 'G-69S8TY48JV');
 </script>
 
-<title>Image to PDF — Combine Images into a PDF Free | MyFreeImageTool</title>
+<title>Image to PDF â€” Combine Images into a PDF Free | MyFreeImageTool</title>
 <meta name="description" content="Convert images to PDF free. Combine one or many JPG, PNG or WebP files into a single PDF in your browser. No upload, no signup, 100% private." />
 <link rel="canonical" href="https://myfreeimagetool.com/image-to-pdf/" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://myfreeimagetool.com/image-to-pdf/" />
-<meta property="og:title" content="Image to PDF — Free Online" />
+<meta property="og:title" content="Image to PDF â€” Free Online" />
 <meta property="og:description" content="Combine images into a PDF in your browser. Free and private." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <script type="application/ld+json">
-{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Image to PDF — MyFreeImageTool", "url": "https://myfreeimagetool.com/image-to-pdf/", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
+{ "@context": "https://schema.org", "@type": "WebApplication", "name": "Image to PDF â€” MyFreeImageTool", "url": "https://myfreeimagetool.com/image-to-pdf/", "applicationCategory": "MultimediaApplication", "operatingSystem": "Any", "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" } }
 </script>
 <link rel="stylesheet" href="/styles.css" />
 <style>
@@ -57,13 +57,13 @@
   <div class="container" style="max-width: 820px;">
     <div class="tool-header">
       <h1>Image to PDF</h1>
-      <p>Combine one or more images into a single PDF — one image per page.</p>
+      <p>Combine one or more images into a single PDF â€” one image per page.</p>
     </div>
 
     <label class="dropzone" id="dropzone" for="file-input">
       <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
       <h2>Drop images here or click to choose</h2>
-      <p>Select one or more · your files never leave your device</p>
+      <p>Select one or more Â· your files never leave your device</p>
       <input id="file-input" type="file" accept="image/*" multiple />
     </label>
 
@@ -77,13 +77,13 @@
 
     <div class="editor-link">
       <div class="editor-link-text"><strong>Editing one image?</strong> Compress, resize, crop and more in the editor.</div>
-      <a href="/editor/" class="btn btn-primary">Open editor →</a>
+      <a href="/editor/" class="btn btn-primary">Open editor â†’</a>
     </div>
 
     <section style="margin-top: 64px;">
       <h2 class="section-title" style="font-size: 26px;">About image to PDF</h2>
       <p style="color: var(--text-secondary); font-size: 16px; max-width: 640px; margin: 0 auto;">
-        Each image becomes one page sized to the image, assembled into a PDF with the open-source pdf-lib library — all in your browser. Add images in the order you want them to appear.
+        Each image becomes one page sized to the image, assembled into a PDF with the open-source pdf-lib library â€” all in your browser. Add images in the order you want them to appear.
       </p>
     </section>
   </div>
@@ -105,10 +105,10 @@
     <a href="/terms/">Terms</a>
     <a href="/contact/">Contact</a>
   </div>
-  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Your images never leave your device</small></div>
+  <div class="container footer-copy"><small>Â© <span id="year"></span> MyFreeImageTool Â· Your images never leave your device</small></div>
 </footer>
 
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="/vendor/pdf-lib/pdf-lib.min.js"></script>
 <script src="/app.js" defer></script>
 <script src="/motion.js" defer></script>
 <script src="/scene3d.js" defer></script>
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.innerHTML = '';
     items.forEach((it, i) => {
       const t = document.createElement('div'); t.className = 'img-tile';
-      t.innerHTML = `<img src="${it.url}" alt="" /><span class="idx">${i + 1}</span><button class="rm" type="button" aria-label="Remove">×</button>`;
+      t.innerHTML = `<img src="${it.url}" alt="" /><span class="idx">${i + 1}</span><button class="rm" type="button" aria-label="Remove">Ã—</button>`;
       t.querySelector('.rm').onclick = () => { items.splice(i, 1); render(); };
       list.appendChild(t);
     });
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   $('#go').onclick = async () => {
     if (!items.length) return;
-    ImgUtils.setStatus('Building PDF…');
+    ImgUtils.setStatus('Building PDFâ€¦');
     try {
       const bytes = await ImageEngine.imagesToPdf(items.map(i => i.src));
       ImgUtils.download(new Blob([bytes], { type: 'application/pdf' }), 'images.pdf');
