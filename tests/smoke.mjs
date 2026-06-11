@@ -862,6 +862,115 @@ await page.goto(`${BASE}/exif-remover/`);
 	check('exif-remover: clean PNG reports no EXIF', meta.includes('no EXIF'), meta);
 }
 
+// ---------- Format & GIF suite ----------
+console.log('format & gif pages');
+for (const path of [
+	'/webp-converter/',
+	'/avif-converter/',
+	'/svg-to-png/',
+	'/gif-maker/',
+	'/gif-splitter/',
+]) {
+	const res = await page.goto(`${BASE}${path}`);
+	check(`format ${path} returns 200`, res !== null && res.status() === 200);
+	check(
+		`format ${path} has dropzone`,
+		(await page.locator('#dropzone').count()) === 1,
+	);
+}
+
+// WebP converter: estimate + compare appear, conversion downloads.
+await page.goto(`${BASE}/webp-converter/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.waitForFunction(
+		() => document.getElementById('est').textContent.includes('→'),
+		undefined, { timeout: 10000 },
+	);
+	check('webp: live size estimate shown', true);
+	const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+	await page.click('#run');
+	check('webp: single file downloads directly', (await downloadPromise) !== null);
+}
+
+// AVIF converter: wasm encoder produces a real AVIF.
+await page.goto(`${BASE}/avif-converter/`);
+{
+	await uploadTo(page);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.waitForFunction(
+		() => {
+			const t = document.getElementById('est').textContent;
+			return t.includes('→') || t.includes('unavailable');
+		},
+		undefined, { timeout: 60000 },
+	);
+	const est = await page.locator('#est').textContent();
+	check('avif: wasm encoder produced an estimate', est.includes('→'), est);
+	const downloadPromise = page.waitForEvent('download', { timeout: 60000 }).catch(() => null);
+	await page.click('#run');
+	const dl = await downloadPromise;
+	check('avif: conversion downloads .avif', dl !== null && dl.suggestedFilename().endsWith('.avif'),
+		dl ? dl.suggestedFilename() : 'no download');
+}
+
+// SVG to PNG: a viewBox-only SVG renders at 2x.
+await page.goto(`${BASE}/svg-to-png/`);
+{
+	const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200"><rect width="300" height="200" fill="#4f46e5"/></svg>';
+	await page.setInputFiles('#file-input', {
+		name: 'shape.svg', mimeType: 'image/svg+xml', buffer: Buffer.from(svg),
+	});
+	await page.waitForSelector('#opts', { state: 'visible' });
+	const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+	await page.click('#run');
+	const dl = await downloadPromise;
+	check('svg-to-png: renders and downloads at 2x',
+		dl !== null && dl.suggestedFilename().includes('600x400'),
+		dl ? dl.suggestedFilename() : 'no download');
+}
+
+// GIF maker: two frames encode into a previewable GIF.
+await page.goto(`${BASE}/gif-maker/`);
+{
+	await uploadTo(page, '#file-input', 2);
+	await page.waitForSelector('#workbench', { state: 'visible' });
+	await page.click('#gen');
+	await page.waitForSelector('#preview[src]', { state: 'visible', timeout: 30000 });
+	check('gif-maker: preview generated', true);
+	check('gif-maker: download enabled', !(await page.locator('#save').isDisabled()));
+}
+
+// GIF splitter: round-trip a generated GIF into frames.
+{
+	// Build a static GIF using the engine already loaded on the gif-maker page.
+	const gifB64 = await page.evaluate(async () => {
+		const c = document.createElement('canvas');
+		c.width = 120; c.height = 80;
+		const x = c.getContext('2d');
+		x.fillStyle = '#ff0000'; x.fillRect(0, 0, 60, 80);
+		x.fillStyle = '#0000ff'; x.fillRect(60, 0, 60, 80);
+		const png = await new Promise(r => c.toBlob(r, 'image/png'));
+		const src = await ImageEngine.loadImage(new File([png], 't.png', { type: 'image/png' }));
+		const gif = await ImageEngine.convert(src, { mime: 'image/gif' });
+		const buf = await gif.arrayBuffer();
+		let s = '';
+		new Uint8Array(buf).forEach(b => { s += String.fromCharCode(b); });
+		return btoa(s);
+	});
+	await page.goto(`${BASE}/gif-splitter/`);
+	await page.setInputFiles('#file-input', {
+		name: 'anim.gif', mimeType: 'image/gif', buffer: Buffer.from(gifB64, 'base64'),
+	});
+	await page.waitForSelector('#toolbar', { state: 'visible', timeout: 15000 });
+	const info = await page.locator('#gif-info').textContent();
+	check('gif-splitter: decodes frames', /1 frames/.test(info), info);
+	const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
+	await page.click('#dl-sheet');
+	check('gif-splitter: sprite sheet downloads', (await downloadPromise) !== null);
+}
+
 // ---------- Console errors ----------
 check(
 	'no console/page errors across all pages',

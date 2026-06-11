@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>SVG to PNG — Render Vectors at Any Resolution | MyFreeImageTool</title>
+<meta name="description" content="Convert SVG to PNG at any resolution — vectors are infinite, so pick the exact pixel size you need. Batch support, transparency kept, free and private." />
+<link rel="canonical" href="https://myfreeimagetool.com/svg-to-png/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/svg-to-png/" />
+<meta property="og:title" content="SVG to PNG — Any Resolution" />
+<meta property="og:description" content="Render SVG vectors to PNG at exactly the size you need. Free, private, batch." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "SVG to PNG — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/svg-to-png/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Render SVG files to PNG at any chosen resolution in the browser, with batch support." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "What resolution should I export an SVG at?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Whatever the destination needs — vectors have no native size. For app icons export the exact pixel sizes required; for print, multiply the physical size by 300 DPI; for the web, export at 2x the display size for retina screens." } },
+  { "@type": "Question", "name": "Is transparency preserved?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — areas the SVG doesn't paint stay transparent in the PNG, or you can choose a solid background colour." } },
+  { "@type": "Question", "name": "Why does my SVG render differently than in my editor?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Rendering uses your browser's SVG engine. Fonts referenced by name but not embedded, and external image links, can differ — embed fonts as paths for pixel-identical output." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 980px;">
+    <div class="tool-header">
+      <p class="eyebrow">Convert · Vector to raster</p>
+      <h1>SVG to PNG</h1>
+      <p>Vectors are infinite — render them at exactly the pixel size you need, from favicon to billboard, with transparency intact.</p>
+      <div class="tool-wedge"><span><b>Any</b> resolution</span><span><b>Alpha</b> preserved</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17c4-9 7 4 10-5s4 1 6-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M4 21h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/></svg>
+      <h2>Drop SVG files here or click to choose</h2>
+      <p>.svg — multiple files welcome · rendered on your device</p>
+      <input id="file-input" type="file" accept=".svg,image/svg+xml" multiple />
+    </label>
+
+    <div id="opts" class="controls" style="display:none; margin-top:20px;">
+      <h3>Output size</h3>
+      <div class="seg" id="size-seg">
+        <button type="button" data-mode="scale" class="active">Scale ×</button>
+        <button type="button" data-mode="width">Exact width</button>
+      </div>
+      <div class="field-row" style="margin-top:12px;">
+        <div class="field" id="scale-field"><label for="scale">Scale factor</label>
+          <select id="scale">
+            <option value="1">1× — as designed</option>
+            <option value="2" selected>2× — retina</option>
+            <option value="4">4×</option>
+            <option value="8">8×</option>
+          </select></div>
+        <div class="field" id="width-field" style="display:none;"><label for="width">Width (px)</label>
+          <input type="number" id="width" value="1024" min="8" max="8192" /></div>
+        <div class="field"><label for="bg">Background</label>
+          <select id="bg"><option value="transparent" selected>Transparent</option><option value="#ffffff">White</option><option value="#000000">Black</option></select></div>
+      </div>
+      <div class="action-bar" style="justify-content:flex-start;">
+        <button class="btn btn-primary" id="run" type="button">Render all to PNG</button>
+        <button class="btn btn-ghost" id="dl-zip" type="button" style="display:none;">Download zip</button>
+      </div>
+    </div>
+
+    <div id="results" class="batch-list"></div>
+    <div class="status" role="status"></div>
+
+    <section class="tool-copy">
+      <h2>Pick the resolution; the vector does the rest</h2>
+      <p>The whole point of SVG is that it has no resolution — a logo drawn once renders crisply at 16 pixels or 16,000. But the moment you need to put that logo somewhere that doesn't speak vector — an app store listing, a Slack emoji, a PowerPoint deck, an email signature, a print PDF — you need pixels, and you need the <em>right number</em> of them. This tool renders your SVG through the browser's own vector engine at whatever size you ask, so the output is as sharp as the destination allows.</p>
+      <h3>Choosing the size</h3>
+      <ul>
+        <li><strong>Scale mode</strong> multiplies the SVG's designed dimensions — 2× is the retina default for web use.</li>
+        <li><strong>Exact-width mode</strong> targets a precise pixel width (height follows the aspect ratio): 512 for app icons, 1024 for marketplace listings, 3000+ for print.</li>
+        <li><strong>Transparency or backdrop</strong> — unpainted areas stay transparent by default, or pick white/black for destinations that dislike alpha.</li>
+      </ul>
+      <p>Batch rendering handles icon sets in one pass: drop twenty SVGs, set the size once, download a zip. Files render entirely on your device — relevant when the SVGs are unreleased brand assets — and since there's no server rasteriser to pay for, there's no file cap or daily limit.</p>
+      <p>One honest caveat: rendering fidelity is your browser's SVG engine, which is excellent but can differ from a design tool in two cases — fonts referenced by name but not embedded (convert text to paths for identical output) and SVGs that link external images. Everything else, including CSS inside the SVG, renders faithfully.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>What's the maximum output size?</summary><p>8192px on the longest side — beyond that, browser canvas memory becomes unreliable. That's poster-print territory anyway.</p></details>
+      <details class="faq-item"><summary>Can it go the other way — PNG to SVG?</summary><p>Not here. Raster-to-vector tracing is a different (and lossier) problem; this tool does the lossless direction.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/convert-image/"><b>Convert Image</b><span>PNG to ICO for favicons</span></a>
+      <a href="/resize-image/"><b>Resize Image</b><span>Resample the rendered PNG</span></a>
+      <a href="/color-picker/"><b>Color Picker</b><span>Sample colours from the render</span></a>
+      <a href="/compress-image/"><b>Compress Image</b><span>Shrink big renders</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  let queue = []; // { file, row, blob, outName, dims }
+  let mode = 'scale';
+
+  // Parse the SVG's intrinsic size from width/height or viewBox.
+  function intrinsicSize(svgText) {
+    const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+    const root = doc.documentElement;
+    if (root.tagName.toLowerCase() !== 'svg') return null;
+    let w = parseFloat(root.getAttribute('width'));
+    let h = parseFloat(root.getAttribute('height'));
+    const vb = (root.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+    if ((!w || !h) && vb.length === 4) { w = vb[2]; h = vb[3]; }
+    if (!w || !h) { w = 300; h = 150; } // SVG spec default
+    return { w, h, root };
+  }
+
+  async function renderOne(item) {
+    const text = await item.file.text();
+    const info = intrinsicSize(text);
+    if (!info) throw new Error('not an SVG');
+    let outW;
+    if (mode === 'width') outW = Math.min(8192, Math.max(8, Number($('#width').value) || 1024));
+    else outW = Math.min(8192, info.w * Number($('#scale').value));
+    const outH = Math.max(1, Math.round(outW * info.h / info.w));
+
+    // Ensure explicit dimensions so the Image decodes at a known size.
+    info.root.setAttribute('width', info.w);
+    info.root.setAttribute('height', info.h);
+    const blobUrl = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(info.root)], { type: 'image/svg+xml' }));
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error('SVG failed to render'));
+        i.src = blobUrl;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(outW);
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      const bg = $('#bg').value;
+      if (bg !== 'transparent') { ctx.fillStyle = bg; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      return { blob, w: canvas.width, h: canvas.height };
+    } finally {
+      URL.revokeObjectURL(blobUrl);
+    }
+  }
+
+  function addFiles(files) {
+    const svgs = files.filter(f => /svg/.test(f.type) || /\.svg$/i.test(f.name));
+    if (!svgs.length) { ImgUtils.setStatus('Please choose .svg files.', 'error'); return; }
+    for (const file of svgs) {
+      const row = document.createElement('div');
+      row.className = 'batch-row';
+      const url = URL.createObjectURL(file);
+      row.innerHTML =
+        '<img class="batch-thumb" alt="" src="' + url + '" style="object-fit:contain;background:#fff;" />' +
+        '<span class="batch-name">' + ImgUtils.escapeHTML(file.name) + '</span>' +
+        '<span class="batch-meta">' + ImgUtils.formatBytes(file.size) + '</span>' +
+        '<button class="batch-x" type="button" aria-label="Remove">✕</button>';
+      $('#results').appendChild(row);
+      const item = { file, row, blob: null };
+      row.querySelector('.batch-x').onclick = () => {
+        queue = queue.filter(q => q !== item);
+        row.remove();
+        if (!queue.length) $('#opts').style.display = 'none';
+      };
+      queue.push(item);
+    }
+    $('#opts').style.display = 'block';
+    ImgUtils.setStatus('');
+  }
+
+  // attachDropzone's MIME filter misses some SVG files — wire directly.
+  $('#file-input').addEventListener('change', e => addFiles(Array.from(e.target.files)));
+  ['dragenter', 'dragover'].forEach(ev => $('#dropzone').addEventListener(ev, e => { e.preventDefault(); $('#dropzone').classList.add('is-drag'); }));
+  ['dragleave', 'drop'].forEach(ev => $('#dropzone').addEventListener(ev, e => { e.preventDefault(); $('#dropzone').classList.remove('is-drag'); }));
+  ToolUI.pageDrop(addFiles, '*');
+
+  $('#size-seg').querySelectorAll('button').forEach(b => b.onclick = () => {
+    mode = b.dataset.mode;
+    $('#size-seg').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+    $('#scale-field').style.display = mode === 'scale' ? 'block' : 'none';
+    $('#width-field').style.display = mode === 'width' ? 'block' : 'none';
+  });
+
+  $('#run').onclick = async () => {
+    if (!queue.length) return;
+    $('#run').disabled = true;
+    let ok = 0;
+    for (const item of queue) {
+      const prog = ToolUI.progress(item.row, 'Rendering…');
+      prog.set(0.4);
+      try {
+        const { blob, w, h } = await renderOne(item);
+        item.blob = blob;
+        item.outName = ImgUtils.stripExt(item.file.name) + '_' + w + 'x' + h + '.png';
+        prog.remove();
+        item.row.querySelector('.batch-meta').textContent = w + ' × ' + h + ' · ' + ImgUtils.formatBytes(blob.size);
+        ok++;
+      } catch (e) {
+        console.error(e);
+        prog.fail('Could not render this SVG');
+      }
+    }
+    if (ok === 1 && queue.length === 1) ImgUtils.download(queue[0].blob, queue[0].outName);
+    else if (ok) $('#dl-zip').style.display = '';
+    ImgUtils.setStatus(ok ? ok + ' SVG(s) rendered.' : 'Rendering failed.', ok ? 'success' : 'error');
+    $('#run').disabled = false;
+  };
+
+  $('#dl-zip').onclick = async () => {
+    const unique = ToolUI.uniqueNames();
+    const files = queue.filter(q => q.blob).map(q => ({ name: unique(q.outName), blob: q.blob }));
+    if (files.length) await ToolUI.zip(files, 'svg-rendered.zip');
+  };
+});
+</script>
+</body>
+</html>

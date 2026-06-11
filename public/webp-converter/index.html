@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>WebP Converter — To &amp; From WebP with Live Quality Preview | MyFreeImageTool</title>
+<meta name="description" content="Convert images to WebP with a live quality slider and before/after comparison, or convert WebP back to JPG/PNG. Batch support, free, no upload." />
+<link rel="canonical" href="https://myfreeimagetool.com/webp-converter/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/webp-converter/" />
+<meta property="og:title" content="WebP Converter — Live Quality Preview" />
+<meta property="og:description" content="To and from WebP with a Squoosh-style live compare. Free, private, batch-friendly." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "WebP Converter — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/webp-converter/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Convert to and from WebP with live quality preview and batch support, in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "Why convert images to WebP?",
+    "acceptedAnswer": { "@type": "Answer", "text": "WebP files are typically 25–35% smaller than JPG at the same visual quality, and support transparency like PNG at a fraction of the size. Every modern browser displays WebP." } },
+  { "@type": "Question", "name": "Can I convert WebP back to JPG or PNG?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — drop WebP files in and choose JPG or PNG output. Useful for apps and platforms that still reject WebP uploads." } },
+  { "@type": "Question", "name": "How do I choose the right quality?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Use the live comparison: the slider shows the original and converted image at the same zoom, with the resulting file size updating as you drag. 80% is visually lossless for most photos." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Optimize · Modern formats</p>
+      <h1>WebP Converter</h1>
+      <p>Convert to WebP with a live quality comparison, or back to JPG/PNG for picky platforms. Batch in, zip out.</p>
+      <div class="tool-wedge"><span><b>Live</b> compare</span><span><b>Both</b> directions</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12l-3-3M20 16H8l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <h2>Drop images here or click to choose</h2>
+      <p>JPG, PNG, WebP, GIF, AVIF — any direction · converted on your device</p>
+      <input id="file-input" type="file" accept="image/*,.avif" multiple />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div style="min-width:0;">
+        <div id="cmp-holder"></div>
+        <p class="meta-line" style="text-align:center;" id="cmp-note">Comparing the first image — left original, right converted.</p>
+      </div>
+      <div class="controls">
+        <h3>Output</h3>
+        <div class="field"><label for="fmt">Convert to</label>
+          <select id="fmt">
+            <option value="image/webp" selected>WebP</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/png">PNG (lossless)</option>
+          </select>
+        </div>
+        <div class="field" id="q-field"><label>Quality <span class="range-val" id="q-v">80%</span></label>
+          <input type="range" id="q" min="30" max="100" value="80" /></div>
+        <p class="meta-line">First image: <strong id="est">—</strong></p>
+        <p class="meta-line" id="webp-note" style="display:none; color:#b45309;">This browser can't encode WebP (Safari) — choose JPG/PNG output, or use Chrome/Firefox/Edge for WebP.</p>
+        <div class="divider"></div>
+        <div class="action-bar" style="justify-content:flex-start; margin-top:0;">
+          <button class="btn btn-primary" id="run" type="button">Convert all</button>
+          <button class="btn btn-ghost" id="dl-zip" type="button" style="display:none;">Download zip</button>
+        </div>
+        <div id="prog-holder"></div>
+      </div>
+    </div>
+    <div id="results" class="batch-list"></div>
+    <div class="status" role="status"></div>
+    <div id="readout"></div>
+
+    <section class="tool-copy">
+      <h2>WebP both ways, with your eyes on the result</h2>
+      <p>WebP is the pragmatic modern format: 25–35% smaller than JPG at matched quality, transparency support like PNG at a fraction of the weight, and universal browser support since 2020. If you run a website, converting your images to WebP is one of the few performance wins that costs nothing visually — when the quality is set right. That's why this converter is built around a <strong>live comparison</strong>: the slider shows your original and the converted result at identical zoom while the output size updates as you drag the quality control. You judge with your eyes, not a guess.</p>
+      <p>It converts the other way too. Plenty of software still refuses WebP uploads — older CMSs, print services, government forms — so dropping WebP files in and getting universally-accepted JPG or PNG back is just as common a job.</p>
+      <h3>Quality guidance from real use</h3>
+      <ul>
+        <li><strong>80%</strong> — visually lossless for photos; the default for a reason.</li>
+        <li><strong>65–75%</strong> — fine for content images at typical display sizes; significant extra savings.</li>
+        <li><strong>90%+</strong> — only for images that will be zoomed or edited again.</li>
+        <li><strong>PNG output</strong> — lossless; pick it when converting WebP screenshots or graphics back for editing.</li>
+      </ul>
+      <p>Batch handling works like everything on this site: unlimited files, per-file progress and savings, single files download directly, multiple files zip up — all processed on your device with nothing uploaded. One honest caveat: Safari can decode WebP but won't encode it, so on Safari this page converts <em>from</em> WebP but needs Chrome, Edge or Firefox to convert <em>to</em> it. We tell you on the page instead of silently producing PNGs.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>Is WebP always smaller?</summary><p>For photos, almost always. For sharp-edged graphics, lossless PNG occasionally wins — the live size readout shows you immediately.</p></details>
+      <details class="faq-item"><summary>Does converting lose transparency?</summary><p>WebP and PNG keep alpha. JPG doesn't support it — transparent areas are flattened to white.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/avif-converter/"><b>AVIF Converter</b><span>The next format after WebP</span></a>
+      <a href="/compress-image/"><b>Compress Image</b><span>Same-format size reduction</span></a>
+      <a href="/convert-image/"><b>Convert Image</b><span>GIF, BMP, TIFF, ICO &amp; more</span></a>
+      <a href="/batch-editor/"><b>Batch Editor</b><span>Resize + convert together</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script src="/js/compare-slider.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  let queue = []; // { file, src, row, blob, outName }
+  let cmp = null;
+  let timer = null;
+
+  // Feature-detect WebP encoding (Safari can't).
+  const canWebp = new Promise(r => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 2;
+    c.toBlob(b => r(!!b && b.type === 'image/webp'), 'image/webp', 0.8);
+  });
+  canWebp.then(ok => { if (!ok) $('#webp-note').style.display = 'block'; });
+
+  function settings() {
+    return { mime: $('#fmt').value, quality: Number($('#q').value) / 100 };
+  }
+
+  async function encodeOne(src) {
+    const { mime, quality } = settings();
+    if (mime === 'image/webp' && !(await canWebp)) throw new Error('webp-encode-unsupported');
+    return ImageEngine.convert(src, { mime, quality: mime === 'image/png' ? undefined : quality });
+  }
+
+  async function updatePreview() {
+    const first = queue[0];
+    if (!first || !first.src) return;
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      try {
+        const blob = await encodeOne(first.src);
+        $('#est').textContent = ImgUtils.formatBytes(first.file.size) + ' → ' + ImgUtils.formatBytes(blob.size) +
+          (blob.size < first.file.size ? ' (−' + Math.round((1 - blob.size / first.file.size) * 100) + '%)' : '');
+        const img = new Image();
+        img.onload = () => { cmp.setAfter(img); };
+        img.src = URL.createObjectURL(blob);
+      } catch (e) {
+        $('#est').textContent = 'not available in this browser';
+      }
+    }, 180);
+  }
+
+  async function addFiles(files) {
+    for (const file of files) {
+      const row = document.createElement('div');
+      row.className = 'batch-row';
+      row.innerHTML =
+        '<span class="batch-name">' + ImgUtils.escapeHTML(file.name) + '</span>' +
+        '<span class="batch-meta">' + ImgUtils.formatBytes(file.size) + '</span>' +
+        '<button class="batch-x" type="button" aria-label="Remove">✕</button>';
+      $('#results').appendChild(row);
+      const item = { file, row, src: null, blob: null };
+      row.querySelector('.batch-x').onclick = () => {
+        queue = queue.filter(q => q !== item);
+        row.remove();
+      };
+      queue.push(item);
+      try { item.src = await ImageEngine.loadImage(file); } catch (e) { row.querySelector('.batch-meta').textContent = 'unreadable'; }
+    }
+    const first = queue.find(q => q.src);
+    if (first) {
+      $('#workbench').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      if (!cmp) cmp = CompareSlider.create($('#cmp-holder'), { labels: ['Original', 'Converted'] });
+      cmp.setBefore(ToolUI.downscale(first.src.img, 1600));
+      ToolUI.readout($('#readout'), first.src, first.file);
+      updatePreview();
+    }
+    ImgUtils.setStatus('');
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), multiple: true, onFiles: addFiles });
+  ToolUI.pageDrop(addFiles);
+
+  $('#q').oninput = () => { $('#q-v').textContent = $('#q').value + '%'; updatePreview(); };
+  $('#fmt').onchange = () => {
+    $('#q-field').style.display = $('#fmt').value === 'image/png' ? 'none' : 'block';
+    updatePreview();
+  };
+
+  $('#run').onclick = async () => {
+    const items = queue.filter(q => q.src);
+    if (!items.length) return;
+    $('#run').disabled = true;
+    const total = ToolUI.progress($('#prog-holder'), 'Converting…');
+    const ext = ImageEngine.extFor($('#fmt').value);
+    let done = 0;
+    for (const item of items) {
+      try {
+        item.blob = await encodeOne(item.src);
+        item.outName = ImgUtils.stripExt(item.file.name) + '.' + ext;
+        const saved = item.file.size > item.blob.size ? Math.round((1 - item.blob.size / item.file.size) * 100) : 0;
+        item.row.querySelector('.batch-meta').innerHTML =
+          ImgUtils.formatBytes(item.blob.size) + (saved > 0 ? ' <span class="saved">−' + saved + '%</span>' : '');
+      } catch (e) {
+        item.row.querySelector('.batch-meta').textContent = 'failed';
+      }
+      total.set(++done / items.length);
+    }
+    total.done('Converted ' + items.filter(i => i.blob).length + ' file(s)');
+    setTimeout(() => total.remove(), 2000);
+    const ok = items.filter(i => i.blob);
+    if (ok.length === 1) ImgUtils.download(ok[0].blob, ok[0].outName);
+    else if (ok.length) $('#dl-zip').style.display = '';
+    ImgUtils.setStatus(ok.length ? 'Done.' : 'Conversion failed.', ok.length ? 'success' : 'error');
+    $('#run').disabled = false;
+  };
+
+  $('#dl-zip').onclick = async () => {
+    const unique = ToolUI.uniqueNames();
+    const files = queue.filter(q => q.blob).map(q => ({ name: unique(q.outName), blob: q.blob }));
+    if (files.length) await ToolUI.zip(files, 'webp-converted.zip');
+  };
+});
+</script>
+</body>
+</html>

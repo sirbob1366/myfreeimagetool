@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-69S8TY48JV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-69S8TY48JV');
+</script>
+
+<title>GIF Maker — Photos to Animated GIF, Free | MyFreeImageTool</title>
+<meta name="description" content="Turn images into an animated GIF: drag to order frames, set per-frame timing and loop count, preview live. Free, no watermark, encoded in your browser." />
+<link rel="canonical" href="https://myfreeimagetool.com/gif-maker/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://myfreeimagetool.com/gif-maker/" />
+<meta property="og:title" content="GIF Maker — Images to Animated GIF" />
+<meta property="og:description" content="Frame ordering, per-frame delay, loop control, live preview. Free and private." />
+<meta name="twitter:card" content="summary" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "WebApplication",
+  "name": "GIF Maker — MyFreeImageTool",
+  "url": "https://myfreeimagetool.com/gif-maker/",
+  "applicationCategory": "MultimediaApplication", "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Combine images into an animated GIF with frame ordering, timing and loop control, in the browser." }
+</script>
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  { "@type": "Question", "name": "How many frames can a GIF have?",
+    "acceptedAnswer": { "@type": "Answer", "text": "No fixed limit here — dozens of frames are fine. Remember GIF is an old format: more frames and larger dimensions grow the file quickly." } },
+  { "@type": "Question", "name": "Can I set a different duration per frame?",
+    "acceptedAnswer": { "@type": "Answer", "text": "Yes — there's a global frame delay, and every frame can override it individually (handy for holding a title card longer)." } },
+  { "@type": "Question", "name": "Why does my GIF look grainy?",
+    "acceptedAnswer": { "@type": "Answer", "text": "GIF is limited to 256 colours per frame, so smooth gradients dither. It's the format, not the tool — for full-colour animation use a video format; for sharp graphics and screenshots GIF looks great." } }
+] }
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="brand" aria-label="MyFreeImageTool home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11l1.2-2a1 1 0 0 1 .85-.5h7.9a1 1 0 0 1 .85.5L21 11h2.5A2.5 2.5 0 0 1 26 13.5v8A2.5 2.5 0 0 1 23.5 24h-15A2.5 2.5 0 0 1 6 21.5v-8A2.5 2.5 0 0 1 8.5 11H9Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="16" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span class="brand-text">MyFreeImageTool</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="/#tools">Tools</a><a href="/editor/">Editor</a><a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="tool-page">
+  <div class="container" style="max-width: 1080px;">
+    <div class="tool-header">
+      <p class="eyebrow">Create · Animation</p>
+      <h1>GIF Maker</h1>
+      <p>Photos in, animated GIF out. Order the frames, time each one, set the loop — encoded in your browser with a live preview.</p>
+      <div class="tool-wedge"><span><b>Per-frame</b> timing</span><span><b>No</b> watermark</span><span><b>0</b> uploads</span></div>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="file-input">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M17 10l4-2v8l-4-2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+      <h2>Drop 2 or more images here</h2>
+      <p>JPG, PNG or WebP — they become the frames · encoded on your device</p>
+      <input id="file-input" type="file" accept="image/*" multiple />
+    </label>
+
+    <div class="workbench" id="workbench" style="display:none;">
+      <div style="min-width:0;">
+        <div class="preview-pane" id="preview-pane" style="min-height:240px;">
+          <p class="meta-line" id="preview-hint">Press “Generate preview” to see the animation.</p>
+          <img id="preview" alt="GIF preview" style="display:none;" />
+        </div>
+        <div id="frames" class="batch-list"></div>
+      </div>
+      <div class="controls">
+        <h3>Animation</h3>
+        <div class="field"><label>Frame delay <span class="range-val" id="delay-v">500ms</span></label>
+          <input type="range" id="delay" min="50" max="2000" step="50" value="500" /></div>
+        <div class="field"><label for="loop">Loop</label>
+          <select id="loop">
+            <option value="0" selected>Forever</option>
+            <option value="1">Play twice</option>
+            <option value="2">Play 3 times</option>
+            <option value="-1">Play once</option>
+          </select>
+        </div>
+        <div class="field"><label for="size">Width</label>
+          <select id="size">
+            <option value="320">320 px — small</option>
+            <option value="480" selected>480 px — standard</option>
+            <option value="640">640 px — large</option>
+            <option value="800">800 px — extra large</option>
+          </select>
+        </div>
+        <div class="field"><label for="bg">Letterbox colour</label>
+          <select id="bg"><option value="#ffffff" selected>White</option><option value="#000000">Black</option></select>
+        </div>
+        <div id="gif-prog"></div>
+        <button class="btn btn-ghost btn-block" id="gen" type="button" style="margin-top:6px;">Generate preview</button>
+        <button class="btn btn-primary btn-block" id="save" type="button" style="margin-top:8px;" disabled>Download GIF</button>
+        <p class="meta-line" id="out-size"></p>
+      </div>
+    </div>
+    <div class="status" role="status"></div>
+
+    <section class="tool-copy">
+      <h2>The GIF still wins where it counts</h2>
+      <p>Thirty-five years old and still undefeated where it matters: a GIF plays everywhere, automatically, with no play button, no codec questions and no embed — in chats, docs, READMEs, issue trackers, presentations and email. When you need three screenshots to loop as a quick demo, or six photos to flick through as a product 360, GIF remains the answer, and making one shouldn't require a video editor.</p>
+      <h3>Order, time, loop</h3>
+      <ul>
+        <li><strong>Frames</strong> — drop images in any order, then rearrange with the up/down controls. Each frame shows its thumbnail so you always know what you're sequencing.</li>
+        <li><strong>Timing</strong> — one global delay sets the rhythm; any frame can override it. Classic trick: hold the first frame 2 seconds as a title, then run the rest at 300ms.</li>
+        <li><strong>Loop</strong> — forever for ambience, once or twice for demos that shouldn't nag.</li>
+      </ul>
+      <p>Encoding runs in your browser via a worker (the encoder is self-hosted, about 30KB), with determinate progress and a live preview before you commit to the download. Be aware of the format's nature: GIF stores at most 256 colours per frame, so photographic gradients dither visibly — graphics, screenshots and UI captures look crisp, sunsets look retro. That's the format's signature, not a bug we can fix.</p>
+      <p>Need the reverse — pulling frames <em>out</em> of a GIF? That's the <a href="/gif-splitter/">GIF splitter</a>. And to trim or resize frames before animating, the <a href="/crop-image/">crop</a> and <a href="/resize-image/">resize</a> tools feed straight in.</p>
+
+      <h3>Common questions</h3>
+      <details class="faq-item"><summary>How do I keep the file size sane?</summary><p>Smaller width and fewer frames matter most — 480px wide at 8–15 frames is the sweet spot for chat-sized GIFs.</p></details>
+      <details class="faq-item"><summary>Do animated GIFs get watermarked?</summary><p>Never. The download is your frames and nothing else.</p></details>
+    </section>
+  </div>
+
+  <div class="related">
+    <h2>Related tools</h2>
+    <div class="related-grid">
+      <a href="/gif-splitter/"><b>GIF Splitter</b><span>GIF back into frames</span></a>
+      <a href="/resize-image/"><b>Resize Image</b><span>Prep frames to one size</span></a>
+      <a href="/meme-generator/"><b>Meme Generator</b><span>Caption frames first</span></a>
+      <a href="/collage-maker/"><b>Collage Maker</b><span>Static grid instead</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-cols">
+    <div class="footer-col"><h4>Optimize</h4>
+      <a href="/compress-image/">Compress Image</a>
+      <a href="/resize-image/">Resize Image</a>
+      <a href="/upscale-image/">Upscale Image</a>
+      <a href="/batch-editor/">Batch Editor</a>
+      <a href="/webp-converter/">WebP Converter</a>
+      <a href="/avif-converter/">AVIF Converter</a>
+    </div>
+    <div class="footer-col"><h4>Edit</h4>
+      <a href="/photo-editor/">Photo Editor</a>
+      <a href="/crop-image/">Crop Image</a>
+      <a href="/rotate-image/">Rotate Image</a>
+      <a href="/adjust/">Adjust Colors</a>
+      <a href="/filters/">Photo Filters</a>
+      <a href="/round-image/">Round Image</a>
+      <a href="/add-border/">Add Border</a>
+      <a href="/replace-color/">Replace Color</a>
+    </div>
+    <div class="footer-col"><h4>Create</h4>
+      <a href="/meme-generator/">Meme Generator</a>
+      <a href="/collage-maker/">Collage Maker</a>
+      <a href="/text/">Add Text</a>
+      <a href="/shapes/">Add Shapes</a>
+      <a href="/add-watermark/">Add Watermark</a>
+      <a href="/gif-maker/">GIF Maker</a>
+      <a href="/color-picker/">Color Picker</a>
+    </div>
+    <div class="footer-col"><h4>Convert</h4>
+      <a href="/convert-image/">Convert Image</a>
+      <a href="/heic-to-jpg/">HEIC to JPG</a>
+      <a href="/svg-to-png/">SVG to PNG</a>
+      <a href="/image-to-pdf/">Image to PDF</a>
+      <a href="/image-to-text/">Image to Text</a>
+      <a href="/gif-splitter/">GIF Splitter</a>
+    </div>
+    <div class="footer-col"><h4>Privacy</h4>
+      <a href="/remove-background/">Remove Background</a>
+      <a href="/blur-face/">Blur Face</a>
+      <a href="/blur-background/">Blur Background</a>
+      <a href="/exif-remover/">EXIF Remover</a>
+    </div>
+    <div class="footer-col"><h4>More</h4>
+      <a href="/editor/">Editor</a>
+      <a href="/crop/">Crop Pro</a>
+      <a href="/resize/">Resize Pro</a>
+      <a href="/about/">About</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+      <a href="/contact/">Contact</a>
+    </div>
+  </div>
+  <div class="container footer-copy"><small>© <span id="year"></span> MyFreeImageTool · Every tool runs on your device — images never upload</small></div>
+</footer>
+
+<script src="/app.js" defer></script>
+<script src="/motion.js" defer></script>
+<script src="/image-engine.js" defer></script>
+<script src="/js/tool-ui.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = s => document.querySelector(s);
+  let frames = []; // { src, row, delayOverride }
+  let gifBlob = null;
+
+  function renumber() {
+    frames.forEach((f, i) => {
+      f.row.querySelector('.frame-n').textContent = '#' + (i + 1);
+      $('#frames').appendChild(f.row);
+    });
+  }
+
+  async function addFiles(files) {
+    for (const file of files) {
+      let src;
+      try { src = await ImageEngine.loadImage(file); } catch (e) { continue; }
+      const row = document.createElement('div');
+      row.className = 'batch-row';
+      row.innerHTML =
+        '<span class="frame-n" style="font-size:12px;font-weight:700;color:var(--text-muted);width:26px;"></span>' +
+        '<img class="batch-thumb" alt="" src="' + src.url + '" />' +
+        '<span class="batch-name">' + ImgUtils.escapeHTML(file.name) + '</span>' +
+        '<input type="number" class="frame-delay" placeholder="auto" min="50" max="10000" step="50"' +
+        ' style="width:84px;padding:6px 8px;border:1px solid var(--border-strong);border-radius:8px;font-size:12px;" title="Delay override (ms)" />' +
+        '<button class="batch-x mv-up" type="button" title="Move up">↑</button>' +
+        '<button class="batch-x mv-dn" type="button" title="Move down">↓</button>' +
+        '<button class="batch-x" type="button" aria-label="Remove">✕</button>';
+      $('#frames').appendChild(row);
+      const item = { src, row, delayOverride: null };
+      row.querySelector('.frame-delay').addEventListener('input', e => {
+        item.delayOverride = Number(e.target.value) || null;
+        invalidate();
+      });
+      row.querySelector('.mv-up').onclick = () => {
+        const i = frames.indexOf(item);
+        if (i > 0) { [frames[i - 1], frames[i]] = [frames[i], frames[i - 1]]; renumber(); invalidate(); }
+      };
+      row.querySelector('.mv-dn').onclick = () => {
+        const i = frames.indexOf(item);
+        if (i < frames.length - 1) { [frames[i + 1], frames[i]] = [frames[i], frames[i + 1]]; renumber(); invalidate(); }
+      };
+      row.querySelector('[aria-label="Remove"]').onclick = () => {
+        frames = frames.filter(f => f !== item);
+        item.row.remove();
+        renumber();
+        invalidate();
+      };
+      frames.push(item);
+    }
+    if (frames.length) {
+      $('#workbench').style.display = 'grid';
+      $('#dropzone').style.display = 'none';
+      renumber();
+    }
+    ImgUtils.setStatus(frames.length < 2 ? 'Add at least 2 frames.' : '');
+  }
+
+  function invalidate() {
+    gifBlob = null;
+    $('#save').disabled = true;
+    $('#out-size').textContent = '';
+  }
+
+  ImgUtils.attachDropzone({ dropzone: $('#dropzone'), input: $('#file-input'), multiple: true, onFiles: addFiles });
+  ToolUI.pageDrop(addFiles);
+  $('#delay').oninput = () => { $('#delay-v').textContent = $('#delay').value + 'ms'; invalidate(); };
+  ['loop', 'size', 'bg'].forEach(id => $('#' + id).addEventListener('change', invalidate));
+
+  async function generate() {
+    if (frames.length < 2) { ImgUtils.setStatus('Add at least 2 frames.', 'error'); return; }
+    $('#gen').disabled = true;
+    const prog = ToolUI.progress($('#gif-prog'), 'Encoding GIF…');
+    try {
+      await ToolUI.lazyScript('/vendor/gifjs/gif.js');
+      const W = Number($('#size').value);
+      // Canvas aspect follows the first frame.
+      const first = frames[0].src;
+      const H = Math.round(W * first.height / first.width);
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: W,
+        height: H,
+        repeat: Number($('#loop').value),
+        workerScript: '/vendor/gifjs/gif.worker.js'
+      });
+      const baseDelay = Number($('#delay').value);
+      const bg = $('#bg').value;
+      for (const f of frames) {
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+        const s = Math.min(W / f.src.width, H / f.src.height);
+        const dw = f.src.width * s, dh = f.src.height * s;
+        ctx.drawImage(f.src.img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+        gif.addFrame(c, { delay: f.delayOverride || baseDelay });
+      }
+      gifBlob = await new Promise((resolve, reject) => {
+        gif.on('progress', p => prog.set(p));
+        gif.on('finished', resolve);
+        gif.on('abort', () => reject(new Error('aborted')));
+        gif.render();
+      });
+      prog.done('Encoded — ' + ImgUtils.formatBytes(gifBlob.size));
+      setTimeout(() => prog.remove(), 2000);
+      const img = $('#preview');
+      img.src = URL.createObjectURL(gifBlob);
+      img.style.display = 'block';
+      $('#preview-hint').style.display = 'none';
+      $('#save').disabled = false;
+      $('#out-size').textContent = W + ' × ' + H + ' · ' + frames.length + ' frames · ' + ImgUtils.formatBytes(gifBlob.size);
+      ImgUtils.setStatus('Preview ready.', 'success');
+    } catch (e) {
+      console.error(e);
+      prog.fail('Encoding failed');
+      ImgUtils.setStatus('Could not encode the GIF.', 'error');
+    }
+    $('#gen').disabled = false;
+  }
+
+  $('#gen').onclick = generate;
+  $('#save').onclick = async () => {
+    if (!gifBlob) await generate();
+    if (gifBlob) {
+      ImgUtils.download(gifBlob, 'animation.gif');
+      ImgUtils.setStatus('GIF downloaded.', 'success');
+    }
+  };
+});
+</script>
+</body>
+</html>
