@@ -67,6 +67,24 @@
     revealEls.forEach(function (el) { io.observe(el); });
   }
 
+  // ---------- Category nav scrollspy (homepage) ----------
+  var catNav = document.querySelector('.cat-nav');
+  if (catNav && 'IntersectionObserver' in window) {
+    var links = catNav.querySelectorAll('a[href^="#"]');
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        links.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+        });
+      });
+    }, { rootMargin: '-25% 0px -65% 0px' });
+    links.forEach(function (a) {
+      var target = document.getElementById(a.getAttribute('href').slice(1));
+      if (target) spy.observe(target);
+    });
+  }
+
   // ---------- Count-up stats ----------
   var counters = document.querySelectorAll('[data-count]');
   function runCount(el) {

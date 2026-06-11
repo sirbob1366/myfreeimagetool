@@ -2,6 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://myfreeimagetool.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/editor/</loc><priority>0.95</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/image-to-text/</loc><priority>0.95</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/heic-to-jpg/</loc><priority>0.95</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/remove-background/</loc><priority>0.95</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/meme-generator/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/upscale-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/blur-face/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/photo-editor/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/batch-editor/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/compress-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/resize-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/convert-image/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
@@ -10,13 +18,23 @@
   <url><loc>https://myfreeimagetool.com/add-watermark/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/image-to-pdf/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/blur-background/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/adjust/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/filters/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/text/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/shapes/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/crop/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/resize/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://myfreeimagetool.com/remove-background/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/webp-converter/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/avif-converter/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/svg-to-png/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/gif-maker/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/gif-splitter/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/round-image/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/add-border/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/collage-maker/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/color-picker/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/replace-color/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/exif-remover/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/adjust/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/filters/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/text/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/shapes/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/crop/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://myfreeimagetool.com/resize/</loc><priority>0.85</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/about/</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/privacy/</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://myfreeimagetool.com/terms/</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>

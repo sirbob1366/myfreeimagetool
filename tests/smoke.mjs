@@ -92,9 +92,17 @@ check(
 );
 check('home: hero renders', await page.locator('.hero-title').isVisible());
 check(
-	'home: 15 tool tiles (8 old + 7 new)',
-	(await page.locator('.tile').count()) === 15,
+	'home: 33 tool tiles in 5 categories',
+	(await page.locator('.tile').count()) === 33,
 	`count=${await page.locator('.tile').count()}`,
+);
+check(
+	'home: sticky category nav with 5 links',
+	(await page.locator('.cat-nav a').count()) === 5,
+);
+check(
+	'home: comparison strip present',
+	(await page.locator('.versus-grid').count()) === 1,
 );
 for (const href of [
 	'/adjust/',
@@ -106,6 +114,19 @@ for (const href of [
 	'/remove-background/',
 	'/editor/',
 	'/compress-image/',
+	'/image-to-text/',
+	'/heic-to-jpg/',
+	'/meme-generator/',
+	'/upscale-image/',
+	'/blur-face/',
+	'/photo-editor/',
+	'/batch-editor/',
+	'/webp-converter/',
+	'/avif-converter/',
+	'/gif-maker/',
+	'/gif-splitter/',
+	'/collage-maker/',
+	'/exif-remover/',
 ]) {
 	check(
 		`home: links to ${href}`,
