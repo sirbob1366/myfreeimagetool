@@ -1,10 +1,5 @@
 [
   {
-    "slug": "compress-image-without-losing-quality",
-    "title": "How to Compress an Image Without Losing Quality (Free, No Upload)",
-    "blurb": "Shrink a photo to fit an upload limit while it still looks identical. What \"visually lossless\" really means, plus how to hit a target file size."
-  },
-  {
     "slug": "resize-image",
     "title": "How to Resize an Image to Exact Dimensions (Free, No Upload)",
     "blurb": "Need a photo at exactly 1080×1080 or under an upload limit? Resize to any pixel size without stretching — free, in your browser, nothing uploaded."
