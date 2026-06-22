@@ -1,2 +1,66 @@
  
 ===== Run at Sat 06/20/2026 10:07:11.98 ===== 
+Next draft: compress-image-without-losing-quality
+Publish date: 2026-06-20 (June 20, 2026)
+Remaining after this: 2
+
+> myfreepdfedit.com@0.0.1 build
+> astro build
+
+[2m10:07:13[22m [34m[types][39m Generated [2m23ms[22m
+[2m10:07:13[22m [34m[build][39m output: [34m"static"[39m
+[2m10:07:13[22m [34m[build][39m mode: [34m"static"[39m
+[2m10:07:13[22m [34m[build][39m directory: [34mC:\Users\User\Documents\Projects\myfreeimagetool\dist\[39m
+[2m10:07:13[22m [34m[build][39m Collecting build info...
+[2m10:07:13[22m [34m[build][39m [32m✓ Completed in 36ms.[39m
+[2m10:07:13[22m [34m[build][39m Building static entrypoints...
+[2m10:07:14[22m [34m[vite][39m [32m✓ built in 527ms[39m
+[2m10:07:14[22m [34m[vite][39m [32m✓ built in 134ms[39m
+[2m10:07:14[22m [34m[build][39m Rearranging server assets...
+
+[42m[30m generating static routes [39m[49m
+[2m10:07:14[22m   [34m├─[39m [2m/adjust/index.html[22m [2m(+7ms)[22m 
+[2m10:07:14[22m   [34m├─[39m [2m/crop/index.html[22m [2m(+2ms)[22m 
+[2m10:07:14[22m   [34m├─[39m [2m/filters/index.html[22m [2m(+1ms)[22m 
+[2m10:07:14[22m   [34m├─[39m [2m/resize/index.html[22m [2m(+1ms)[22m 
+[2m10:07:14[22m   [34m├─[39m [2m/shapes/index.html[22m [2m(+1ms)[22m 
+[2m10:07:14[22m   [34m├─[39m [2m/text/index.html[22m [2m(+1ms)[22m 
+[2m10:07:14[22m [32m✓ Completed in 21ms.
+[39m
+[2m10:07:14[22m [34m[build][39m [32m✓ Completed in 714ms.[39m
+[2m10:07:14[22m [34m[build][39m 6 page(s) built in [1m768ms[22m
+[2m10:07:14[22m [34m[build][39m [1mComplete![22m
+warning: in the working copy of 'drafts/queue.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/blog/index.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/sitemap.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/blog/compress-image-without-losing-quality/index.html', LF will be replaced by CRLF the next time Git touches it
+[main 8903b2a] Publish blog post: compress-image-without-losing-quality
+ 5 files changed, 18 insertions(+), 9 deletions(-)
+ create mode 100644 drafts/publish.log
+ rename {drafts => public}/blog/compress-image-without-losing-quality/index.html (98%)
+To https://github.com/sirbob1366/myfreeimagetool.git
+   d27c0e5..8903b2a  main -> main
+
+ ⛅️ wrangler 4.100.0
+────────────────────
+🌀 Building list of assets...
+✨ Read 158 files from the assets directory C:\Users\User\Documents\Projects\myfreeimagetool\dist
+🌀 Starting asset upload...
+🌀 Found 3 new or modified static assets to upload. Proceeding with upload...
++ /sitemap.xml
++ /blog/index.html
++ /blog/compress-image-without-losing-quality/index.html
+Uploaded 1 of 3 assets
+Uploaded 2 of 3 assets
+Uploaded 3 of 3 assets
+✨ Success! Uploaded 3 files (96 already uploaded) (1.89 sec)
+
+Total Upload: 0.33 KiB / gzip: 0.24 KiB
+Uploaded myfreeimagetool (18.55 sec)
+Deployed myfreeimagetool triggers (6.56 sec)
+  https://myfreeimagetool.sirbob1366.workers.dev
+Current Version ID: e00b8fd5-6231-4fcc-8f26-f480613118ef
+
+Published compress-image-without-losing-quality. 2 draft(s) remaining in queue.
+ 
+===== Run at Mon 06/22/2026 22:07:12.24 ===== 
